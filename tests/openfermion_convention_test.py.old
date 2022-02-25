@@ -1,0 +1,69 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+A few tests to check our conventions vs OpenFermion conventions
+"""
+import unittest
+import numpy as np
+from openfermion.hamiltonians import MolecularData
+from openfermion.transforms import get_sparse_operator
+from openfermionpyscf import run_pyscf
+
+from qat.dqs.hamiltonians import ElectronicStructureHamiltonian
+from qat.dqs.qchem.ucc import compute_noons, build_molecular_description
+from qat.dqs.qchem.util import get_sparse_matrix
+from qat.dqs.qchem.tools import get_active_space_spin_hamiltonian
+
+
+class BasicTestH2(unittest.TestCase):
+    def test_basic(self):
+        diatomic_bond_length = 0.75
+        geometry = [('H', (0., 0., 0.)), ('H', (0., 0., diatomic_bond_length))]
+        basis = 'sto-3g'
+        multiplicity = 1
+
+        molecule = MolecularData(geometry, basis, multiplicity)
+
+        #FCI using pySCF
+        mol_scf = run_pyscf(molecule, run_fci=True)
+
+        fci_energy = mol_scf.fci_energy
+
+        #transform to spins
+        spin_hamiltonian, nqbits = get_active_space_spin_hamiltonian(molecule)
+        #print(spin_hamiltonian)
+        paulis = spin_hamiltonian.list_pauli_operators
+        coeffs = spin_hamiltonian.list_pauli_values
+        spin_matrix = get_sparse_matrix(paulis, coeffs)
+        eigvals = np.linalg.eigvals(spin_matrix.A)
+        spin_gs_energy = min(eigvals)
+
+        self.assertAlmostEqual(spin_gs_energy, fci_energy, delta=1e-13)
+
+        # fermionic Hamiltonian
+        mol_hf, _, _, _ = compute_noons(molecule)
+        fermion_hamiltonian, _ = build_molecular_description(mol_hf)
+        fermion_matrix = get_sparse_operator(fermion_hamiltonian)
+
+        eigvals = np.linalg.eigvals(fermion_matrix.A)
+        fermion_gs_energy = min(eigvals)
+        self.assertAlmostEqual(fermion_gs_energy, fci_energy, delta=1e-13)
+
+
+        mol_data_hamiltonian = molecule.get_molecular_hamiltonian()
+        mol_fermion_matrix = get_sparse_operator(mol_data_hamiltonian)
+
+        eigvals = np.linalg.eigvals(mol_fermion_matrix.A)
+        mol_gs_energy = min(eigvals)
+
+        self.assertAlmostEqual(mol_gs_energy, fci_energy, delta=1e-13)
+
+        our_hamiltonian = ElectronicStructureHamiltonian(hpq=mol_data_hamiltonian.one_body_tensor,
+                                            hpqrs=2*mol_data_hamiltonian.two_body_tensor)
+
+        eigvals, _ = our_hamiltonian.get_eigenenergy()
+        our_gs_energy = min(eigvals) + mol_data_hamiltonian.constant
+        self.assertAlmostEqual(our_gs_energy, fci_energy, delta=1e-13)
+
+if __name__ == '__main__':
+    unittest.main(argv=['first-arg-is-ignored'], exit=False)
