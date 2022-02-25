@@ -1,0 +1,6 @@
+/build
+/myqlm_fermion.egg-info
+del_fermion.sh
+/.pytest_cache
+/tests/__pycache__
+/qat/__pycache__
