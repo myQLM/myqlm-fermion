@@ -4,11 +4,11 @@ import unittest
 
 from qat.lang.AQASM import QRoutine, RY, RX
 from qat.qpus import LinAlg
-from qat.dqs.fermionic_util import exact_eigen_energies
-from qat.dqs.transforms import transform_to_jw_basis
-from qat.dqs.hamiltonians import ElectronicStructureHamiltonian
-from qat.dqs.vqe import VQE
-from qat.dqs.optimization import Optimizer
+from qat.fermion.fermionic_util import exact_eigen_energies
+from qat.fermion.transforms import transform_to_jw_basis
+from qat.fermion.hamiltonians import ElectronicStructureHamiltonian
+from qat.fermion.vqe import VQE
+from qat.fermion.optimization import Optimizer
 from scipy.optimize import minimize
 from qat.vsolve.optimize.spsa_algorithm import spsa_minimize
 

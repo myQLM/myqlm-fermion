@@ -9,10 +9,10 @@ from openfermion.hamiltonians import MolecularData
 from openfermion.transforms import get_sparse_operator
 from openfermionpyscf import run_pyscf
 
-from qat.dqs.hamiltonians import ElectronicStructureHamiltonian
-from qat.dqs.qchem.ucc import compute_noons, build_molecular_description
-from qat.dqs.qchem.util import get_sparse_matrix
-from qat.dqs.qchem.tools import get_active_space_spin_hamiltonian
+from qat.fermion.hamiltonians import ElectronicStructureHamiltonian
+from qat.fermion.qchem.ucc import compute_noons, build_molecular_description
+from qat.fermion.qchem.util import get_sparse_matrix
+from qat.fermion.qchem.tools import get_active_space_spin_hamiltonian
 
 
 class BasicTestH2(unittest.TestCase):

@@ -2,7 +2,7 @@
 
 .. only:: header
 
-    NEASQC Project
+    MyQLM fermion Project
     ==============
 
 .. only:: html
@@ -10,10 +10,10 @@
     Welcome to the <PROJECT> documentation
     ======================================
 
-    .. image:: logo-neasqc.svg
+    .. image:: logo-myqlm-fermion.svg
         :scale: 50%
         :align: center
-        :alt: NEASQC Project
+        :alt: MyQLM fermion Project
 
 
 .. toctree-filt::

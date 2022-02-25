@@ -2,9 +2,9 @@ import numpy as np
 import unittest
 
 from qat.plugins import SeqOptim
-from qat.dqs.ansatz_circuits import make_shallow_circ
-from qat.dqs.hamiltonians import ElectronicStructureHamiltonian
-from qat.dqs.transforms import transform_to_jw_basis
+from qat.fermion.ansatz_circuits import make_shallow_circ
+from qat.fermion.hamiltonians import ElectronicStructureHamiltonian
+from qat.fermion.transforms import transform_to_jw_basis
 
 from qat.qpus import LinAlg
 

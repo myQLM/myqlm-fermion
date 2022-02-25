@@ -10,8 +10,8 @@ from bitstring import BitArray
 from anytree import Node
 import numpy as np
 from qat.core import Term
-from qat.dqs.util import tobin
-from qat.dqs.hamiltonians import SpinHamiltonian
+from qat.fermion.util import tobin
+from qat.fermion.hamiltonians import SpinHamiltonian
 
 
 def make_fenwick_tree(N):
@@ -95,12 +95,12 @@ def transform_to_jw_basis(fermion_hamiltonian):
     .. run-block:: python
 
         from qat.core import Term
-        from qat.dqs import FermionHamiltonian
+        from qat.fermion import FermionHamiltonian
 
         hamiltonian = FermionHamiltonian(2, [Term(0.3, "Cc", [0, 1]), Term(1.4, "CcCc", [0, 1, 1, 0])])
         print("H = ", hamiltonian)
 
-        from qat.dqs.transforms import transform_to_jw_basis
+        from qat.fermion.transforms import transform_to_jw_basis
         spin_hamiltonian = transform_to_jw_basis(hamiltonian)
         print("H(spin) = ", spin_hamiltonian)
         
@@ -144,12 +144,12 @@ def transform_to_parity_basis(fermion_hamiltonian):
     .. run-block:: python
 
         from qat.core import Term
-        from qat.dqs import FermionHamiltonian
+        from qat.fermion import FermionHamiltonian
 
         hamiltonian = FermionHamiltonian(2, [Term(0.3, "Cc", [0, 1]), Term(1.4, "CcCc", [0, 1, 1, 0])])
         print("H = ", hamiltonian)
 
-        from qat.dqs.transforms import transform_to_parity_basis
+        from qat.fermion.transforms import transform_to_parity_basis
         spin_hamiltonian = transform_to_parity_basis(hamiltonian)
         print("H(spin) = ", spin_hamiltonian)
     """
@@ -190,12 +190,12 @@ def transform_to_bk_basis(fermion_hamiltonian):
     .. run-block:: python
 
         from qat.core import Term
-        from qat.dqs import FermionHamiltonian
+        from qat.fermion import FermionHamiltonian
 
         hamiltonian = FermionHamiltonian(2, [Term(0.3, "Cc", [0, 1]), Term(1.4, "CcCc", [0, 1, 1, 0])])
         print("H = ", hamiltonian)
 
-        from qat.dqs.transforms import transform_to_bk_basis
+        from qat.fermion.transforms import transform_to_bk_basis
         spin_hamiltonian = transform_to_bk_basis(hamiltonian)
         print("H(spin) = ", spin_hamiltonian)
     """

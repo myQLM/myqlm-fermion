@@ -1,4 +1,3 @@
-
 if HAVE_TESTS
 all-local:
 	mkdir -p report

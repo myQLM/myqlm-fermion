@@ -3,13 +3,13 @@ import numpy as np
 import scipy as sp
 from qat.core import Observable, Term
 
-from qat.dqs.util import get_unitary_from_circuit
-from qat.dqs.trotterisation import _excitation_operator_jw, _coulomb_exchange_operator_jw
-from qat.dqs.trotterisation import _number_excitation_operator_jw, _double_excitation_operator_jw
-from qat.dqs.trotterisation import _number_operator_jw, make_trotter_slice_jw
-from qat.dqs.fermionic_util import fermionic_hamiltonian_exponential
-from qat.dqs.trotterisation import make_spin_hamiltonian_trotter_slice
-from qat.dqs.hamiltonians import SpinHamiltonian
+from qat.fermion.util import get_unitary_from_circuit
+from qat.fermion.trotterisation import _excitation_operator_jw, _coulomb_exchange_operator_jw
+from qat.fermion.trotterisation import _number_excitation_operator_jw, _double_excitation_operator_jw
+from qat.fermion.trotterisation import _number_operator_jw, make_trotter_slice_jw
+from qat.fermion.fermionic_util import fermionic_hamiltonian_exponential
+from qat.fermion.trotterisation import make_spin_hamiltonian_trotter_slice
+from qat.fermion.hamiltonians import SpinHamiltonian
 
 TOL1 = 1e-4
 TOL2 = 1e-10

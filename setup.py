@@ -64,7 +64,7 @@ setup(
         "Community": "https://myqlmworkspace.slack.com",
         "Source code": "https://github.com/myQLM/myqlm-fermion"
     },
-    packages=find_namespace_packages(include=["qat.*"]),
+    packages=find_namespace_packages(include=["qat.*", "qat.fermion.*"]),
     test_suite="tests",
     install_requires=["qat-core", "qat-lang"],
     tests_require=['pytest'],

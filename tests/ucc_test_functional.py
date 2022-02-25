@@ -3,15 +3,15 @@
 import unittest
 import scipy
 import numpy as np
-from qat.dqs.hamiltonians import ElectronicStructureHamiltonian
-from qat.dqs.qchem.pyscf_tools import perform_pyscf_computation
-from qat.dqs.qchem.ucc import get_cluster_ops_and_init_guess, get_active_space_hamiltonian
-from qat.dqs.qchem.ucc import convert_to_h_integrals
-from qat.dqs.transforms import recode_integer
-from qat.dqs.transforms import transform_to_parity_basis, get_parity_code
-from qat.dqs.transforms import transform_to_bk_basis, get_bk_code
-from qat.dqs.transforms import transform_to_jw_basis, get_jw_code
-from qat.dqs.qchem.ucc import build_ucc_ansatz
+from qat.fermion.hamiltonians import ElectronicStructureHamiltonian
+from qat.fermion.qchem.pyscf_tools import perform_pyscf_computation
+from qat.fermion.qchem.ucc import get_cluster_ops_and_init_guess, get_active_space_hamiltonian
+from qat.fermion.qchem.ucc import convert_to_h_integrals
+from qat.fermion.transforms import recode_integer
+from qat.fermion.transforms import transform_to_parity_basis, get_parity_code
+from qat.fermion.transforms import transform_to_bk_basis, get_bk_code
+from qat.fermion.transforms import transform_to_jw_basis, get_jw_code
+from qat.fermion.qchem.ucc import build_ucc_ansatz
 from qat.linalg import LinAlg
 from qat.lang.AQASM import Program
 

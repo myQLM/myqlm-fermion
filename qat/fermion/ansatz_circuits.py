@@ -5,9 +5,9 @@ This is a container for various ansatz circuits for variational preparation of f
 """
 from qat.lang.AQASM import Program, RY, CNOT, X
 
-from qat.dqs.matchgates_util import nb_params_LDCA, LDCA_routine
-from qat.dqs.fsim_util import make_fSim_fan_routine, make_sugisaki_routine
-from qat.dqs.util import tobin
+from qat.fermion.matchgates_util import nb_params_LDCA, LDCA_routine
+from qat.fermion.fsim_util import make_fSim_fan_routine, make_sugisaki_routine
+from qat.fermion.util import tobin
 
 from qat.pbo import GraphCircuit, VAR
 

@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
-from qat.dqs.util import get_unitary_from_circuit
-from qat.dqs.fermionic_util import fermionic_hamiltonian_exponential
+from qat.fermion.util import get_unitary_from_circuit
+from qat.fermion.fermionic_util import fermionic_hamiltonian_exponential
 from qat.lang.AQASM import QRoutine, X, Y, H, Z, CNOT
 
 

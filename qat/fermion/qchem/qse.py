@@ -73,7 +73,7 @@ def apply_quantum_subspace_expansion(hamiltonian,
 
         import numpy as np
         from qat.core import Term
-        from qat.dqs import SpinHamiltonian
+        from qat.fermion import SpinHamiltonian
         from qat.lang.AQASM import Program, RY, CNOT, RZ
         from qat.qpus import NoisyQProc
         from qat.plugins import SeqOptim
@@ -115,7 +115,7 @@ def apply_quantum_subspace_expansion(hamiltonian,
         expansion_operators = [SpinHamiltonian(2, [], 1.0),
                                SpinHamiltonian(2, [Term(1., "ZZ", [0, 1])])]
 
-        from qat.dqs.qchem.qse import apply_quantum_subspace_expansion
+        from qat.fermion.qchem.qse import apply_quantum_subspace_expansion
         e_qse = apply_quantum_subspace_expansion(hamiltonian, 
                                                  opt_circ,
                                                  expansion_operators, 

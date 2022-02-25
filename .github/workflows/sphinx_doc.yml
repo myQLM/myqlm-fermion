@@ -47,10 +47,10 @@ jobs:
           
       - name: Create local changes
         run: |
-          mkdir -p neasqc/test #Replace test with repo name
-          rm -rf neasqc/test/* #Replace test with repo name
-          cp -r doc/_build/* neasqc/test #Replace test with repo name
-          cd neasqc
+          mkdir -p myqlm/fermion #Replace test with repo name
+          rm -rf myqlm/fermion/* #Replace test with repo name
+          cp -r doc/_build/* myqlm/fermion #Replace test with repo name
+          cd myqlm
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add .

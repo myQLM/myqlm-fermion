@@ -34,7 +34,7 @@ class SpinHamiltonian(Observable):
         .. run-block:: python
 
             from qat.core import Term
-            from qat.dqs import SpinHamiltonian
+            from qat.fermion import SpinHamiltonian
 
             hamiltonian = SpinHamiltonian(2, [Term(0.3, "X", [0]), Term(-0.4, "ZY", [0, 1])])
             print(hamiltonian)
@@ -143,7 +143,7 @@ class FermionHamiltonian(Observable):
         .. run-block:: python
 
             from qat.core import Term
-            from qat.dqs import FermionHamiltonian
+            from qat.fermion import FermionHamiltonian
 
             hamiltonian = FermionHamiltonian(2, [Term(0.3, "Cc", [0, 1]), Term(1.4, "CcCc", [0, 1, 1, 0])])
             print("H = ", hamiltonian)
@@ -228,7 +228,7 @@ class ElectronicStructureHamiltonian(FermionHamiltonian):
         .. run-block:: python
 
             import numpy as np
-            from qat.dqs import ElectronicStructureHamiltonian
+            from qat.fermion import ElectronicStructureHamiltonian
 
             h_pq = 0.2 * np.array([[0, 1], [1, 0]])
             h_pqrs = np.zeros((2, 2, 2, 2))

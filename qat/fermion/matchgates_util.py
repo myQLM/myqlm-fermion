@@ -4,7 +4,7 @@ import scipy.optimize
 from qat.lang.AQASM import Program, QRoutine, CNOT, RY, RZ, X, AbstractGate
 from qat.core import default_gate_set
 
-from qat.dqs.util import tobin
+from qat.fermion.util import tobin
 
 """
 Define nearest-neighbour matchgates as custom gates

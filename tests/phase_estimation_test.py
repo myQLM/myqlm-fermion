@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@file qat/dqs/phase_estimation.py
+@file qat/fermion/phase_estimation.py
 @authors Thomas Ayral <thomas.ayral@atos.net>
          Grigori Matein <grigori.matein@atos.net>
 @internal
@@ -17,12 +17,12 @@ import numpy as np
 from itertools import product
 from qat.lang.AQASM import H, X, RX, RY, CNOT, QRoutine, Program
 from qat.lang.AQASM.gates import AbstractGate
-from qat.dqs.hamiltonians import ElectronicStructureHamiltonian, make_hubbard_model
-from qat.dqs.fermionic_util import exact_eigen_energies
-from qat.dqs.transforms import transform_to_jw_basis
-from qat.dqs.phase_estimation import perform_phase_estimation, apply_adiabatic_state_prep
-from qat.dqs.qchem.pyscf_tools import perform_pyscf_computation
-from qat.dqs.qchem.ucc import convert_to_h_integrals
+from qat.fermion.hamiltonians import ElectronicStructureHamiltonian, make_hubbard_model
+from qat.fermion.fermionic_util import exact_eigen_energies
+from qat.fermion.transforms import transform_to_jw_basis
+from qat.fermion.phase_estimation import perform_phase_estimation, apply_adiabatic_state_prep
+from qat.fermion.qchem.pyscf_tools import perform_pyscf_computation
+from qat.fermion.qchem.ucc import convert_to_h_integrals
 from qat.linalg import LinAlg
 
 

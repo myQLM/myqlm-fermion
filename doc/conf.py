@@ -53,7 +53,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'NEASQC documentation'
+project = 'MyQLM fermion documentation'
 copyright = 'Atos 2021-2022'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -130,7 +130,7 @@ html_theme = 'sphinx_rtd_theme'
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = "logo-neasqc.svg"
+html_logo = "logo-myqlm-fermion.svg"
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
@@ -184,7 +184,7 @@ html_show_sphinx = False
 # html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'neasqcdoc'
+htmlhelp_basename = 'myqlm-fermion-doc'
 
 
 # -- Options for LaTeX output -------------------------------------------------
@@ -357,13 +357,13 @@ latex_elements = {
 # (source start file, target name, title, author,
 # documentclass [howto/manual]).
 latex_documents = [
-    ('index', 'neasqc.tex', 'NEASQC Documentation',
-     'The NEASQC Project Team', 'manual'),
+    ('index', 'myqlm-fermion.tex', 'MyQLM fermion Documentation',
+     'Atos Quantum Lab', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.
-latex_logo = "logo-neasqc.svg"
+latex_logo = "logo-myqlm-fermion.svg"
 
 # For "manual" documents, if this is true, then toplevel headings are parts,
 # not chapters.
@@ -387,8 +387,8 @@ latex_logo = "logo-neasqc.svg"
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'neasqc', 'NEASQC Documentation',
-     ['The NEASQC Project Team'], 1)
+    ('index', 'myqlm-fermion', 'MyQLM fermion Documentation',
+     ['Atos Quantum Lab'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -401,8 +401,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    ('index', 'neasqc', 'NEASQC Documentation',
-     'NEASQC Project Team', 'NEASQC', 'One line description of project.',
+    ('index', 'myqlm-fermion', 'MyQLM fermion Documentation',
+     'Atos Quantum Lab', 'MyQLM fermion', 'One line description of project.',
      'Miscellaneous'),
 ]
 

@@ -8,9 +8,9 @@ from itertools import product
 import numpy as np
 
 from qat.core import Term
-from qat.dqs.transforms import transform_to_jw_basis, transform_to_parity_basis, transform_to_bk_basis
-from qat.dqs.transforms import get_jw_code, get_parity_code, get_bk_code, change_encoding
-from qat.dqs.hamiltonians import FermionHamiltonian
+from qat.fermion.transforms import transform_to_jw_basis, transform_to_parity_basis, transform_to_bk_basis
+from qat.fermion.transforms import get_jw_code, get_parity_code, get_bk_code, change_encoding
+from qat.fermion.hamiltonians import FermionHamiltonian
 
 
 class TestBasic(unittest.TestCase):

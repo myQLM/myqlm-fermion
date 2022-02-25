@@ -9,7 +9,7 @@ from itertools import product
 import numpy as np
 
 from qat.core import Observable, Term
-from qat.dqs import SpinHamiltonian
+from qat.fermion import SpinHamiltonian
 
 
 class TestSpinHamiltonian(unittest.TestCase):

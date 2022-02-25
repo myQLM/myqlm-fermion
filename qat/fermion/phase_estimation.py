@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-@file qat/dqs/phase_estimation.py
+@file qat/fermion/phase_estimation.py
 @authors Thomas Ayral <thomas.ayral@atos.net>
          Grigori Matein <grigori.matein@atos.net>
 @internal
@@ -15,8 +15,8 @@ import inspect
 import numpy as np
 from qat.core.variables import ArithExpression
 import qat.comm.exceptions.ttypes as exceptions_types
-from qat.dqs.hamiltonians import ElectronicStructureHamiltonian
-from qat.dqs.transforms import (
+from qat.fermion.hamiltonians import ElectronicStructureHamiltonian
+from qat.fermion.transforms import (
     transform_to_jw_basis,
     transform_to_bk_basis,
     transform_to_parity_basis,
@@ -40,7 +40,7 @@ def perform_phase_estimation(
     verbose=False,
 ):
     r"""
-    Perform quantum phase estimation (QPE) on an :class:`~qat.dqs.ElectronicStructureHamiltonian`. This Hamiltonian is transformed to the computational basis via a Jordan-Wigner transformation and approximated via first order trotterization. Other transformations like parity and Bravyi-Kitaev are also possible.
+    Perform quantum phase estimation (QPE) on an :class:`~qat.fermion.ElectronicStructureHamiltonian`. This Hamiltonian is transformed to the computational basis via a Jordan-Wigner transformation and approximated via first order trotterization. Other transformations like parity and Bravyi-Kitaev are also possible.
 
     When providing an initial state one can specify it either as a string composed of zeros and ones, or as a :class:`~qat.lang.AQASM.routines.QRoutine` which will produce it. The QPE is meant to start from an eigenstate of the Hamiltonian, however, knowing apriori even one eigenstate of the system may be challenging. Therefore, this function comes with adiabatic state preparation - an optional preliminary step to create an eigenstate of the Hamiltonian :math:`H`. This step consists in performing QPE :code:`n_adiab_steps` number of times, but not to read the phase bits (it is set to only one), but rather to collapse the system to an eigenstate (read from the data bits). The first of the series of QPE executions starts from the lowest energy eigenstate of the Hamiltonian composed of :math:`h_{pq}`. Then, :math:`h_{pq}` is linearly transformed to :math:`H` and at each new step we start from the eigenstate of the Hamiltonian of the previous step. This guarantees that when the main QPE routine starts, it will do so from an eigenstate of the full :math:`H`.
 
@@ -54,7 +54,7 @@ def perform_phase_estimation(
 
 
     Args:
-        H_el (:class:`~qat.dqs.ElectronicStructureHamiltonian`): an electronic-structure Hamiltonian
+        H_el (:class:`~qat.fermion.ElectronicStructureHamiltonian`): an electronic-structure Hamiltonian
         n_phase_bits (int): the number of qubits for the phase evaluation. The larger it is, the
             more accurate is the result.
         n_trotter_steps (int): number of first order trotterization steps. For good phase estimation it
@@ -70,8 +70,8 @@ def perform_phase_estimation(
             of the energy is in: :math:`E \in [E_\mathrm{target}-\Delta/2, E_\mathrm{target}+\Delta/2]`
             If no idea take :math:`\Delta =2 E_\mathrm{max}`, with :math:`E_\mathrm{max}` an upper
             bound of the energy.
-        basis_transform (string, optional): transformation to go from :class:`qat.dqs.ElectronicStructureHamiltonian`
-            into a :class:`qat.dqs.SpinHamiltonian`: one can use the "jordan-wigner" (default),
+        basis_transform (string, optional): transformation to go from :class:`qat.fermion.ElectronicStructureHamiltonian`
+            into a :class:`qat.fermion.SpinHamiltonian`: one can use the "jordan-wigner" (default),
             "bravyi-kitaev" or "parity" transformations.
         qpu (QPU, optional): a QPU to use for computation, default is :class:`~qat.linalg.LinAlg`.
 
@@ -100,7 +100,7 @@ def perform_phase_estimation(
         current_line_no = inspect.stack()[0][2]
         raise exceptions_types.QPUException(
             code=exceptions_types.ErrorType.INVALID_ARGS,
-            modulename="qat.dqs",
+            modulename="qat.fermion",
             message="Unrecognised transformation.",
             file=__file__,
             line=current_line_no,
@@ -160,7 +160,7 @@ def perform_phase_estimation(
             current_line_no = inspect.stack()[0][2]
             raise exceptions_types.QPUException(
                 code=exceptions_types.ErrorType.INVALID_ARGS,
-                modulename="qat.dqs",
+                modulename="qat.fermion",
                 message=error_message,
                 file=__file__,
                 line=current_line_no,
@@ -170,7 +170,7 @@ def perform_phase_estimation(
             current_line_no = inspect.stack()[0][2]
             raise exceptions_types.QPUException(
                 code=exceptions_types.ErrorType.INVALID_ARGS,
-                modulename="qat.dqs",
+                modulename="qat.fermion",
                 message=(
                     "The state preparation acts on %s qubits "
                     "but the Hamiltonian works with %s qubits."

@@ -5,8 +5,8 @@ Container for impurity Hamiltonians.
 
 import numpy as np
 
-from qat.dqs.hamiltonians import ElectronicStructureHamiltonian
-from qat.dqs.qchem.ucc import transform_integrals_to_new_basis
+from qat.fermion.hamiltonians import ElectronicStructureHamiltonian
+from qat.fermion.qchem.ucc import transform_integrals_to_new_basis
 
 from qat.lang.AQASM.math_util import reverse_int
 
@@ -31,7 +31,7 @@ def make_anderson_model(U, mu, V, epsilon):
         epsilon (vector of size the number of bath modes): bath modes energies 
 
     Returns:
-        :class:`~qat.dqs.hamiltonians.ElectronicStructureHamiltonian` object constructed from :math:`h_{pq}` (matrix of size :math:`(2n_b+2) \times (2n_b+2)`) and :math:`h_{pqrs}` (4D tensor with size :math:`2n_b+2` in each dimension)
+        :class:`~qat.fermion.hamiltonians.ElectronicStructureHamiltonian` object constructed from :math:`h_{pq}` (matrix of size :math:`(2n_b+2) \times (2n_b+2)`) and :math:`h_{pqrs}` (4D tensor with size :math:`2n_b+2` in each dimension)
 
     .. note::
         Convention:
@@ -109,7 +109,7 @@ def make_embedded_model(U, mu, D, lambda_c, t_loc=None, int_kernel=None, groupin
         grouping (str, optional): defines how spin-orbitals indices are ordered (see below), defaults to 'spins'. 
                        
     Returns:
-        :class:`~qat.dqs.hamiltonians.ElectronicStructureHamiltonian`
+        :class:`~qat.fermion.hamiltonians.ElectronicStructureHamiltonian`
         
     The two grouping strategies are the following:
     

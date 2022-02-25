@@ -8,8 +8,8 @@ from scipy.sparse.linalg import eigsh
 import itertools
 import scipy.sparse as sp
 
-from qat.dqs.util import init_creation_ops, dag
-from qat.dqs.impurity.hamiltonians import make_embedded_model, make_anderson_model
+from qat.fermion.util import init_creation_ops, dag
+from qat.fermion.impurity.hamiltonians import make_embedded_model, make_anderson_model
 
 
 class Test_embedding_hamiltonian(unittest.TestCase):
@@ -43,12 +43,12 @@ class Test_embedding_hamiltonian(unittest.TestCase):
             int_kernel += int_kernel_sym
 
             # cluster ordering:
-            int_kernel_dqs = 1.0*np.fromfunction(lambda i, j,k,l: (i==k)*(i%2==0)*(j==l)*(j==i+1)*1, (2*Nc, 2*Nc, 2*Nc, 2*Nc), dtype = float)
-            int_kernel_sym_dqs = 1.0*np.fromfunction(lambda i, j,k,l: (i==k)*(i%2==1)*(j==l)*(j==i-1)*1, (2*Nc, 2*Nc, 2*Nc, 2*Nc), dtype = float)
+            int_kernel_fermion = 1.0*np.fromfunction(lambda i, j,k,l: (i==k)*(i%2==0)*(j==l)*(j==i+1)*1, (2*Nc, 2*Nc, 2*Nc, 2*Nc), dtype = float)
+            int_kernel_sym_fermion = 1.0*np.fromfunction(lambda i, j,k,l: (i==k)*(i%2==1)*(j==l)*(j==i-1)*1, (2*Nc, 2*Nc, 2*Nc, 2*Nc), dtype = float)
 
-            int_kernel_dqs += int_kernel_sym_dqs
-            extended_int_kernel_dqs = np.zeros((2*M, 2*M, 2*M, 2*M))
-            extended_int_kernel_dqs[:(2*Nc), :(2*Nc), :(2*Nc), :(2*Nc)] = int_kernel_dqs
+            int_kernel_fermion += int_kernel_sym_fermion
+            extended_int_kernel_fermion = np.zeros((2*M, 2*M, 2*M, 2*M))
+            extended_int_kernel_fermion[:(2*Nc), :(2*Nc), :(2*Nc), :(2*Nc)] = int_kernel_fermion
 
             int_term = U/2*sum([int_kernel[i, j, k, l]*d_dag[i].dot(d[j]).dot(d_dag[k]).dot(d[l]) for i, j, k, l in itertools.product(range(M), repeat=4)])
 
@@ -59,8 +59,8 @@ class Test_embedding_hamiltonian(unittest.TestCase):
                                  +sum([t_pm[i, j] * dot(d_dag[i], d[j]) for i, j in itertools.product(range(M), repeat=2)])\
                                  - mu*sum([d_dag[i].dot(d[i]) for i in range(M)])
 
-            hamilt_emb_dqs = make_embedded_model(U, mu, D, lambda_c, t_loc=t_pm, int_kernel=extended_int_kernel_dqs, grouping='clusters')
-            h_emb_pm = hamilt_emb_dqs.get_matrix(sparse=True)
+            hamilt_emb_fermion = make_embedded_model(U, mu, D, lambda_c, t_loc=t_pm, int_kernel=extended_int_kernel_fermion, grouping='clusters')
+            h_emb_pm = hamilt_emb_fermion.get_matrix(sparse=True)
 
             H_emb = non_int_term + int_term
 
