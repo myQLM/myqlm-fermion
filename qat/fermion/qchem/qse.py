@@ -6,15 +6,18 @@ import numpy as np
 from scipy.linalg import eig
 
 from qat.core import Term
-from ..hamiltonians import SpinHamiltonian
+from ..hamiltonians import Hamiltonian
 
 
-def apply_quantum_subspace_expansion(hamiltonian,
-                                     state_prep_circ,
-                                     expansion_operators,
-                                     qpu, nbshots=0,
-                                     threshold=1e-15,
-                                     return_matrices=False):
+def apply_quantum_subspace_expansion(
+    hamiltonian,
+    state_prep_circ,
+    expansion_operators,
+    qpu,
+    nbshots=0,
+    threshold=1e-15,
+    return_matrices=False,
+):
     r"""Apply quantum subspace expansion (QSE) to the given Hamiltonian.
 
     QSE is a method that improves the quality of noisy results at
@@ -48,9 +51,9 @@ def apply_quantum_subspace_expansion(hamiltonian,
 
     Args:
 
-        hamiltonian (SpinHamiltonian): the Hamiltonian in its spin representation
+        hamiltonian (Hamiltonian): the Hamiltonian in its spin representation
         state_prep_circ (Circuit): the state prep circuit
-        expansion_operators (list<SpinHamiltonian>): The set of operators :math:`{O_i}_i`
+        expansion_operators (list<Hamiltonian>): The set of operators :math:`{O_i}_i`
             generating the subspace of interest.
         qpu (QPUHandler): the QPU.
         nbshots (int, optional): The number of shots. Defaults to 0:
@@ -73,13 +76,13 @@ def apply_quantum_subspace_expansion(hamiltonian,
 
         import numpy as np
         from qat.core import Term
-        from qat.fermion import SpinHamiltonian
+        from qat.fermion import Hamiltonian
         from qat.lang.AQASM import Program, RY, CNOT, RZ
         from qat.qpus import NoisyQProc
         from qat.plugins import SeqOptim
 
         # we instantiate the Hamiltonian we want to approximate the ground state energy of
-        hamiltonian = SpinHamiltonian(2, [Term(1, op, [0, 1]) for op in ["XX", "YY", "ZZ"]])
+        hamiltonian = Hamiltonian(2, [Term(1, op, [0, 1]) for op in ["XX", "YY", "ZZ"]])
 
 
         # we construct the variational circuit (ansatz)
@@ -112,23 +115,27 @@ def apply_quantum_subspace_expansion(hamiltonian,
         # we use the optimal parameters found by VQE
         opt_circ = circ.bind_variables(eval(result.meta_data["parameter_map"]))
 
-        expansion_operators = [SpinHamiltonian(2, [], 1.0),
-                               SpinHamiltonian(2, [Term(1., "ZZ", [0, 1])])]
+        expansion_operators = [Hamiltonian(2, [], 1.0),
+                               Hamiltonian(2, [Term(1., "ZZ", [0, 1])])]
 
         from qat.fermion.qchem.qse import apply_quantum_subspace_expansion
-        e_qse = apply_quantum_subspace_expansion(hamiltonian, 
+        e_qse = apply_quantum_subspace_expansion(hamiltonian,
                                                  opt_circ,
-                                                 expansion_operators, 
+                                                 expansion_operators,
                                                  qpu,
                                                  return_matrices=False)
         print("E(QSE) = %s (err = %s %%)"%(e_qse, 100*abs((e_qse-E_min)/E_min)))
 
-    
+
     """
-    matrix_h, matrix_s = _build_quantum_subspace_expansion(hamiltonian, state_prep_circ,
-                                                           expansion_operators, qpu,
-                                                           nbshots=nbshots,
-                                                           threshold=threshold)
+    matrix_h, matrix_s = _build_quantum_subspace_expansion(
+        hamiltonian,
+        state_prep_circ,
+        expansion_operators,
+        qpu,
+        nbshots=nbshots,
+        threshold=threshold,
+    )
     eig_vals = eig(matrix_h, matrix_s)
     e_qse = min([x.real for x in eig_vals[0]])
 
@@ -137,12 +144,9 @@ def apply_quantum_subspace_expansion(hamiltonian,
     return e_qse
 
 
-
-def _build_quantum_subspace_expansion(hamiltonian, 
-                                      state_prep_circ,
-                                      expansion_operators,
-                                      qpu, nbshots=0,
-                                      threshold=1e-15):
+def _build_quantum_subspace_expansion(
+    hamiltonian, state_prep_circ, expansion_operators, qpu, nbshots=0, threshold=1e-15
+):
     r"""Build the quantum subspace expansion (QSE) of the Hamiltonian as
     a matrix and the corresponding overlap matrix.
 
@@ -167,7 +171,7 @@ def _build_quantum_subspace_expansion(hamiltonian,
 
     Args:
 
-        hamiltonian (SpinHamiltonian): the Hamiltonian
+        hamiltonian (Hamiltonian): the Hamiltonian
         expansion_operators (list(Observable)): the list of operators
             generating the subspace of interest.
         qpu (QPUHandler): the qpu.
@@ -196,8 +200,12 @@ def _build_quantum_subspace_expansion(hamiltonian,
             overlap = op_l.dag() * op_r
 
             # Measurement of the expectation value:
-            scalar_h = qpu.submit(state_prep_circ.to_job(observable=h_expanded, nbshots=nbshots)).value
-            scalar_s = qpu.submit(state_prep_circ.to_job(observable=overlap, nbshots=nbshots)).value
+            scalar_h = qpu.submit(
+                state_prep_circ.to_job(observable=h_expanded, nbshots=nbshots)
+            ).value
+            scalar_s = qpu.submit(
+                state_prep_circ.to_job(observable=overlap, nbshots=nbshots)
+            ).value
 
             matrix_h[i, j] = scalar_h.real if abs(scalar_h) > threshold else 0
             matrix_s[i, j] = scalar_s.real if abs(scalar_s) > threshold else 0
@@ -223,6 +231,6 @@ def build_linear_pauli_expansion(pauli_gates, nb_qubits):
     """
     expansion_operators = []
     for (pauli, qbit) in it.product(pauli_gates, range(nb_qubits)):
-        op = SpinHamiltonian(nb_qubits, [Term(1., pauli, [qbit])])
+        op = Hamiltonian(nb_qubits, [Term(1.0, pauli, [qbit])])
         expansion_operators.append(op)
     return expansion_operators

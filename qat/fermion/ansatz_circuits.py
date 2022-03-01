@@ -11,6 +11,7 @@ from qat.fermion.util import tobin
 
 from qat.pbo import GraphCircuit, VAR
 
+
 def make_ldca_circ(nb_fermionic_modes, ncycles, eigstate_ind=0, slater=False):
     """
     Construct a LDCA circuit, applying ncycles layers of matchgates routines
@@ -33,14 +34,14 @@ def make_ldca_circ(nb_fermionic_modes, ncycles, eigstate_ind=0, slater=False):
 
     nstring = tobin(eigstate_ind, nqbits)
     if slater:
-        nonzerobits = [index for index in range(nqbits) if nstring[index]=='1']
+        nonzerobits = [index for index in range(nqbits) if nstring[index] == "1"]
     else:
         nonzerobits = list(range(nqbits))
     for b in nonzerobits:
         prog.apply(X, reg[b])
 
     nb_params = nb_params_LDCA(nqbits, ncycles, slater=slater)
-    theta = [prog.new_var(float, r"\theta_{%i}"%i) for i in range(nb_params)]
+    theta = [prog.new_var(float, r"\theta_{%i}" % i) for i in range(nb_params)]
     prog.apply(LDCA_routine(nqbits, ncycles, theta, None, slater=slater), reg)
 
     return prog.to_circ()
@@ -57,9 +58,9 @@ def make_MR_circ():
 
     prog = Program()
     reg = prog.qalloc(4)
-    theta = [prog.new_var(float, r"\theta_{%i}"%i) for i in range(1)]
+    theta = [prog.new_var(float, r"\theta_{%i}" % i) for i in range(1)]
     prog.apply(X, reg[2])
-    prog.apply(X,reg[3])
+    prog.apply(X, reg[3])
     prog.apply(RY(theta[0]), reg[0])
     prog.apply(CNOT, reg[0], reg[1])
     prog.apply(CNOT, reg[0], reg[2])
@@ -68,6 +69,7 @@ def make_MR_circ():
     circ = prog.to_circ()
 
     return circ
+
 
 def make_MREP_circ(n_fSim_cycles=4, set_phi_to_0=False):
     """
@@ -86,9 +88,11 @@ def make_MREP_circ(n_fSim_cycles=4, set_phi_to_0=False):
 
     prog = Program()
     reg = prog.qalloc(nbqbits)
-    theta = [prog.new_var(float, "\\theta_{%i}"%i) for i in range(2 + 14*n_fSim_cycles)]
+    theta = [
+        prog.new_var(float, "\\theta_{%i}" % i) for i in range(2 + 14 * n_fSim_cycles)
+    ]
 
-    for i in range(nbqbits//2, nbqbits):
+    for i in range(nbqbits // 2, nbqbits):
         prog.apply(X, reg[i])
 
     rout = make_sugisaki_routine(theta[0])
@@ -99,10 +103,10 @@ def make_MREP_circ(n_fSim_cycles=4, set_phi_to_0=False):
     ind = 2
 
     for _ in range(n_fSim_cycles):
-        fSim_angles = theta[ind:(ind + 14)]
+        fSim_angles = theta[ind : (ind + 14)]
         if set_phi_to_0:
-            for i in range(len(fSim_angles)//2):
-                fSim_angles[2*i+1]=0
+            for i in range(len(fSim_angles) // 2):
+                fSim_angles[2 * i + 1] = 0
         rout = make_fSim_fan_routine(nbqbits, fSim_angles)
         prog.apply(rout, reg)
         ind += 14
@@ -110,6 +114,7 @@ def make_MREP_circ(n_fSim_cycles=4, set_phi_to_0=False):
     circ = prog.to_circ()
 
     return circ
+
 
 def make_shallow_circ():
     """
@@ -122,7 +127,7 @@ def make_shallow_circ():
 
     prog = Program()
     reg = prog.qalloc(4)
-    theta = [prog.new_var(float, r"\theta_{%i}"%i) for i in range(8)]
+    theta = [prog.new_var(float, r"\theta_{%i}" % i) for i in range(8)]
 
     for i in range(4):
         prog.apply(RY(theta[i]), reg[i])
@@ -138,7 +143,9 @@ def make_shallow_circ():
     return prog.to_circ()
 
 
-def make_general_hwe_circ(nqbits, n_cycles=1, rotation_gates=[RY], entangling_gate=CNOT):
+def make_general_hwe_circ(
+    nqbits, n_cycles=1, rotation_gates=[RY], entangling_gate=CNOT
+):
 
     """
     Constructs an ansatz made of :math:`n_{\mathrm{cycles}}` layers of so-called thinly-dressed routines,
@@ -163,7 +170,10 @@ def make_general_hwe_circ(nqbits, n_cycles=1, rotation_gates=[RY], entangling_ga
 
     prog = Program()
     reg = prog.qalloc(nqbits)
-    theta = [prog.new_var(float, r"\theta_{%i}"%i) for i in range(n_rotations*(nqbits+2*(nqbits-1)*n_cycles))]
+    theta = [
+        prog.new_var(float, r"\theta_{%i}" % i)
+        for i in range(n_rotations * (nqbits + 2 * (nqbits - 1) * n_cycles))
+    ]
     ind_theta = 0
 
     for i in range(nqbits):
@@ -172,26 +182,28 @@ def make_general_hwe_circ(nqbits, n_cycles=1, rotation_gates=[RY], entangling_ga
             ind_theta += 1
 
     for _ in range(n_cycles):
-        for i in range(nqbits//2):
-            prog.apply(entangling_gate, reg[2*i], reg[2*i+1])
+        for i in range(nqbits // 2):
+            prog.apply(entangling_gate, reg[2 * i], reg[2 * i + 1])
             for R in rotation_gates:
-                prog.apply(R(theta[ind_theta]), reg[2*i])
+                prog.apply(R(theta[ind_theta]), reg[2 * i])
                 ind_theta += 1
-                prog.apply(R(theta[ind_theta]), reg[2*i+1])
+                prog.apply(R(theta[ind_theta]), reg[2 * i + 1])
                 ind_theta += 1
 
-        for i in range(nqbits//2-1):
-            prog.apply(entangling_gate, reg[2*i+1], reg[2*i+2])
+        for i in range(nqbits // 2 - 1):
+            prog.apply(entangling_gate, reg[2 * i + 1], reg[2 * i + 2])
             for R in rotation_gates:
-                prog.apply(R(theta[ind_theta]), reg[2*i+1])
+                prog.apply(R(theta[ind_theta]), reg[2 * i + 1])
                 ind_theta += 1
-                prog.apply(R(theta[ind_theta]), reg[2*i+2])
+                prog.apply(R(theta[ind_theta]), reg[2 * i + 2])
                 ind_theta += 1
 
     return prog.to_circ()
 
 
-def make_compressed_ldca_circ(nb_fermionic_modes, ncycles, eigstate_ind=0, slater=False):
+def make_compressed_ldca_circ(
+    nb_fermionic_modes, ncycles, eigstate_ind=0, slater=False
+):
     """
     Builds a compressed version of the LDCA ansatz circuit.
 
@@ -208,7 +220,9 @@ def make_compressed_ldca_circ(nb_fermionic_modes, ncycles, eigstate_ind=0, slate
        :class:`~qat.core.Circuit`
     """
 
-    circ = make_ldca_circ(nb_fermionic_modes, ncycles, eigstate_ind=eigstate_ind, slater=slater)
+    circ = make_ldca_circ(
+        nb_fermionic_modes, ncycles, eigstate_ind=eigstate_ind, slater=slater
+    )
 
     graph = GraphCircuit()
     graph.load_circuit(circ)
@@ -219,8 +233,26 @@ def make_compressed_ldca_circ(nb_fermionic_modes, ncycles, eigstate_ind=0, slate
     a4 = VAR()
     a5 = VAR()
 
-    old_pattern = [('RYY', [0, 1], a3), ('RXX', [0, 1], a2), ('RZZ', [0, 1], a1), ('RYX', [0, 1], a5), ('RXY', [0, 1], a4)]
-    new_pattern = [('CNOT', [1, 0]), ('RX', [1], a2), ('RY', [1], a4), ('H', [1]), ('CNOT', [0, 1]), ('PH', [1], -a3), ('PH', [0], a1), ('RY', [1], -a5), ('CNOT', [1, 0]), ('H', [1]), ('CNOT', [0, 1])]
+    old_pattern = [
+        ("RYY", [0, 1], a3),
+        ("RXX", [0, 1], a2),
+        ("RZZ", [0, 1], a1),
+        ("RYX", [0, 1], a5),
+        ("RXY", [0, 1], a4),
+    ]
+    new_pattern = [
+        ("CNOT", [1, 0]),
+        ("RX", [1], a2),
+        ("RY", [1], a4),
+        ("H", [1]),
+        ("CNOT", [0, 1]),
+        ("PH", [1], -a3),
+        ("PH", [0], a1),
+        ("RY", [1], -a5),
+        ("CNOT", [1, 0]),
+        ("H", [1]),
+        ("CNOT", [0, 1]),
+    ]
 
     # Replace pattern
     while graph.replace_pattern(old_pattern, new_pattern):

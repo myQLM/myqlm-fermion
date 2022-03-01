@@ -2,7 +2,7 @@
 from math import pi
 import numpy as np
 from qat.lang.AQASM import QRoutine, PH, CNOT, H, RX, RZ, CustomGate, Z
-from .hamiltonians import ElectronicStructureHamiltonian, SpinHamiltonian
+from .hamiltonians import ElectronicStructureHamiltonian, Hamiltonian
 
 
 def make_trotterisation_routine(hamiltonian, n_trotter_steps, final_time):
@@ -33,23 +33,33 @@ def make_trotterisation_routine(hamiltonian, n_trotter_steps, final_time):
         higher order approximations are possible.
 
     """
-    if isinstance(hamiltonian, SpinHamiltonian):
+    if isinstance(hamiltonian, Hamiltonian):
         Qrout = QRoutine()
         for _ in range(n_trotter_steps):
-            Qrout.apply(make_spin_hamiltonian_trotter_slice(hamiltonian, final_time / n_trotter_steps),
-                        list(range(hamiltonian.nbqbits)))
+            Qrout.apply(
+                make_spin_hamiltonian_trotter_slice(
+                    hamiltonian, final_time / n_trotter_steps
+                ),
+                list(range(hamiltonian.nbqbits)),
+            )
         return Qrout
 
     elif isinstance(hamiltonian, ElectronicStructureHamiltonian):
         Qrout = QRoutine()
         for _ in range(n_trotter_steps):
-            Qrout.apply(make_trotter_slice_jw(hamiltonian.hpq, hamiltonian.hpqrs, final_time / n_trotter_steps),
-                        list(range(len(hamiltonian.hpq))))
+            Qrout.apply(
+                make_trotter_slice_jw(
+                    hamiltonian.hpq, hamiltonian.hpqrs, final_time / n_trotter_steps
+                ),
+                list(range(len(hamiltonian.hpq))),
+            )
         return Qrout
 
     else:
-        raise Exception("Hamiltonian must be of type ElectronicStructureHamiltonian or "
-                        "SpinHamiltonian, got %s instead" % type(hamiltonian))
+        raise Exception(
+            "Hamiltonian must be of type ElectronicStructureHamiltonian or "
+            "Hamiltonian, got %s instead" % type(hamiltonian)
+        )
 
 
 def make_spin_hamiltonian_trotter_slice(hamiltonian, coeff=1.0):
@@ -63,12 +73,13 @@ def make_spin_hamiltonian_trotter_slice(hamiltonian, coeff=1.0):
     where :math:`H` is a spin Hamiltonian.
 
     Args:
-        hamiltonian (SpinHamiltonian): a spin Hamiltonian
+        hamiltonian (Hamiltonian): a spin Hamiltonian
 
     Returns:
         QRoutine: gates to apply to perform the time evolution
 
     """
+
     def _one_operator_circuit(op, qbits):
         r"""Construct cascade of CNOTs corresponds to Pauli string
 
@@ -83,14 +94,14 @@ def make_spin_hamiltonian_trotter_slice(hamiltonian, coeff=1.0):
         _qbits = range(nqbits)
         Qrout = QRoutine()
         for qb, pauli in zip(_qbits, op):
-            if pauli == 'X':
+            if pauli == "X":
                 Qrout.apply(H, qb)
-            if pauli == 'Y':
+            if pauli == "Y":
                 Qrout.apply(RX(np.pi / 2), qb)
 
         previous_qb = nqbits - 1
         for qb, pauli in zip(_qbits[::-1][1:], op[::-1][1:]):
-            if pauli != 'I':
+            if pauli != "I":
                 Qrout.apply(CNOT, previous_qb, qb)
                 previous_qb = qb
         return Qrout, qbits[previous_qb]
@@ -137,8 +148,10 @@ def make_trotter_slice_jw(hpq, hpqrs, delta_t):
     """
     Qrout = QRoutine()
     if len(hpq) != len(hpqrs):
-        return('Error hpq and hpqrs must have the same dimension')
-    hpqrs = hpqrs / 2  # In order to take in account the 1/2 coefficient in front of the sum
+        return "Error hpq and hpqrs must have the same dimension"
+    hpqrs = (
+        hpqrs / 2
+    )  # In order to take in account the 1/2 coefficient in front of the sum
 
     Qrout.apply(_number_operator_jw(hpq, delta_t), range(len(hpq)))
     Qrout.apply(_excitation_operator_jw(hpq, delta_t), range(len(hpq)))
@@ -196,7 +209,7 @@ def _excitation_operator_jw(hpq, t):
         # dimensionnal problem when building circuit
         Qrout.apply(PH(0), i)
         for j in range(i):
-            if (hpq[i][j].real != 0):
+            if hpq[i][j].real != 0:
                 Qrout.apply(H, j)
                 Qrout.apply(H, i)
                 for k in range(i - j):
@@ -241,11 +254,16 @@ def _coulomb_exchange_operator_jw(hpqrs, t):
         # dimensional problem when building circuit
         Qrout.apply(PH(0), p)
         for q in range(p):
-            hpqqp = hpqrs[p][q][q][p] - hpqrs[q][p][q][p] - \
-                hpqrs[p][q][p][q] + hpqrs[q][p][p][q]
-            if (hpqqp != 0):
-                U = np.array([[np.exp(-1j * t * hpqqp / 4), 0],
-                              [0, np.exp(-1j * t * hpqqp / 4)]])
+            hpqqp = (
+                hpqrs[p][q][q][p]
+                - hpqrs[q][p][q][p]
+                - hpqrs[p][q][p][q]
+                + hpqrs[q][p][p][q]
+            )
+            if hpqqp != 0:
+                U = np.array(
+                    [[np.exp(-1j * t * hpqqp / 4), 0], [0, np.exp(-1j * t * hpqqp / 4)]]
+                )
                 # G = CustomGate(U,"global_phase_%1.2f"%w)
                 G = CustomGate(U)  # , "global_phase")
                 Qrout.apply(G, q)
@@ -282,9 +300,13 @@ def _number_excitation_operator_jw(hpqrs, t):
             if p != q:
                 for r in range(p):
                     if r < q < p:
-                        hpqqr = hpqrs[p][q][q][r] - hpqrs[q][p][q][r] - \
-                            hpqrs[p][q][r][q] + hpqrs[q][p][r][q]
-                        if (hpqqr.real != 0):
+                        hpqqr = (
+                            hpqrs[p][q][q][r]
+                            - hpqrs[q][p][q][r]
+                            - hpqrs[p][q][r][q]
+                            + hpqrs[q][p][r][q]
+                        )
+                        if hpqqr.real != 0:
                             Qrout.apply(H, r)
                             Qrout.apply(H, p)
                             for k in range(p - q - 1):
@@ -336,10 +358,14 @@ def _number_excitation_operator_jw(hpqrs, t):
                             Qrout.apply(RX(-pi / 2).dag(), p)
 
                     if (q < r) or (q > p):
-                        hpqqr = hpqrs[p][q][q][r] - hpqrs[q][p][q][r] - \
-                            hpqrs[p][q][r][q] + hpqrs[q][p][r][q]
+                        hpqqr = (
+                            hpqrs[p][q][q][r]
+                            - hpqrs[q][p][q][r]
+                            - hpqrs[p][q][r][q]
+                            + hpqrs[q][p][r][q]
+                        )
 
-                        if (hpqqr.real != 0):
+                        if hpqqr.real != 0:
                             Qrout.apply(H, r)
                             Qrout.apply(H, p)
                             for k in range(p - r):
@@ -410,9 +436,12 @@ def _double_excitation_operator_jw(hpqrs, t):
             for r in range(q):
                 for s in range(r):
                     # Unexplain minus sign but it works so ...
-                    hpqrs_number = - \
-                        (hpqrs[p][q][r][s] - hpqrs[q][p][r][s] -
-                         hpqrs[p][q][s][r] + hpqrs[q][p][s][r])
+                    hpqrs_number = -(
+                        hpqrs[p][q][r][s]
+                        - hpqrs[q][p][r][s]
+                        - hpqrs[p][q][s][r]
+                        + hpqrs[q][p][s][r]
+                    )
                     if hpqrs_number.real != 0:
                         for k in range(p - q - 2):
                             Qrout.apply(CNOT, [p - k - 1, p - k - 2])

@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 
 r"""
@@ -15,6 +14,7 @@ r"""
 
 # Try to find other packages in other folders (with separate build directory)
 from pkgutil import extend_path
+
 __path__ = extend_path(__path__, __name__)
 
 from .ucc import transform_integrals_to_new_basis

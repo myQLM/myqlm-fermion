@@ -1,4 +1,3 @@
-
 # -*- coding: utf-8 -*-
 
 r"""
@@ -15,6 +14,10 @@ r"""
 
 # Try to find other packages in other folders (with separate build directory)
 from pkgutil import extend_path
+
 __path__ = extend_path(__path__, __name__)
 
-from .hamiltonians import SpinHamiltonian, FermionHamiltonian, ElectronicStructureHamiltonian
+from .hamiltonians import (
+    Hamiltonian,
+    ElectronicStructureHamiltonian,
+)

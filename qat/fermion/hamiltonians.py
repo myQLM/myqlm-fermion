@@ -7,19 +7,50 @@ from qat.core import Observable, Term
 
 from .util import init_creation_ops, dag
 
-PAULI_MATS = {"X": [[0, 1], [1, 0]],
-              "I": [[1, 0], [0, 1]],
-              "Y": [[0, -1j], [1j, 0]],
-              "Z": [[1, 0], [0, -1]]}
+PAULI_MATS = {
+    "X": [[0, 1], [1, 0]],
+    "I": [[1, 0], [0, 1]],
+    "Y": [[0, -1j], [1j, 0]],
+    "Z": [[1, 0], [0, -1]],
+}
+
+""" Module with containers for common Hamiltonians """
+from itertools import product
+import scipy.sparse as sp
+import numpy as np
+
+from enum import Enum
+
+from qat.core import Observable, Term
+
+from .util import init_creation_ops, dag
+
+PAULI_MATS = {
+    "X": [[0, 1], [1, 0]],
+    "I": [[1, 0], [0, 1]],
+    "Y": [[0, -1j], [1j, 0]],
+    "Z": [[1, 0], [0, -1]],
+}
 
 
-class SpinHamiltonian(Observable):
+class ObservableType(Enum):
     """
-    Implementation of a generic spin hamiltonian.
+    Define the different types of Hamiltonian
+    """
+
+    UNDEFINED = 0
+    SPIN = 1
+    FERMION = 2
+    BOSONIC = 3
+
+
+class Hamiltonian(Observable):
+    """
+    Implementation of a generic hamiltonian.
 
     Args:
         nqbits (int): the total number of qubits
-        pauli_terms (list<Term>): the list of terms
+        terms (list<Term>): the list of terms
         constant_coeff (float): constant term
 
     Attributes:
@@ -31,32 +62,108 @@ class SpinHamiltonian(Observable):
 
     Example:
 
+        One can use spin operators :
         .. run-block:: python
 
             from qat.core import Term
-            from qat.fermion import SpinHamiltonian
+            from qat.fermion import Hamiltonian
 
-            hamiltonian = SpinHamiltonian(2, [Term(0.3, "X", [0]), Term(-0.4, "ZY", [0, 1])])
+            hamiltonian = Hamiltonian(2, [Term(0.3, "X", [0]), Term(-0.4, "ZY", [0, 1])])
             print(hamiltonian)
 
             # let us print the corresponding matrix representation:
             print("H matrix:", hamiltonian.get_matrix())
-    """
-    def __init__(self, nqbits, pauli_terms,
-                 constant_coeff=0.0, do_clean_up=True):
 
+        Or fermionic operators :
+        .. run-block:: python
+
+            from qat.core import Term
+            from qat.fermion import Hamiltonian
+
+            hamiltonian = Hamiltonian(2, [Term(0.3, "Cc", [0, 1]), Term(1.4, "CcCc", [0, 1, 1, 0])])
+            print("H = ", hamiltonian)
+
+            # let us print the corresponding matrix representation:
+            print("H matrix:", hamiltonian.get_matrix())
+    """
+
+    def __init__(self, nqbits, terms, constant_coeff=0.0, do_clean_up=True):
+
+        self.type = ObservableType.UNDEFINED
         self.matrix = None
         self.do_clean_up = do_clean_up
 
-        super(SpinHamiltonian, self).__init__(nqbits,
-                                              pauli_terms=pauli_terms,
-                                              constant_coeff=constant_coeff,
-                                              do_clean_up=do_clean_up)
+        super().__init__(
+            nqbits,
+            pauli_terms=terms,
+            constant_coeff=constant_coeff,
+            do_clean_up=do_clean_up,
+        )
 
     def __add__(self, other):
-        res = super(SpinHamiltonian, self).__add__(other)
-        return SpinHamiltonian(res.nbqbits, res.terms, res.constant_coeff,
-                               do_clean_up=self.do_clean_up)
+        res = super().__add__(other)
+        return Hamiltonian(
+            res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up
+        )
+
+    def __radd__(self, other):
+        res = super().__radd__(other)
+        return Hamiltonian(
+            res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up
+        )
+
+    def __iadd__(self, other):
+        res = super().__iadd__(other)
+        return Hamiltonian(
+            res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up
+        )
+
+    def __sub__(self, other):
+        res = super().__sub__(other)
+        return Hamiltonian(
+            res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up
+        )
+
+    def __neg__(self, other):
+        res = super().__neg__(other)
+        return Hamiltonian(
+            res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up
+        )
+
+    def __mul__(self, other):
+        res = super().__mul__(other)
+        return Hamiltonian(
+            res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up
+        )
+
+    def __rmul__(self, other):
+        res = super().__rmul__(other)
+        return Hamiltonian(
+            res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up
+        )
+
+    def __truediv__(self, other):
+        res = super().__truediv__(other)
+        return Hamiltonian(
+            res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up
+        )
+
+    def __itruediv__(self, other):
+        res = super().__itruediv__(other)
+        return Hamiltonian(
+            res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up
+        )
+
+    @property
+    def htype(self):
+        return self._check_hamiltonian_type()
+
+    def dag(self):
+        return Hamiltonian(
+            self.nbqbits,
+            [Term(np.conj(term.coeff), term.op, term.qbits) for term in self.terms],
+            np.conj(self.constant_coeff),
+        )
 
     def get_matrix(self, sparse=False):
         r"""
@@ -69,6 +176,14 @@ class SpinHamiltonian(Observable):
         Returns:
             numpy.ndarray or sp.bsr.bsr_matrix: The matrix of the Hamiltonian.
         """
+
+        if self.htype is ObservableType.SPIN:
+            return self._get_spin_op_matrix(sparse)
+
+        elif self.htype is ObservableType.FERMION:
+            return self._get_fermion_op_matrix(sparse)
+
+    def _get_spin_op_matrix(self, sparse):
         def _make_spin_op(op, qb, nqbits, sparse):
             """
             Args:
@@ -78,12 +193,22 @@ class SpinHamiltonian(Observable):
             m_type = sp.csr_matrix if sparse else np.array
             kron_op = sp.kron if sparse else np.kron
             if qb == 0:
-                return kron_op(m_type(PAULI_MATS[op]), id_type(2**(nqbits - 1), dtype=np.complex_))
+                return kron_op(
+                    m_type(PAULI_MATS[op]),
+                    id_type(2 ** (nqbits - 1), dtype="complex"),
+                )
             if qb == nqbits - 1:
-                return kron_op(id_type(2**(nqbits - 1), dtype=np.complex_), m_type(PAULI_MATS[op]))
-            return kron_op(id_type(2**qb, dtype=np.complex_),
-                           kron_op(m_type(PAULI_MATS[op]),
-                                   id_type(2**(nqbits - qb - 1), dtype=np.complex_)))
+                return kron_op(
+                    id_type(2 ** (nqbits - 1), dtype="complex"),
+                    m_type(PAULI_MATS[op]),
+                )
+            return kron_op(
+                id_type(2**qb, dtype="complex"),
+                kron_op(
+                    m_type(PAULI_MATS[op]),
+                    id_type(2 ** (nqbits - qb - 1), dtype="complex"),
+                ),
+            )
 
         if self.matrix is not None and sp.issparse(self.matrix) == sparse:
             return self.matrix
@@ -98,14 +223,16 @@ class SpinHamiltonian(Observable):
                 if (op, qb) not in op_list.keys():
                     if op != "I":
                         try:
-                            op_list[(op, qb)] = _make_spin_op(op, qb, self.nbqbits, sparse)
+                            op_list[(op, qb)] = _make_spin_op(
+                                op, qb, self.nbqbits, sparse
+                            )
                         except:
                             print(op, qb, self.nbqbits)
                             raise
 
         final_matrix = 0
         for term in self.terms:
-            matrix = id_type(2**self.nbqbits, dtype=np.complex_)
+            matrix = id_type(2**self.nbqbits, dtype="complex")
             for op, qb in zip(term.op, term.qbits):
                 if op != "I":
                     matrix = matrix.dot(op_list[(op, qb)])
@@ -114,88 +241,19 @@ class SpinHamiltonian(Observable):
         self.matrix = final_matrix
         return final_matrix
 
-    def dag(self):
-        return SpinHamiltonian(self.nbqbits,
-                               [Term(np.conj(term.coeff), term.op, term.qbits) for term in self.terms],
-                               np.conj(self.constant_coeff))
+    def _get_fermion_op_matrix(self, sparse=False):
 
-
-class FermionHamiltonian(Observable):
-    r"""
-    Implementation of a generic fermionic hamiltonian (with arbitrary combinations
-    of fermionic creation and annihilation operators).
-
-    Args:
-        nqbits (int): the total number of qubits
-        terms (list<Term>): the list of terms (where "C" denotes a creation
-            operator :math:`c^\dagger` and "c" an annihilation operator :math:`c`)
-        constant_coeff (float): constant term
-
-    Attributes:
-        nbqbits (int): the total number of qubits
-        terms (list<Term>): the list of terms
-        constant_coeff (float): constant term
-        matrix (np.array): the corresponding matrix (None by default,
-            can be set by calling get_matrix method)
-
-    Example:
-
-        .. run-block:: python
-
-            from qat.core import Term
-            from qat.fermion import FermionHamiltonian
-
-            hamiltonian = FermionHamiltonian(2, [Term(0.3, "Cc", [0, 1]), Term(1.4, "CcCc", [0, 1, 1, 0])])
-            print("H = ", hamiltonian)
-
-            # let us print the corresponding matrix representation:
-            print("H matrix:", hamiltonian.get_matrix())
-
-
-    Warning:
-        The corresponding operator is not necessarily Hermitian.
-    """
-    def __init__(self, nqbits, terms,
-                 constant_coeff=0.0,
-                 do_clean_up=True):
-
-        self.matrix = None
-        self.do_clean_up = do_clean_up
-
-        super(FermionHamiltonian, self).__init__(nqbits,
-                                                 pauli_terms=terms,
-                                                 constant_coeff=constant_coeff,
-                                                 do_clean_up=do_clean_up)
-
-    def __add__(self, other):
-        res = super(FermionHamiltonian, self).__add__(other)
-        return FermionHamiltonian(res.nbqbits, res.terms, res.constant_coeff,
-                                  do_clean_up=self.do_clean_up)
-
-    def get_matrix(self, sparse=False):
-        r"""
-        This function returns matrix corresponding to :math:`H` in the computational basis
-
-        Args:
-            sparse (bool, optional): whether to return in sparse
-                representation. Defaults to False.
-
-        Returns:
-            numpy.ndarray or sp.csr.csr_matrix: The matrix of the Hamiltonian.
-        """
         if self.matrix is not None and sp.issparse(self.matrix) == sparse:
             return self.matrix
         ops = {}
         ops["C"] = init_creation_ops(self.nbqbits, sparse=sparse)
         ops["c"] = {ind: dag(c_dag) for ind, c_dag in ops["C"].items()}
 
-        # m_type = sp.csr_matrix if sparse else np.array
-        # kron_op = sp.kron if sparse else np.kron
         id_type = sp.identity if sparse else np.identity
 
         final_matrix = 0
         for term in self.terms:
-            matrix = id_type(2**self.nbqbits, dtype=np.complex_)
+            matrix = id_type(2**self.nbqbits, dtype="complex")
             for op, qb in zip(term.op, term.qbits):
                 matrix = matrix.dot(ops[op][qb])
             final_matrix += term.coeff * matrix
@@ -203,8 +261,36 @@ class FermionHamiltonian(Observable):
         self.matrix = final_matrix
         return final_matrix
 
+    def _check_hamiltonian_type(self):
 
-class ElectronicStructureHamiltonian(FermionHamiltonian):
+        condition_1, condition_2 = (None,) * 2
+
+        for term in self.terms:
+            for operator in term.op:
+                condition_1 = (
+                    ObservableType.SPIN
+                    if operator in PAULI_MATS.keys()
+                    else condition_1
+                )
+                condition_2 = (
+                    ObservableType.FERMION if operator in {"C", "c"} else condition_2
+                )
+
+        if all((condition_1, condition_2)) is None:
+            return ObservableType.UNDEFINED
+
+        if isinstance(condition_1, ObservableType) and isinstance(
+            condition_2, ObservableType
+        ):
+            raise NotImplementedError(
+                "Hamiltonian with mixed spin-fermion operators are not implemented."
+            )
+
+        else:
+            return condition_1 or condition_2
+
+
+class ElectronicStructureHamiltonian(Hamiltonian):
     r"""
     A container for the electronic-structure Hamiltonian, defined as
 
@@ -240,6 +326,7 @@ class ElectronicStructureHamiltonian(FermionHamiltonian):
             eigvals = np.linalg.eigvalsh(hamiltonian.get_matrix())
             print("eigenvalues =", eigvals)
     """
+
     def __init__(self, hpq, hpqrs=None, constant_coeff=0.0, do_clean_up=True):
         if hpqrs is None:
             hpqrs = np.zeros((hpq.shape[0], hpq.shape[0], hpq.shape[0], hpq.shape[0]))
@@ -251,22 +338,25 @@ class ElectronicStructureHamiltonian(FermionHamiltonian):
         for i, j in product(range(hpq.shape[0]), range(hpq.shape[1])):
             if abs(hpq[i, j]) > TOL:
                 terms.append(Term(hpq[i, j], "Cc", [i, j]))
-            
-        for i, j, k, l in product(range(hpqrs.shape[0]), range(hpqrs.shape[1]),
-                                  range(hpqrs.shape[2]), range(hpqrs.shape[3])):
+
+        for i, j, k, l in product(
+            range(hpqrs.shape[0]),
+            range(hpqrs.shape[1]),
+            range(hpqrs.shape[2]),
+            range(hpqrs.shape[3]),
+        ):
             if abs(hpqrs[i, j, k, l]) > TOL:
                 terms.append(Term(0.5 * hpqrs[i, j, k, l], "CCcc", [i, j, k, l]))
 
-        super(ElectronicStructureHamiltonian, self).__init__(hpq.shape[0],
-                                                             terms,
-                                                             constant_coeff,
-                                                             do_clean_up=do_clean_up)
+        super().__init__(hpq.shape[0], terms, constant_coeff, do_clean_up=do_clean_up)
 
     def __add__(self, other):
-        return ElectronicStructureHamiltonian(self.hpq + other.hpq,
-                                              self.hpqrs + other.hpqrs,
-                                              self.constant_coeff + other.constant_coeff,
-                                              do_clean_up=self.do_clean_up)
+        return ElectronicStructureHamiltonian(
+            self.hpq + other.hpq,
+            self.hpqrs + other.hpqrs,
+            self.constant_coeff + other.constant_coeff,
+            do_clean_up=self.do_clean_up,
+        )
 
 
 def make_hubbard_model(t_mat, U, mu):

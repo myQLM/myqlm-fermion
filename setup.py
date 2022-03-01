@@ -34,6 +34,7 @@ class PyTest(TestCommand):
 
     def run_tests(self):
         import pytest
+
         errno = pytest.main([".", "-v"])
         sys.exit(errno)
 
@@ -56,17 +57,17 @@ setup(
     license="Atos myQLM EULA",
     description="myQLM-fermion package",
     long_description=get_description(),
-    long_description_content_type='text/markdown',
+    long_description_content_type="text/markdown",
     url="https://atos.net/en/lp/myqlm",
     project_urls={
         "Documentation": "https://myqlm.github.io",
         "Bug Tracker": "https://github.com/myQLM/myqlm-issues/issues",
         "Community": "https://myqlmworkspace.slack.com",
-        "Source code": "https://github.com/myQLM/myqlm-fermion"
+        "Source code": "https://github.com/myQLM/myqlm-fermion",
     },
     packages=find_namespace_packages(include=["qat.*", "qat.fermion.*"]),
     test_suite="tests",
     install_requires=["qat-core", "qat-lang"],
-    tests_require=['pytest'],
-    cmdclass={'test': PyTest},
+    tests_require=["pytest"],
+    cmdclass={"test": PyTest},
 )

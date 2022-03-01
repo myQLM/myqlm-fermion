@@ -53,7 +53,7 @@ def inv_fractional_binary(binary_list):
         inv_fractionnal_binary([1,0, 1])=0.625,
         inv_fractionnal_binary([0, 1, 1, 0, 1, 1, 0, 0, 1, 1])=0.4248046875
     """
-    return sum([binary_list[i] / 2**(i + 1) for i in range(len(binary_list))])
+    return sum([binary_list[i] / 2 ** (i + 1) for i in range(len(binary_list))])
 
 
 def fractional_binary(number, precision):
@@ -96,30 +96,30 @@ def give_coordinate_list(list1, list2):
 
 
 def bitget(n, pos):
-    return ((n & (1 << pos)) != 0)
+    return (n & (1 << pos)) != 0
 
 
 def tobin(n, size):
-    '''returns binary representation of n with size size
+    """returns binary representation of n with size size
 
     Example
     --------
     tobin(3,4) = '0011'
-    '''
+    """
     nbin = "{0:b}".format(n)
     l = len(nbin)
     for _ in range(size - l):
-        nbin = '0' + nbin
+        nbin = "0" + nbin
     return nbin
 
 
 def count_bits(n, cutoff, size):
-    '''takes an integer n and returns the sum of its first 'cutoff' bits
+    """takes an integer n and returns the sum of its first 'cutoff' bits
 
     Example:
         if binary representation is '001110' (size=6 bits),
         if cutoff==3: -> 0+0+1 = 1
-    '''
+    """
     nbin = tobin(n, size)
     rg = range(0, min(cutoff, size))
     s = sum([int(nbin[k]) for k in rg])
@@ -153,20 +153,26 @@ def init_creation_ops(Norb, sparse=False, verbose=False):
         for j in range(2**Norb):  # for each state j
             if verbose:
                 print("  applied to ", tobin(j, Norb))
-            if(bitget(j, Norb - 1 - i) == 0):  # if pos i in state j is empty
+            if bitget(j, Norb - 1 - i) == 0:  # if pos i in state j is empty
                 sign = 1 if count_bits(j, i, Norb) % 2 == 0 else -1
-                row_ind.append(j + 2**(Norb - i - 1))
+                row_ind.append(j + 2 ** (Norb - i - 1))
                 col_ind.append(j)
                 data.append(sign)
             if verbose:
-                print(". . . . . . . . ok : nb bits:" +
-                      str(count_bits(j, i, Norb)) + "----->" + str(sign))
+                print(
+                    ". . . . . . . . ok : nb bits:"
+                    + str(count_bits(j, i, Norb))
+                    + "----->"
+                    + str(sign)
+                )
 
             else:
                 if verbose:
                     print(". . . . . . . . ko")
 
-        c_dagger_dict[i] = sp.coo_matrix((data, (row_ind, col_ind)), shape=(2**Norb, 2**Norb))
+        c_dagger_dict[i] = sp.coo_matrix(
+            (data, (row_ind, col_ind)), shape=(2**Norb, 2**Norb)
+        )
         if not sparse:
             c_dagger_dict[i] = c_dagger_dict[i].A
     return c_dagger_dict
@@ -187,18 +193,19 @@ def get_unitary_from_circuit(Qrout, number_qubits):
     Returns:
         numpy.ndarray: matrix of the circuit
     """
-    unitary_matrix = [0] * 2**(number_qubits)
-    for i in list(product('IX', repeat=number_qubits)):
+    unitary_matrix = [0] * 2 ** (number_qubits)
+    for i in list(product("IX", repeat=number_qubits)):
         p = Program()
         reg = p.qalloc(number_qubits)
         numero_colonne = 0
         for j in range(len(i)):
-            if i[j] == 'X':
-                numero_colonne += 2**(len(i) - j - 1)
+            if i[j] == "X":
+                numero_colonne += 2 ** (len(i) - j - 1)
                 p.apply(X, reg[j])
-        p.apply(Qrout, reg[:Qrout.arity])
+        p.apply(Qrout, reg[: Qrout.arity])
         circuit = p.to_circ()
         # pylint: disable=E1101
         unitary_matrix[numero_colonne] = list(
-            wavefunction(circuit, qat.linalg.LinAlg()))
+            wavefunction(circuit, qat.linalg.LinAlg())
+        )
     return np.transpose(unitary_matrix)

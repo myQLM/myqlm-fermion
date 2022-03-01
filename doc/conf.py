@@ -17,44 +17,52 @@ from sphinx.ext.autodoc import between
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.autodoc', 'sphinx.ext.doctest', 'nbsphinx',
-              'sphinx.ext.mathjax', 'sphinx.ext.napoleon', 'sphinxcontrib.bibtex',
-              'sphinxcontrib.programoutput', 'sphinxcontrib.contentui']
+extensions = [
+    "sphinx.ext.autodoc",
+    "sphinx.ext.doctest",
+    "nbsphinx",
+    "sphinx.ext.mathjax",
+    "sphinx.ext.napoleon",
+    "sphinxcontrib.bibtex",
+    "sphinxcontrib.programoutput",
+    "sphinxcontrib.contentui",
+]
 autodoc_mock_imports = ["cirq"]
 
 napoleon_google_docstring = True
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 nbsphinx_allow_errors = True
-#sys.path.append(os.path.abspath('./sphinx_helpers/'))
+# sys.path.append(os.path.abspath('./sphinx_helpers/'))
 
 bibtex_bibfiles = ["./biblio.bib", "./biblio_sp.bib"]
 
 # Subscript to add the toctree helpers in the path and use them
 
+
 def setup(app):
-    app.add_config_value('toc_filter_exclude', [], 'html')
-    app.connect('autodoc-process-docstring',
-                between('^.*SIGNATURE.*$', exclude=True))
-    app.add_css_file('css/custom.css')
+    app.add_config_value("toc_filter_exclude", [], "html")
+    app.connect("autodoc-process-docstring", between("^.*SIGNATURE.*$", exclude=True))
+    app.add_css_file("css/custom.css")
     # app.add_js_file('js/custom.js')
 
     return app
 
+
 # The suffix of source filenames.
-source_suffix = '.rst'
+source_suffix = ".rst"
 
 # The encoding of source files.
 # source_encoding = 'utf-8-sig'
 
 # The master toctree document.
-master_doc = 'index'
+master_doc = "index"
 
 # General information about the project.
-project = 'MyQLM fermion documentation'
-copyright = 'Atos 2021-2022'
+project = "MyQLM fermion documentation"
+copyright = "Atos 2021-2022"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -76,12 +84,11 @@ version = "0.0.1"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ['_build', '**.ipynb_checkpoints', 'misc',
-                    "sphinx_helpers"]
+exclude_patterns = ["_build", "**.ipynb_checkpoints", "misc", "sphinx_helpers"]
 toc_filter_exclude = list()
 
-print('Excluding in toctree', toc_filter_exclude)
-print('Straight up excluding', exclude_patterns)
+print("Excluding in toctree", toc_filter_exclude)
+print("Straight up excluding", exclude_patterns)
 # exclude_patterns = ['_build', '**.ipynb_checkpoints', 'misc', "notebooks"]
 
 # The reST default role (used for this markup: `text`) to use for all
@@ -100,7 +107,7 @@ print('Straight up excluding', exclude_patterns)
 # show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = "sphinx"
 
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
@@ -111,7 +118,7 @@ pygments_style = 'sphinx'
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 # html_theme = 'default'
-html_theme = 'sphinx_rtd_theme'
+html_theme = "sphinx_rtd_theme"
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -140,7 +147,7 @@ html_favicon = "favicon.ico"
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ["_static"]
 
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
@@ -184,29 +191,27 @@ html_show_sphinx = False
 # html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'myqlm-fermion-doc'
+htmlhelp_basename = "myqlm-fermion-doc"
 
 
 # -- Options for LaTeX output -------------------------------------------------
 
-latex_engine = 'pdflatex'
+latex_engine = "pdflatex"
 latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
     #
-    'papersize': 'a4paper',
+    "papersize": "a4paper",
     # Sonny, Lenny, Glenn, Conny, Rejne, Bjarne and Bjornstrup
     # 'fncychap': '\\usepackage[Lenny]{fncychap}',
-    'fncychap': '\\usepackage{fncychap}',
-    'fontpkg': '\\usepackage{amsmath,amsfonts,amssymb,amsthm}',
-
-    'figure_align': 'htbp',
+    "fncychap": "\\usepackage{fncychap}",
+    "fontpkg": "\\usepackage{amsmath,amsfonts,amssymb,amsthm}",
+    "figure_align": "htbp",
     # The font size ('10pt', '11pt' or '12pt').
     #
-    'pointsize': '10pt',
-
+    "pointsize": "10pt",
     # Additional stuff for the LaTeX preamble.
     #
-    'preamble': r'''
+    "preamble": r"""
         %%%%%%%%%%%%%%%%%%%% Meher %%%%%%%%%%%%%%%%%%
         %%%add number to subsubsection 2=subsection, 3=subsubsection
         %%% below subsubsection is not good idea.
@@ -295,10 +300,8 @@ latex_elements = {
   \renewcommand{\headrulewidth}{0pt}% Line at the header invisible
   \renewcommand{\footrulewidth}{0.4pt}% Line at the footer visible
   }
-    ''',
-
-
-    'maketitle': r'''
+    """,
+    "maketitle": r"""
         \pagenumbering{Roman} %%% to avoid page 1 conflict with actual page 1
 
         \begin{titlepage}
@@ -338,27 +341,30 @@ latex_elements = {
         \clearpage
         \pagenumbering{arabic}
 
-        ''',
+        """,
     # Latex figure (float) alignment
     #
     # 'figure_align': 'htbp',
-    'sphinxsetup': \
-        'hmargin={0.7in,0.7in}, vmargin={1in,1in}, \
+    "sphinxsetup": "hmargin={0.7in,0.7in}, vmargin={1in,1in}, \
         verbatimwithframe=true, \
         TitleColor={rgb}{0,0,0}, \
         HeaderFamily=\\rmfamily\\bfseries, \
         InnerLinkColor={rgb}{0,0,1}, \
-        OuterLinkColor={rgb}{0,0,1}',
-
-        'tableofcontents': ' ',
+        OuterLinkColor={rgb}{0,0,1}",
+    "tableofcontents": " ",
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author,
 # documentclass [howto/manual]).
 latex_documents = [
-    ('index', 'myqlm-fermion.tex', 'MyQLM fermion Documentation',
-     'Atos Quantum Lab', 'manual'),
+    (
+        "index",
+        "myqlm-fermion.tex",
+        "MyQLM fermion Documentation",
+        "Atos Quantum Lab",
+        "manual",
+    ),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -387,8 +393,7 @@ latex_logo = "logo-myqlm-fermion.svg"
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'myqlm-fermion', 'MyQLM fermion Documentation',
-     ['Atos Quantum Lab'], 1)
+    ("index", "myqlm-fermion", "MyQLM fermion Documentation", ["Atos Quantum Lab"], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -401,9 +406,15 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    ('index', 'myqlm-fermion', 'MyQLM fermion Documentation',
-     'Atos Quantum Lab', 'MyQLM fermion', 'One line description of project.',
-     'Miscellaneous'),
+    (
+        "index",
+        "myqlm-fermion",
+        "MyQLM fermion Documentation",
+        "Atos Quantum Lab",
+        "MyQLM fermion",
+        "One line description of project.",
+        "Miscellaneous",
+    ),
 ]
 
 # Documents to append as an appendix to all manuals.

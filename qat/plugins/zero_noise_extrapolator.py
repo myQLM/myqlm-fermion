@@ -39,10 +39,14 @@ def insert_ids(circ, gates, n_ins):
             if op[0] == gate.name:
                 for _ in range(n_ins):
                     modified_circ.insert_gate(
-                        gate=gate, position=op_index + n_gates_inserted + 1, qbits=op[2])
+                        gate=gate, position=op_index + n_gates_inserted + 1, qbits=op[2]
+                    )
                     modified_circ.insert_gate(
-                        gate=gate.dag(), position=op_index + n_gates_inserted + 2, qbits=op[2])
-                n_gates_inserted += 2*n_ins
+                        gate=gate.dag(),
+                        position=op_index + n_gates_inserted + 2,
+                        qbits=op[2],
+                    )
+                n_gates_inserted += 2 * n_ins
         op_index += 1
 
     return modified_circ
@@ -50,7 +54,7 @@ def insert_ids(circ, gates, n_ins):
 
 def extract_values(batch_result, n_ins, n_jobs, job_number):
     """
-    Given a batch result corresponding to 
+    Given a batch result corresponding to
 
     :math:`C_0^1, C_0^2, ..., C_0^{n_\mathrm{jobs}}, C_1^1, C_1^2, ..., C_1^{n_\mathrm{jobs}}, ..., C_{n_\mathrm{ins}}^{n_\mathrm{jobs}}`
 
@@ -78,13 +82,13 @@ def extract_values(batch_result, n_ins, n_jobs, job_number):
     # the circuit without id insertions
 
     for i in range(n_ins):
-        index = n_jobs + job_number*n_ins + i
+        index = n_jobs + job_number * n_ins + i
         values_for_fit.append(results[index].value)
 
     return values_for_fit
 
 
-def perform_extrapolation(values_for_fit, n_ins, extrap_method='linear', asymptot=0):
+def perform_extrapolation(values_for_fit, n_ins, extrap_method="linear", asymptot=0):
     """
     Perform an extrapolation to zero noise
 
@@ -101,29 +105,35 @@ def perform_extrapolation(values_for_fit, n_ins, extrap_method='linear', asympto
     try:
         assert len(values_for_fit) == n_ins + 1
     except:
-        raise PluginException('Not enough jobs in the batch (%i) compared with the max number'
-                              'of local CNOT insertions (%i) extrapolation' % (len(values_for_fit),
-                                                                               n_ins))
+        raise PluginException(
+            "Not enough jobs in the batch (%i) compared with the max number"
+            "of local CNOT insertions (%i) extrapolation" % (len(values_for_fit), n_ins)
+        )
 
-    if extrap_method == 'linear' or not all([val - asymptot != 0 for val in values_for_fit]):
-        a, b, _, _, _ = linregress(range(n_ins+1), values_for_fit)
-        value = -0.5*a + b
+    if extrap_method == "linear" or not all(
+        [val - asymptot != 0 for val in values_for_fit]
+    ):
+        a, b, _, _, _ = linregress(range(n_ins + 1), values_for_fit)
+        value = -0.5 * a + b
 
-    elif extrap_method == 'exponential':
+    elif extrap_method == "exponential":
         sign = np.sign(values_for_fit[0] - asymptot)
         log_values = [np.log(abs(val - asymptot)) for val in values_for_fit]
-        a, b, _, _, _ = linregress(range(n_ins+1), log_values)
-        value = sign*np.exp(-0.5*a + b) + asymptot
+        a, b, _, _, _ = linregress(range(n_ins + 1), log_values)
+        value = sign * np.exp(-0.5 * a + b) + asymptot
     else:
-        raise PluginException('Extrapolation method not implemented. You required the', extrap_method, 'method whereas only ''linear'' and'
-                              ' ''exponential'' options exist.')
+        raise PluginException(
+            "Extrapolation method not implemented. You required the",
+            extrap_method,
+            "method whereas only " "linear" " and" " " "exponential" " options exist.",
+        )
     return value, a, b
 
 
 class ZeroNoiseExtrapolator(AbstractPlugin):
     r"""
-    Perform Zero-Noise Extrapolation (linear - by default - or exponential) by inserting  
-    decompositions :math:`GG^{\dagger}` of the identity after each occurrence of the gate 
+    Perform Zero-Noise Extrapolation (linear - by default - or exponential) by inserting
+    decompositions :math:`GG^{\dagger}` of the identity after each occurrence of the gate
     :math:`G` (default is CNOT) in the circuit.
 
     More specifically, let
@@ -135,7 +145,7 @@ class ZeroNoiseExtrapolator(AbstractPlugin):
     on the circuit in which each gate :math:`G` was replaced by :math:`G(GG^{\dagger})^{n_{\mathrm{pairs}}}`.
     In other words, this value corresponds to a noise strength :math:`\mathcal{N} \propto 1 + 2 n_\mathrm{pairs}`.
 
-    Then the plugin will fit :math:`f` from the :math:`(n_{\mathrm{ins}}+1)` points corresponding to 
+    Then the plugin will fit :math:`f` from the :math:`(n_{\mathrm{ins}}+1)` points corresponding to
     :math:`n_{\mathrm{pairs}} =0...n_{\mathrm{ins}}` with either a linear ansatz
 
     - :math:`f(n_\mathrm{pairs}) = an_\mathrm{pairs} + b`
@@ -146,10 +156,10 @@ class ZeroNoiseExtrapolator(AbstractPlugin):
 
     and infer a noise-free value for :math:`\langle \hat{O}_{\mathrm{noise-free, inferred}} \rangle` as :math:`f(-0.5)`.
 
-    In the latter case, :math:`C` corresponds to the observable's expectation value over the totally mixed state, 
-    which can be shown to be the observable's constant coefficient and is the asymptotic value reached as the noise 
-    increases, whereas the sign is case-specific and is evaluated by the plugin by looking at the difference 
-    between the noisy value and the asymptot :math:`C`). 
+    In the latter case, :math:`C` corresponds to the observable's expectation value over the totally mixed state,
+    which can be shown to be the observable's constant coefficient and is the asymptotic value reached as the noise
+    increases, whereas the sign is case-specific and is evaluated by the plugin by looking at the difference
+    between the noisy value and the asymptot :math:`C`).
 
     .. note::
         Be careful as the plugin will not work correctly if the batch sent to the stack
@@ -162,7 +172,7 @@ class ZeroNoiseExtrapolator(AbstractPlugin):
         extrap_method (str, optional): form of the ansatz fit, defaults to 'linear'. Can be also 'exponential'.
     """
 
-    def __init__(self, n_ins=1, extrap_gates=[CNOT], extrap_method='linear'):
+    def __init__(self, n_ins=1, extrap_gates=[CNOT], extrap_method="linear"):
         super(ZeroNoiseExtrapolator, self).__init__()
         self.n_ins = n_ins
         self.extrap_gates = extrap_gates
@@ -180,16 +190,16 @@ class ZeroNoiseExtrapolator(AbstractPlugin):
         resulting_batch = copy.deepcopy(batch)
 
         # sampling mode, assume all of the batch jobs are so
-        if batch.jobs and not hasattr(batch.jobs[0].observable, 'constant_coeff'):
+        if batch.jobs and not hasattr(batch.jobs[0].observable, "constant_coeff"):
             self.is_sampling = True
             return resulting_batch
 
         self.is_sampling = False
 
-        if self.extrap_method == 'exponential':
+        if self.extrap_method == "exponential":
             self.asymptots = []
-        elif self.extrap_method == 'linear':
-            self.asymptots = [0]*len(batch.jobs)
+        elif self.extrap_method == "linear":
+            self.asymptots = [0] * len(batch.jobs)
 
         for idx, job in enumerate(batch.jobs):
 
@@ -198,11 +208,13 @@ class ZeroNoiseExtrapolator(AbstractPlugin):
                 # GG^{\dagger} insertions
                 modified_job = copy.deepcopy(job)
                 circ = job.circuit
-                modified_circ = insert_ids(circ, self.extrap_gates, i+1)
+                modified_circ = insert_ids(circ, self.extrap_gates, i + 1)
                 modified_job.circuit = modified_circ
                 resulting_batch.jobs.append(modified_job)
 
-            if self.extrap_method == 'exponential':  # fetch the expected asymptotic value
+            if (
+                self.extrap_method == "exponential"
+            ):  # fetch the expected asymptotic value
                 asymptot = job.observable.constant_coeff
                 self.asymptots.append(asymptot)
             else:
@@ -238,7 +250,7 @@ class ZeroNoiseExtrapolator(AbstractPlugin):
 
         number_of_jobs_involved = self.n_ins + 1
 
-        n_jobs_init = len(batch_result)//(number_of_jobs_involved)
+        n_jobs_init = len(batch_result) // (number_of_jobs_involved)
 
         extrapolated_results = BatchResult()
 
@@ -247,11 +259,15 @@ class ZeroNoiseExtrapolator(AbstractPlugin):
             extrapolated_results.results.append(result_to_fix)
             if result_to_fix.value is not None:
                 values_for_fit = extract_values(
-                    batch_result, self.n_ins, n_jobs_init, i)
-                result_to_fix.meta_data['values_for_ZNE'] = values_for_fit
+                    batch_result, self.n_ins, n_jobs_init, i
+                )
+                result_to_fix.meta_data["values_for_ZNE"] = values_for_fit
                 extrapolated_results.results[i].value, a, b = perform_extrapolation(
-                    values_for_fit, self.n_ins, extrap_method=self.extrap_method, asymptot=self.asymptots[i])
-                result_to_fix.meta_data['ZNE_fit_parameters'] = {
-                    'a': a, 'b': b}
+                    values_for_fit,
+                    self.n_ins,
+                    extrap_method=self.extrap_method,
+                    asymptot=self.asymptots[i],
+                )
+                result_to_fix.meta_data["ZNE_fit_parameters"] = {"a": a, "b": b}
 
         return extrapolated_results

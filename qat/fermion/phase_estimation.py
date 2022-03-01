@@ -71,7 +71,7 @@ def perform_phase_estimation(
             If no idea take :math:`\Delta =2 E_\mathrm{max}`, with :math:`E_\mathrm{max}` an upper
             bound of the energy.
         basis_transform (string, optional): transformation to go from :class:`qat.fermion.ElectronicStructureHamiltonian`
-            into a :class:`qat.fermion.SpinHamiltonian`: one can use the "jordan-wigner" (default),
+            into a :class:`qat.fermion.Hamiltonian`: one can use the "jordan-wigner" (default),
             "bravyi-kitaev" or "parity" transformations.
         qpu (QPU, optional): a QPU to use for computation, default is :class:`~qat.linalg.LinAlg`.
 
@@ -80,8 +80,8 @@ def perform_phase_estimation(
 
     """
 
-#         Usually, energies lie outside the range :math:`(-\frac{2\pi}{t}, 0)`. However, this range can be adjusted by specifying the arguments `E_target` and `size_interval` thus searching inside the window :math:`(E_{t} - \frac{\Delta}{2}, E_{target} + \frac{size_interval}{2})`, where :math:`E_{t}` and :math:`\Delta` stand for . We suggest to always start from a large size interval and unbiased target energy like 0 thus enclosing many of the eigenenergies including the desired one. One can then narrow the window around an already found eigenenergy for a better precision. Experience shows that working with a window not enclosing an eigenenergy makes the QPE still output a result, but it is misleading.
-    
+    #         Usually, energies lie outside the range :math:`(-\frac{2\pi}{t}, 0)`. However, this range can be adjusted by specifying the arguments `E_target` and `size_interval` thus searching inside the window :math:`(E_{t} - \frac{\Delta}{2}, E_{target} + \frac{size_interval}{2})`, where :math:`E_{t}` and :math:`\Delta` stand for . We suggest to always start from a large size interval and unbiased target energy like 0 thus enclosing many of the eigenenergies including the desired one. One can then narrow the window around an already found eigenenergy for a better precision. Experience shows that working with a window not enclosing an eigenenergy makes the QPE still output a result, but it is misleading.
+
     # A check for nqbits_adiab to be set if n_adiab_steps
     H_qbasis = None
     if basis_transform == "jordan-wigner":
@@ -191,8 +191,15 @@ def perform_phase_estimation(
 
     # Adiabatic state preparation using intermediate QPE circuits - in an outer function
     # so as to be separately tested
-    apply_adiabatic_state_prep(prog, n_adiab_steps, H_el_hopping_qbasis,
-                               H_qbasis, n_trotter_steps, phase_reg, data_reg)
+    apply_adiabatic_state_prep(
+        prog,
+        n_adiab_steps,
+        H_el_hopping_qbasis,
+        H_qbasis,
+        n_trotter_steps,
+        phase_reg,
+        data_reg,
+    )
 
     # Actual phase estimation with the QPE routine
     pea_routine = build_qpe_routine_for_hamiltonian(
@@ -233,8 +240,15 @@ def perform_phase_estimation(
     return energy, np.max(probs)
 
 
-def apply_adiabatic_state_prep(prog, n_adiab_steps, H_el_hopping_qbasis,
-                               H_qbasis, n_trotter_steps, phase_reg, data_reg):
+def apply_adiabatic_state_prep(
+    prog,
+    n_adiab_steps,
+    H_el_hopping_qbasis,
+    H_qbasis,
+    n_trotter_steps,
+    phase_reg,
+    data_reg,
+):
     nqbits_adiab = 1
     for t in np.linspace(0, 1, n_adiab_steps):
         H_current = (1 - t) * H_el_hopping_qbasis + t * H_qbasis
@@ -244,7 +258,7 @@ def apply_adiabatic_state_prep(prog, n_adiab_steps, H_el_hopping_qbasis,
         )
         prog.apply(
             pea_routine, phase_reg[:nqbits_adiab], data_reg
-        ) # use only the first nqbits_adiab of all the n_phase_bits
+        )  # use only the first nqbits_adiab of all the n_phase_bits
 
         # Reset the qubits used for the adiabatic step to be ready for
         # the actual QPE afterwards
@@ -252,11 +266,7 @@ def apply_adiabatic_state_prep(prog, n_adiab_steps, H_el_hopping_qbasis,
 
 
 def build_qpe_routine_for_hamiltonian(
-    hamiltonian,
-    n_phase_bits,
-    n_trotter_steps=1,
-    global_phase=0,
-    t=1
+    hamiltonian, n_phase_bits, n_trotter_steps=1, global_phase=0, t=1
 ):
     """
     Construct a phase estimation routine corresponding to a given spin Hamiltonian.
@@ -283,7 +293,9 @@ def build_qpe_routine_for_hamiltonian(
 
     # Controlled unitaries along with a global phase application
     for j_ind in range(n_phase_bits):
-        routine.apply(PH(global_phase * 2**j_ind), phase_reg[j_ind]) # happens before the trotterization
+        routine.apply(
+            PH(global_phase * 2**j_ind), phase_reg[j_ind]
+        )  # happens before the trotterization
         for _ in range(n_trotter_steps):
             for term in hamiltonian.terms:
                 if np.imag(term.coeff) > 1e-10:
@@ -292,7 +304,7 @@ def build_qpe_routine_for_hamiltonian(
                         " qubit basis. All the terms should be real, coming from a"
                         " hermitian H."
                     )
-                theta = np.real(term.coeff) * 2**(j_ind + 1) * t / n_trotter_steps
+                theta = np.real(term.coeff) * 2 ** (j_ind + 1) * t / n_trotter_steps
                 Rk_routine = construct_Rk_routine(term.op, term.qbits, theta)
                 routine.apply(
                     Rk_routine.ctrl(),

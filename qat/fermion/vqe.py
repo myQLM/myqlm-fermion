@@ -2,8 +2,9 @@ from qat.lang.AQASM import Program
 from qat.plugins import ObservableSplitter
 
 
-def VQE(hamiltonian, optimizer, ansatz_routine, theta0, qpu,
-        n_shots=[0, 0], display=False):
+def VQE(
+    hamiltonian, optimizer, ansatz_routine, theta0, qpu, n_shots=[0, 0], display=False
+):
     r"""
     This function implements the Variational Quantum Eigen solver i.e.,
     it first prepares the variational ansatz and measures the energy using
@@ -11,7 +12,7 @@ def VQE(hamiltonian, optimizer, ansatz_routine, theta0, qpu,
     finds the parameters of the ansatz that minimize the energy of the Hamiltonian.
 
     Args:
-        hamiltonian (SpinHamiltonian): hamiltonian for which
+        hamiltonian (Hamiltonian): hamiltonian for which
             the ground state is to be estimated
         optimizer (Optimizer): with 2 attributes : the optimization algorithm
             (a function) and its own parameters (either args or kwargs)
@@ -36,19 +37,23 @@ def VQE(hamiltonian, optimizer, ansatz_routine, theta0, qpu,
     Note:
         This high-level function is there just to maintain backward compatibility.
     """
+
     def fun(theta, n_shots_internal):
         prog = Program()
         reg = prog.qalloc(hamiltonian.nbqbits)
         prog.apply(ansatz_routine(theta), reg)
-        job = prog.to_circ().to_job(job_type="OBS", observable=hamiltonian,
-                                    nbshots=n_shots_internal)
+        job = prog.to_circ().to_job(
+            job_type="OBS", observable=hamiltonian, nbshots=n_shots_internal
+        )
         res = qpu.submit(job)
         return res.value
 
     # optimized_params, nb_eval, energies = optimizer.make_calculation(lambda theta: fun(theta, n_shots[0]), theta0)
     # minimum_energy = fun(optimized_params, n_shots[1])
 
-    theta, energy, k, theta_energy_list = optimizer(lambda theta: fun(theta, n_shots[0]), theta0)
+    theta, energy, k, theta_energy_list = optimizer(
+        lambda theta: fun(theta, n_shots[0]), theta0
+    )
 
     # if display:
     # print("Energy =", minimum_energy, "Optimized parameters =", optimized_params,

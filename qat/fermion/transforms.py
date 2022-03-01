@@ -11,7 +11,7 @@ from anytree import Node
 import numpy as np
 from qat.core import Term
 from qat.fermion.util import tobin
-from qat.fermion.hamiltonians import SpinHamiltonian
+from qat.fermion.hamiltonians import Hamiltonian
 
 
 def make_fenwick_tree(N):
@@ -19,12 +19,13 @@ def make_fenwick_tree(N):
 
     def fenwick(left, right):
         if left != right:
-            lr_half = floor((left + right) / 2.)
+            lr_half = floor((left + right) / 2.0)
             ftree[lr_half] = Node(str(lr_half), parent=ftree[right])
             fenwick(left, lr_half)
             fenwick(lr_half + 1, right)
         else:
             return
+
     fenwick(0, N - 1)
     return [ftree[k] for k in sorted(ftree.keys())]
 
@@ -57,8 +58,9 @@ def _F_set(j, ftree_nodes):
 
 
 def _P_set(j, ftree_nodes):
-    """ P = C u F"""
+    """P = C u F"""
     return _C_set(j, ftree_nodes).union(_F_set(j, ftree_nodes))
+
 
 # N : number of qbits
 
@@ -75,7 +77,9 @@ def make_PCU_sets(nqbits):
     set_list = []
     ftree_nodes = make_fenwick_tree(nqbits)
     for qb in range(nqbits):
-        set_list.append((_P_set(qb, ftree_nodes), _C_set(qb, ftree_nodes), _U_set(qb, ftree_nodes)))
+        set_list.append(
+            (_P_set(qb, ftree_nodes), _C_set(qb, ftree_nodes), _U_set(qb, ftree_nodes))
+        )
     return set_list
 
 
@@ -84,36 +88,37 @@ def transform_to_jw_basis(fermion_hamiltonian):
     """Transform to Jordan-Wigner (JW) basis
 
     Args:
-        fermion_hamiltonian (FermionHamiltonian or ElectronicStructureHamiltonian): the
+        fermion_hamiltonian (Hamiltonian or ElectronicStructureHamiltonian): the
             fermionic hamiltonian
 
     Returns:
-        SpinHamiltonian: the same hamiltonian, in JW spin representation
+        Hamiltonian: the same hamiltonian, in JW spin representation
 
     Examples:
 
     .. run-block:: python
 
         from qat.core import Term
-        from qat.fermion import FermionHamiltonian
+        from qat.fermion import Hamiltonian
 
-        hamiltonian = FermionHamiltonian(2, [Term(0.3, "Cc", [0, 1]), Term(1.4, "CcCc", [0, 1, 1, 0])])
+        hamiltonian = Hamiltonian(2, [Term(0.3, "Cc", [0, 1]), Term(1.4, "CcCc", [0, 1, 1, 0])])
         print("H = ", hamiltonian)
 
         from qat.fermion.transforms import transform_to_jw_basis
         spin_hamiltonian = transform_to_jw_basis(hamiltonian)
         print("H(spin) = ", spin_hamiltonian)
-        
-        
+
+
     """
 
     nqbits = fermion_hamiltonian.nbqbits
-    spin_hamiltonian = SpinHamiltonian(nqbits, [], constant_coeff=fermion_hamiltonian.constant_coeff,
-                                       do_clean_up=False)
+    spin_hamiltonian = Hamiltonian(
+        nqbits, [], constant_coeff=fermion_hamiltonian.constant_coeff, do_clean_up=False
+    )
     for term in fermion_hamiltonian.terms:
-        cur_ham = SpinHamiltonian(nqbits, [], constant_coeff=term.coeff)
+        cur_ham = Hamiltonian(nqbits, [], constant_coeff=term.coeff)
         for op, qb in zip(term.op, term.qbits):
-            mini_ham = SpinHamiltonian(nqbits, [])
+            mini_ham = Hamiltonian(nqbits, [])
             qbits = list(range(qb + 1))
 
             st = "Z" * (qb) + "X"
@@ -133,20 +138,20 @@ def transform_to_parity_basis(fermion_hamiltonian):
     """Transform to parity basis
 
     Args:
-        fermion_hamiltonian (FermionHamiltonian or ElectronicStructureHamiltonian): the
+        fermion_hamiltonian (Hamiltonian or ElectronicStructureHamiltonian): the
             fermionic hamiltonian
 
     Returns:
-        SpinHamiltonian: the same hamiltonian, in parity spin representation
+        Hamiltonian: the same hamiltonian, in parity spin representation
 
     Examples:
 
     .. run-block:: python
 
         from qat.core import Term
-        from qat.fermion import FermionHamiltonian
+        from qat.fermion import Hamiltonian
 
-        hamiltonian = FermionHamiltonian(2, [Term(0.3, "Cc", [0, 1]), Term(1.4, "CcCc", [0, 1, 1, 0])])
+        hamiltonian = Hamiltonian(2, [Term(0.3, "Cc", [0, 1]), Term(1.4, "CcCc", [0, 1, 1, 0])])
         print("H = ", hamiltonian)
 
         from qat.fermion.transforms import transform_to_parity_basis
@@ -154,13 +159,16 @@ def transform_to_parity_basis(fermion_hamiltonian):
         print("H(spin) = ", spin_hamiltonian)
     """
     nqbits = fermion_hamiltonian.nbqbits
-    spin_hamiltonian = SpinHamiltonian(nqbits, [], constant_coeff=fermion_hamiltonian.constant_coeff,
-                                       do_clean_up=False)
+    spin_hamiltonian = Hamiltonian(
+        nqbits, [], constant_coeff=fermion_hamiltonian.constant_coeff, do_clean_up=False
+    )
     for term in fermion_hamiltonian.terms:
-        cur_ham = SpinHamiltonian(nqbits, [Term(term.coeff, "I" * nqbits, list(range(nqbits)))])
+        cur_ham = Hamiltonian(
+            nqbits, [Term(term.coeff, "I" * nqbits, list(range(nqbits)))]
+        )
         for op, qb in zip(term.op, term.qbits):
             sign = -1 if op == "C" else 1
-            mini_ham = SpinHamiltonian(nqbits, [])
+            mini_ham = Hamiltonian(nqbits, [])
             qbits = list(range(qb - 1 if qb > 0 else qb, nqbits))
             st = ("Z" if qb > 0 else "") + "X" + "X" * (nqbits - qb - 1)
             mini_ham.add_term(Term(0.5, st, qbits))
@@ -179,20 +187,20 @@ def transform_to_bk_basis(fermion_hamiltonian):
     """Transform to Bravyi-Kitaev (BK) basis
 
     Args:
-        fermion_hamiltonian (FermionHamiltonian or ElectronicStructureHamiltonian): the
+        fermion_hamiltonian (Hamiltonian or ElectronicStructureHamiltonian): the
             fermionic hamiltonian
 
     Returns:
-        SpinHamiltonian: the same hamiltonian, in BK spin representation
+        Hamiltonian: the same hamiltonian, in BK spin representation
 
     Examples:
 
     .. run-block:: python
 
         from qat.core import Term
-        from qat.fermion import FermionHamiltonian
+        from qat.fermion import Hamiltonian
 
-        hamiltonian = FermionHamiltonian(2, [Term(0.3, "Cc", [0, 1]), Term(1.4, "CcCc", [0, 1, 1, 0])])
+        hamiltonian = Hamiltonian(2, [Term(0.3, "Cc", [0, 1]), Term(1.4, "CcCc", [0, 1, 1, 0])])
         print("H = ", hamiltonian)
 
         from qat.fermion.transforms import transform_to_bk_basis
@@ -201,15 +209,18 @@ def transform_to_bk_basis(fermion_hamiltonian):
     """
     nqbits = fermion_hamiltonian.nbqbits
     pcu_sets = make_PCU_sets(nqbits)
-    spin_hamiltonian = SpinHamiltonian(nqbits, [],
-                                       constant_coeff=fermion_hamiltonian.constant_coeff,
-                                       do_clean_up=False)
+    spin_hamiltonian = Hamiltonian(
+        nqbits, [], constant_coeff=fermion_hamiltonian.constant_coeff, do_clean_up=False
+    )
     for term in fermion_hamiltonian.terms:
-        cur_ham = SpinHamiltonian(nqbits, [Term(term.coeff, "I" * nqbits, list(range(nqbits)))],
-                                  do_clean_up=False)
+        cur_ham = Hamiltonian(
+            nqbits,
+            [Term(term.coeff, "I" * nqbits, list(range(nqbits)))],
+            do_clean_up=False,
+        )
         for op, qb in zip(term.op, term.qbits):
             sign = -1 if op == "C" else 1
-            mini_ham = SpinHamiltonian(nqbits, [], do_clean_up=False)
+            mini_ham = Hamiltonian(nqbits, [], do_clean_up=False)
             p_set, c_set, u_set = pcu_sets[qb]
 
             qbits = []
@@ -334,7 +345,7 @@ def recode_integer(integer, code):
     bitstring = tobin(integer, nbits)
     bitarray = [int(x) for x in bitstring]
     res_bitarray = [str(int(c)) for c in code.T.dot(bitarray) % 2]
-    res_bitstring = '0b' + ''.join(res_bitarray)
+    res_bitstring = "0b" + "".join(res_bitarray)
     bitarr = BitArray(res_bitstring)
     res_int = bitarr.uint
     return res_int
@@ -354,12 +365,12 @@ def change_encoding(mat, code):
     Returns:
         np.array: the encoded matrix B
     """
-    corresp_table = np.array([0 for _ in range(2**code.shape[0])], dtype=int)
-    for i in range(2**code.shape[0]):
+    corresp_table = np.array([0 for _ in range(2 ** code.shape[0])], dtype=int)
+    for i in range(2 ** code.shape[0]):
         corresp_table[i] = recode_integer(i, code)
 
     res_mat = np.zeros(mat.shape, mat.dtype)
-    for i, j in itertools.product(range(2**code.shape[0]), repeat=2):
+    for i, j in itertools.product(range(2 ** code.shape[0]), repeat=2):
         res_mat[corresp_table[i], corresp_table[j]] = mat[i, j]
 
     return res_mat

@@ -79,6 +79,10 @@ def make_intermediate_hamiltonian(alpha, hamiltonian):
             hpqrs_HF[q][p][q][p] = hpqrs_FCI[q][p][q][p]
             hpqrs_HF[p][q][p][q] = hpqrs_FCI[p][q][p][q]
             hpqrs_HF[q][p][p][q] = hpqrs_FCI[q][p][p][q]
-            hpqrs[p][q][q][p] = hpqrs[q][p][q][p] = hpqrs[p][q][p][q] = hpqrs[q][p][p][q] = 0
+            hpqrs[p][q][q][p] = hpqrs[q][p][q][p] = hpqrs[p][q][p][q] = hpqrs[q][p][p][
+                q
+            ] = 0
 
-    return ElectronicStructureHamiltonian(hpq_HF + (alpha) * hpq, hpqrs_HF + (alpha) * hpqrs)
+    return ElectronicStructureHamiltonian(
+        hpq_HF + (alpha) * hpq, hpqrs_HF + (alpha) * hpqrs
+    )

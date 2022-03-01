@@ -10,57 +10,81 @@ from qat.fermion.util import tobin
 Define nearest-neighbour matchgates as custom gates
 """
 # exp(-i theta/2 XX)
-RXX_gen = lambda theta : np.array([[np.cos(theta/2),0,0,-1j*np.sin(theta/2)],
-                                   [0,np.cos(theta/2),-1j*np.sin(theta/2),0],
-                                   [0,-1j*np.sin(theta/2),np.cos(theta/2),0],
-                                   [-1j*np.sin(theta/2),0,0,np.cos(theta/2)]
-                                  ],dtype=np.complex_)
+RXX_gen = lambda theta: np.array(
+    [
+        [np.cos(theta / 2), 0, 0, -1j * np.sin(theta / 2)],
+        [0, np.cos(theta / 2), -1j * np.sin(theta / 2), 0],
+        [0, -1j * np.sin(theta / 2), np.cos(theta / 2), 0],
+        [-1j * np.sin(theta / 2), 0, 0, np.cos(theta / 2)],
+    ],
+    dtype="complex",
+)
 
 # exp(-i theta/2 XY)
-RXY_gen = lambda theta : np.array([[np.cos(theta/2),0,0,-np.sin(theta/2)],
-                                   [0,np.cos(theta/2),np.sin(theta/2),0],
-                                   [0,-np.sin(theta/2),np.cos(theta/2),0],
-                                   [np.sin(theta/2),0,0,np.cos(theta/2)]
-                                  ],dtype=np.complex_)
+RXY_gen = lambda theta: np.array(
+    [
+        [np.cos(theta / 2), 0, 0, -np.sin(theta / 2)],
+        [0, np.cos(theta / 2), np.sin(theta / 2), 0],
+        [0, -np.sin(theta / 2), np.cos(theta / 2), 0],
+        [np.sin(theta / 2), 0, 0, np.cos(theta / 2)],
+    ],
+    dtype="complex",
+)
 
 # exp(-i theta/2 YY)
-RYY_gen = lambda theta : np.array([[np.cos(theta/2),0,0,1j*np.sin(theta/2)],
-                                   [0,np.cos(theta/2),-1j*np.sin(theta/2),0],
-                                   [0,-1j*np.sin(theta/2),np.cos(theta/2),0],
-                                   [1j*np.sin(theta/2),0,0,np.cos(theta/2)]
-                                  ],dtype=np.complex_)
-
+RYY_gen = lambda theta: np.array(
+    [
+        [np.cos(theta / 2), 0, 0, 1j * np.sin(theta / 2)],
+        [0, np.cos(theta / 2), -1j * np.sin(theta / 2), 0],
+        [0, -1j * np.sin(theta / 2), np.cos(theta / 2), 0],
+        [1j * np.sin(theta / 2), 0, 0, np.cos(theta / 2)],
+    ],
+    dtype="complex",
+)
 
 
 # exp(-i theta/2 YX)
-RYX_gen = lambda theta : np.array([[np.cos(theta/2),0,0,-np.sin(theta/2)],
-                                   [0,np.cos(theta/2),-np.sin(theta/2),0],
-                                   [0,np.sin(theta/2),np.cos(theta/2),0],
-                                   [np.sin(theta/2),0,0,np.cos(theta/2)]
-                                  ],dtype=np.complex_)
+RYX_gen = lambda theta: np.array(
+    [
+        [np.cos(theta / 2), 0, 0, -np.sin(theta / 2)],
+        [0, np.cos(theta / 2), -np.sin(theta / 2), 0],
+        [0, np.sin(theta / 2), np.cos(theta / 2), 0],
+        [np.sin(theta / 2), 0, 0, np.cos(theta / 2)],
+    ],
+    dtype="complex",
+)
 
 # exp(-i theta/2 ZZ)
-RZZ_gen = lambda theta : np.array([[np.exp(-1j*theta/2),0,0,0],
-                                  [0,np.exp(1j*theta/2),0,0],
-                                  [0,0,np.exp(1j*theta/2),0],
-                                  [0,0,0,np.exp(-1j*theta/2)]
-                                  ],dtype=np.complex_)
+RZZ_gen = lambda theta: np.array(
+    [
+        [np.exp(-1j * theta / 2), 0, 0, 0],
+        [0, np.exp(1j * theta / 2), 0, 0],
+        [0, 0, np.exp(1j * theta / 2), 0],
+        [0, 0, 0, np.exp(-1j * theta / 2)],
+    ],
+    dtype="complex",
+)
 
 
-RXX = AbstractGate("RXX",[float],2,
-                   matrix_generator=lambda theta, mat_gen=RXX_gen: mat_gen(theta))
+RXX = AbstractGate(
+    "RXX", [float], 2, matrix_generator=lambda theta, mat_gen=RXX_gen: mat_gen(theta)
+)
 
-RXY = AbstractGate("RXY",[float],2,
-                   matrix_generator=lambda theta, mat_gen=RXY_gen: mat_gen(theta))
+RXY = AbstractGate(
+    "RXY", [float], 2, matrix_generator=lambda theta, mat_gen=RXY_gen: mat_gen(theta)
+)
 
-RYY = AbstractGate("RYY",[float],2,
-                    matrix_generator=lambda theta, mat_gen=RYY_gen: mat_gen(theta))
+RYY = AbstractGate(
+    "RYY", [float], 2, matrix_generator=lambda theta, mat_gen=RYY_gen: mat_gen(theta)
+)
 
-RYX = AbstractGate("RYX",[float],2,
-                    matrix_generator=lambda theta, mat_gen=RYX_gen: mat_gen(theta))
+RYX = AbstractGate(
+    "RYX", [float], 2, matrix_generator=lambda theta, mat_gen=RYX_gen: mat_gen(theta)
+)
 
-RZZ = AbstractGate("RZZ",[float],2,
-                   matrix_generator=lambda theta, mat_gen=RZZ_gen: mat_gen(theta))
+RZZ = AbstractGate(
+    "RZZ", [float], 2, matrix_generator=lambda theta, mat_gen=RZZ_gen: mat_gen(theta)
+)
 
 MG_gate_set = default_gate_set()
 
@@ -69,6 +93,7 @@ MG_gate_set.add_signature(RXY)
 MG_gate_set.add_signature(RYX)
 MG_gate_set.add_signature(RYY)
 MG_gate_set.add_signature(RZZ)
+
 
 def MG_chain_routine(angles, slater=False, ZZ_angle=None):
     """
@@ -80,13 +105,13 @@ def MG_chain_routine(angles, slater=False, ZZ_angle=None):
     """
     q_rout = QRoutine()
 
-    q_rout.apply(RYY(2*angles[0]), 0, 1)
-    q_rout.apply(RXX(-2*angles[1]), 0, 1)
+    q_rout.apply(RYY(2 * angles[0]), 0, 1)
+    q_rout.apply(RXX(-2 * angles[1]), 0, 1)
     if ZZ_angle is not None:
-        q_rout.apply(RZZ(-2*ZZ_angle), 0, 1)
+        q_rout.apply(RZZ(-2 * ZZ_angle), 0, 1)
     if not slater:
-        q_rout.apply(RYX(2*angles[2]), 0, 1)
-        q_rout.apply(RXY(-2*angles[3]), 0, 1)
+        q_rout.apply(RYX(2 * angles[2]), 0, 1)
+        q_rout.apply(RXY(-2 * angles[3]), 0, 1)
 
     return q_rout
 
@@ -102,29 +127,28 @@ def gaussian_state_prep_routine(nb_fermionic_modes, theta, slater=False):
     """
     M = nb_fermionic_modes
 
-    if len(theta) != (2*M**2 - M if not slater else M**2):
-        raise Exception('Theta doesn''t have the correct length!')
+    if len(theta) != (2 * M**2 - M if not slater else M**2):
+        raise Exception("Theta doesn" "t have the correct length!")
     lenm = 2 if slater else 4
 
     q_rout = QRoutine()
 
     for i in range(M):
-        q_rout.apply(RZ(-2*theta[i]), i) #  = exp(j theta Z)
-    for k in range(M//2):
-        for j in range(M//2):
-            offset = M + lenm*(M-1) * k + lenm*j
-            angles = theta[offset: offset+lenm]
-            q_rout.apply(MG_chain_routine(angles, slater), 2*j, 2*j+1)
+        q_rout.apply(RZ(-2 * theta[i]), i)  #  = exp(j theta Z)
+    for k in range(M // 2):
+        for j in range(M // 2):
+            offset = M + lenm * (M - 1) * k + lenm * j
+            angles = theta[offset : offset + lenm]
+            q_rout.apply(MG_chain_routine(angles, slater), 2 * j, 2 * j + 1)
 
-        for j in range(M//2-1):
-            offset = M + lenm*(M-1) * k + lenm*M//2 + lenm*j
-            angles = theta[offset: offset+lenm]
-            q_rout.apply(MG_chain_routine(angles, slater), 2*j+1, 2*j+2)
+        for j in range(M // 2 - 1):
+            offset = M + lenm * (M - 1) * k + lenm * M // 2 + lenm * j
+            angles = theta[offset : offset + lenm]
+            q_rout.apply(MG_chain_routine(angles, slater), 2 * j + 1, 2 * j + 2)
     return q_rout
 
 
-def LDCA_cycle_routine(nb_fermionic_modes, theta_MG, theta_RZZ,
-                       slater=False):
+def LDCA_cycle_routine(nb_fermionic_modes, theta_MG, theta_RZZ, slater=False):
     """
     Low Depth Circuit Ansatz building block.
 
@@ -152,33 +176,40 @@ def LDCA_cycle_routine(nb_fermionic_modes, theta_MG, theta_RZZ,
     """
     M = nb_fermionic_modes
 
-    if len(theta_MG) != (2*M**2 -2*M if not slater else M**2 -M):
-        raise Exception('theta_MG doesn''t have the correct length!')
-    if len(theta_RZZ) != M//2*(M-1):
-        raise Exception('theta_RZZ doesn''t have the correct length!')
+    if len(theta_MG) != (2 * M**2 - 2 * M if not slater else M**2 - M):
+        raise Exception("theta_MG doesn" "t have the correct length!")
+    if len(theta_RZZ) != M // 2 * (M - 1):
+        raise Exception("theta_RZZ doesn" "t have the correct length!")
 
     lenm = 2 if slater else 4
     q_rout = QRoutine()
 
-    for k in range(M//2):
+    for k in range(M // 2):
 
-        for j in range(M//2):#even rotations
-            offset = lenm*(M-1) * k + lenm*j
-            angles_MG = theta_MG[offset: offset+lenm]
-            q_rout.apply(MG_chain_routine(angles_MG, slater, theta_RZZ[(M-1)*k+j]),
-                         2*j, 2*j+1)
+        for j in range(M // 2):  # even rotations
+            offset = lenm * (M - 1) * k + lenm * j
+            angles_MG = theta_MG[offset : offset + lenm]
+            q_rout.apply(
+                MG_chain_routine(angles_MG, slater, theta_RZZ[(M - 1) * k + j]),
+                2 * j,
+                2 * j + 1,
+            )
 
-        for j in range(M//2-1): #odd rotations
-            offset = lenm*(M-1) * k + lenm*M//2 + lenm*j
-            angles_MG = theta_MG[offset: offset+lenm]
-            q_rout.apply(MG_chain_routine(angles_MG, slater, theta_RZZ[(M-1)*k+M//2+j]),
-                         2*j+1, 2*j+2)
+        for j in range(M // 2 - 1):  # odd rotations
+            offset = lenm * (M - 1) * k + lenm * M // 2 + lenm * j
+            angles_MG = theta_MG[offset : offset + lenm]
+            q_rout.apply(
+                MG_chain_routine(
+                    angles_MG, slater, theta_RZZ[(M - 1) * k + M // 2 + j]
+                ),
+                2 * j + 1,
+                2 * j + 2,
+            )
 
     return q_rout
 
 
-def LDCA_routine(nb_fermionic_modes, ncycles, theta, theta_gaussian=None,
-                 slater=False):
+def LDCA_routine(nb_fermionic_modes, ncycles, theta, theta_gaussian=None, slater=False):
     """
     Full LDCA routine
 
@@ -198,43 +229,48 @@ def LDCA_routine(nb_fermionic_modes, ncycles, theta, theta_gaussian=None,
     """
     M = nb_fermionic_modes
     lenm = 4 if not slater else 2
-    nb_MG_cycles = M//2
+    nb_MG_cycles = M // 2
 
-    l_theta_MG = ncycles*nb_MG_cycles*lenm*(M-1)
-    l_theta_RZZ = ncycles*nb_MG_cycles*(M-1)
+    l_theta_MG = ncycles * nb_MG_cycles * lenm * (M - 1)
+    l_theta_RZZ = ncycles * nb_MG_cycles * (M - 1)
 
     if len(theta) != M + l_theta_MG + l_theta_RZZ:
         raise Exception("Theta doesn't have the correct length!")
     if theta_gaussian is not None:
-        if len(theta_gaussian) != M + l_theta_MG//ncycles:
+        if len(theta_gaussian) != M + l_theta_MG // ncycles:
             raise Exception("Theta-gaussian doesn't have the correct length!")
 
     q_rout = QRoutine()
 
     for i in range(M):
-        #q_rout.apply(X, i)
-        q_rout.apply(RZ(-2*theta[i]), i)
+        # q_rout.apply(X, i)
+        q_rout.apply(RZ(-2 * theta[i]), i)
 
     # first M+l_theta_MG angles correspond to same params as U_Bog
-    theta_MG = theta[M: M+l_theta_MG]
+    theta_MG = theta[M : M + l_theta_MG]
     # remainder: RZZ angles
-    theta_RZZ = theta[M+l_theta_MG:]
+    theta_RZZ = theta[M + l_theta_MG :]
 
     pointeur_MG = 0
     pointeur_RZZ = 0
     for _ in range(ncycles):
-        theta_MG_cycle = theta_MG[pointeur_MG:pointeur_MG + nb_MG_cycles*lenm*(M-1)]
-        theta_RZZ_cycle = theta_RZZ[pointeur_RZZ:pointeur_RZZ + nb_MG_cycles*(M-1)]
-        q_rout.apply(LDCA_cycle_routine(nb_fermionic_modes,
-                                        theta_MG_cycle,
-                                        theta_RZZ_cycle,
-                                        slater),
-                     list(range(M)))
-        pointeur_MG += nb_MG_cycles*lenm*(M-1)
-        pointeur_RZZ += nb_MG_cycles*(M-1)
+        theta_MG_cycle = theta_MG[
+            pointeur_MG : pointeur_MG + nb_MG_cycles * lenm * (M - 1)
+        ]
+        theta_RZZ_cycle = theta_RZZ[
+            pointeur_RZZ : pointeur_RZZ + nb_MG_cycles * (M - 1)
+        ]
+        q_rout.apply(
+            LDCA_cycle_routine(
+                nb_fermionic_modes, theta_MG_cycle, theta_RZZ_cycle, slater
+            ),
+            list(range(M)),
+        )
+        pointeur_MG += nb_MG_cycles * lenm * (M - 1)
+        pointeur_RZZ += nb_MG_cycles * (M - 1)
 
-    #U_Bog = gaussian_state_prep_routine(M, theta_gaussian, slater)
-    #q_rout.apply(U_Bog.dag(), list(range(M)))
+    # U_Bog = gaussian_state_prep_routine(M, theta_gaussian, slater)
+    # q_rout.apply(U_Bog.dag(), list(range(M)))
 
     return q_rout
 
@@ -243,10 +279,11 @@ def make_gen(a, b, M):
     """construct antimsymmetric generator :math:`M_{ab}`
     2M x 2M matrix with 1 at (a,b), -1 at b,a
     """
-    res = np.zeros((2*M, 2*M))
+    res = np.zeros((2 * M, 2 * M))
     res[a, b] = 1
     res[b, a] = -1
     return res
+
 
 def build_generator_old(theta, a, b, M):
     """
@@ -257,35 +294,37 @@ def build_generator_old(theta, a, b, M):
         Same as build_generator, but slower and less accurate
     """
     M = make_gen(a, b, M)
-    return scipy.linalg.expm(theta*M)
+    return scipy.linalg.expm(theta * M)
+
 
 def build_generator(theta, a, b, M):
     """
     Returns:
         :math:`exp(\thetaM_{ab})`
     """
-    res = np.identity(2*M)
+    res = np.identity(2 * M)
     res += np.sin(theta) * make_gen(a, b, M)
-    res[a, a] += (np.cos(theta)-1)
-    res[b, b] += (np.cos(theta)-1)
+    res[a, a] += np.cos(theta) - 1
+    res[b, b] += np.cos(theta) - 1
     return res
+
 
 def _make_index_pair_list(M, slater=False):
 
     if slater:
-        majorana_components = [(0, 1), (1, 0)] # AB BA
+        majorana_components = [(0, 1), (1, 0)]  # AB BA
     else:
-        majorana_components = [(0, 1), (1, 0), (0, 0), (1, 1)] #AB BA AA BB
+        majorana_components = [(0, 1), (1, 0), (0, 0), (1, 1)]  # AB BA AA BB
 
-    index_pair_list = [(i, M+i) for i in range(M)]
+    index_pair_list = [(i, M + i) for i in range(M)]
 
-    for k in range(M//2):
-        for j in range(M//2): #even
+    for k in range(M // 2):
+        for j in range(M // 2):  # even
             for A, B in majorana_components:
-                index_pair_list.append((M*A + 2*j, M*B + 2*j+1))
-        for j in range(M//2-1): #odd
+                index_pair_list.append((M * A + 2 * j, M * B + 2 * j + 1))
+        for j in range(M // 2 - 1):  # odd
             for A, B in majorana_components:
-                index_pair_list.append((M*A + 2*j+1, M*B + 2*j+2))
+                index_pair_list.append((M * A + 2 * j + 1, M * B + 2 * j + 2))
     return index_pair_list
 
 
@@ -305,20 +344,21 @@ def prepare_R_matrix(nb_fermionic_modes, theta, slater=False):
         np.array: R, a 2Mx2M matrix
     """
     M = nb_fermionic_modes
-    if len(theta) != (2*M**2 - M if not slater else M**2):
-        raise Exception('Theta doesn''t have the correct length!')
+    if len(theta) != (2 * M**2 - M if not slater else M**2):
+        raise Exception("Theta doesn" "t have the correct length!")
 
-    #r = exp(2*theta*G), with G generator
-    #G: Generator
-    #Gtilde(mu nu, i j) = G(M*mu + i, M*nu + j)
+    # r = exp(2*theta*G), with G generator
+    # G: Generator
+    # Gtilde(mu nu, i j) = G(M*mu + i, M*nu + j)
 
     index_pair_list = _make_index_pair_list(M, slater)
 
-    mat = np.identity(2*M)
+    mat = np.identity(2 * M)
     for ind, (a, b) in enumerate(index_pair_list):
-        mat = np.dot(build_generator(2*theta[ind], a, b, M), mat)
+        mat = np.dot(build_generator(2 * theta[ind], a, b, M), mat)
 
     return mat
+
 
 def prepare_R_matrix_gradient(nb_fermionic_modes, theta, slater=False):
     """
@@ -328,27 +368,34 @@ def prepare_R_matrix_gradient(nb_fermionic_modes, theta, slater=False):
         list<np.array>: list of :math:`2Mx2M` matrices
     """
     M = nb_fermionic_modes
-    if len(theta) != (2*M**2 - M if not slater else M**2):
-        raise Exception('Theta doesn''t have the correct length!')
+    if len(theta) != (2 * M**2 - M if not slater else M**2):
+        raise Exception("Theta doesn" "t have the correct length!")
 
     index_pair_list = _make_index_pair_list(M, slater)
     grad_list = []
     for theta_ind in range(len(index_pair_list)):
-        mat = np.identity(2*M)
+        mat = np.identity(2 * M)
         for ind, (a, b) in enumerate(index_pair_list):
             if ind == theta_ind:
-                mat = np.dot(2*make_gen(a, b, M), mat)
-            mat = np.dot(build_generator(2*theta[ind], a, b, M), mat)
+                mat = np.dot(2 * make_gen(a, b, M), mat)
+            mat = np.dot(build_generator(2 * theta[ind], a, b, M), mat)
         grad_list.append(mat)
 
     return grad_list
 
 
-def find_R_angles(R_target, theta0=None, slater=False, use_gradient=False,
-                  method='COBYLA', options=None, verbose=False):
+def find_R_angles(
+    R_target,
+    theta0=None,
+    slater=False,
+    use_gradient=False,
+    method="COBYLA",
+    options=None,
+    verbose=False,
+):
     r"""
     Compute the angles corresponding to the product decomposition
-    
+
     .. math::
         R(\theta) = \prod_i r_i(theta_i)
 
@@ -375,21 +422,21 @@ def find_R_angles(R_target, theta0=None, slater=False, use_gradient=False,
     Returns:
         np.array, float: the list of angles and the value of the objective function
     """
-    nqbits = R_target.shape[0]//2
+    nqbits = R_target.shape[0] // 2
 
     def func(theta):
         R_mat = prepare_R_matrix(nqbits, theta, slater)
-        return - np.trace(R_target.T.dot(R_mat))/(2*nqbits)
+        return -np.trace(R_target.T.dot(R_mat)) / (2 * nqbits)
 
     def der(theta):
         der_res = np.zeros_like(theta)
         grad_list = prepare_R_matrix_gradient(nqbits, theta, slater)
         for ind in range(len(grad_list)):
-            der_res[ind] = - np.trace(R_target.T.dot(grad_list[ind]))/(2*nqbits)
+            der_res[ind] = -np.trace(R_target.T.dot(grad_list[ind])) / (2 * nqbits)
         return der_res
 
     if theta0 is None:
-        nparams = 2*nqbits**2 - nqbits if not slater else nqbits**2
+        nparams = 2 * nqbits**2 - nqbits if not slater else nqbits**2
         theta0 = [0.0 for _ in range(nparams)]
 
     if verbose:
@@ -398,16 +445,25 @@ def find_R_angles(R_target, theta0=None, slater=False, use_gradient=False,
     if not use_gradient:
         res = scipy.optimize.minimize(func, theta0, method=method, options=options)
     else:
-        res = scipy.optimize.minimize(func, theta0, method=method, options=options,
-                                    jac=der)
+        res = scipy.optimize.minimize(
+            func, theta0, method=method, options=options, jac=der
+        )
 
     if verbose:
         print(res)
 
     return res.x, res.fun
 
-def get_nn_rotation_angles(h, slater=False, theta0=None, method='COBYLA', options=None,
-                           use_gradient=False, verbose=False):
+
+def get_nn_rotation_angles(
+    h,
+    slater=False,
+    theta0=None,
+    method="COBYLA",
+    options=None,
+    use_gradient=False,
+    verbose=False,
+):
     """
     Compute the rotation angles corresponding to a quadratic Hamiltonian with
     the constraint that the corresponding circuit has only nearest-neighbor
@@ -430,20 +486,25 @@ def get_nn_rotation_angles(h, slater=False, theta0=None, method='COBYLA', option
     h_eigvals, r = np.linalg.eigh(h)
     nqbits = h.shape[0]
 
-    r_majo = np.block([[r.real, r.imag],
-                       [-r.imag, r.real]])
+    r_majo = np.block([[r.real, r.imag], [-r.imag, r.real]])
 
     if slater:
         theta0 = [0.1 for _ in range(nqbits**2)]
     else:
-        theta0 = [0.1 for _ in range(2*nqbits**2-nqbits)]
+        theta0 = [0.1 for _ in range(2 * nqbits**2 - nqbits)]
 
     if verbose:
-        print("theta0=",theta0)
+        print("theta0=", theta0)
 
-    theta, cost_res = find_R_angles(r_majo, theta0, slater=slater,
-                                    method=method, options=options,
-                                    use_gradient=use_gradient, verbose=verbose)
+    theta, cost_res = find_R_angles(
+        r_majo,
+        theta0,
+        slater=slater,
+        method=method,
+        options=options,
+        use_gradient=use_gradient,
+        verbose=verbose,
+    )
 
     return theta, cost_res
 
@@ -451,7 +512,7 @@ def get_nn_rotation_angles(h, slater=False, theta0=None, method='COBYLA', option
 def nb_params_LDCA(nb_fermionic_modes, ncycles, slater=False):
     """
     Computes the number of variational parameters carried by the LDCA circuit.
-    
+
     Args:
         nb_fermionic_modes (int): (even) number of qubits (=number of fermionic modes)
         ncycles (int): number of LDCA cycles
@@ -461,13 +522,13 @@ def nb_params_LDCA(nb_fermionic_modes, ncycles, slater=False):
     Returns:
         int: number of parameters of the associated LDCA circuit
     """
-    
-    lenm = 4 if not slater else 2
-    
-    M = nb_fermionic_modes
-    nb_MG_cycles = M//2 
 
-    l_theta_MG = ncycles*nb_MG_cycles*lenm*(M-1)
-    l_theta_RZZ = ncycles*nb_MG_cycles*(M-1)
+    lenm = 4 if not slater else 2
+
+    M = nb_fermionic_modes
+    nb_MG_cycles = M // 2
+
+    l_theta_MG = ncycles * nb_MG_cycles * lenm * (M - 1)
+    l_theta_RZZ = ncycles * nb_MG_cycles * (M - 1)
 
     return M + l_theta_MG + l_theta_RZZ
