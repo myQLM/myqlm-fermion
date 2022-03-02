@@ -415,3 +415,19 @@ def make_tot_density_op(n_sites):
     tot_density_op = ElectronicStructureHamiltonian(hpq=tot_density)
 
     return tot_density_op
+
+class SpinHamiltonian(Hamiltonian):
+    """Ensures restrocompatibility of old SpinHamiltonian class with new Hamiltonian class"""
+
+    def __init__(self, *args, **kwargs):
+        from warnings import warn
+        warn("The SpinHamiltonian class is deprecated. Please use the Hamiltonian class instead.", stacklevel=2)
+        return super().__init__(*args, **kwargs)
+
+class FermionHamiltonian(Hamiltonian):
+    """Ensures restrocompatibility of old SpinHamiltonian class with new Hamiltonian class"""
+
+    def __init__(self, *args, **kwargs):
+        from warnings import warn
+        warn("The FermionHamiltonian class is deprecated. Please use the Hamiltonian class instead.", stacklevel=2)
+        return super().__init__(*args, **kwargs)

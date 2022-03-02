@@ -17,7 +17,8 @@ from pkgutil import extend_path
 
 __path__ = extend_path(__path__, __name__)
 
-from .hamiltonians import (
-    Hamiltonian,
-    ElectronicStructureHamiltonian,
-)
+from .hamiltonians import Hamiltonian, ElectronicStructureHamiltonian
+
+# Retrocompatibility import
+from .hamiltonians import SpinHamiltonian
+from .hamiltonians import FermionHamiltonian
