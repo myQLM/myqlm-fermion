@@ -118,7 +118,7 @@ def apply_quantum_subspace_expansion(
         expansion_operators = [Hamiltonian(2, [], 1.0),
                                Hamiltonian(2, [Term(1., "ZZ", [0, 1])])]
 
-        from qat.fermion.qchem.qse import apply_quantum_subspace_expansion
+        from qat.fermion.chemistry.qse import apply_quantum_subspace_expansion
         e_qse = apply_quantum_subspace_expansion(hamiltonian,
                                                  opt_circ,
                                                  expansion_operators,

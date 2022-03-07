@@ -12,7 +12,6 @@ from qat.fermion.trotterisation import (
     _double_excitation_operator_jw,
 )
 from qat.fermion.trotterisation import _number_operator_jw, make_trotter_slice_jw
-from qat.fermion.fermionic_util import fermionic_hamiltonian_exponential
 from qat.fermion.trotterisation import make_spin_hamiltonian_trotter_slice
 from qat.fermion.hamiltonians import Hamiltonian
 
@@ -21,12 +20,14 @@ TOL2 = 10
 
 
 def check_trotterisation(hpq, hpqrs, tol):
-    U_exact = fermionic_hamiltonian_exponential(hpq, hpqrs)
+    hamiltonian = Hamiltonian(hpq, hpqrs)
+    U_exact = hamiltonian.exponential()
     U_trotter = get_unitary_from_circuit(
         make_trotter_slice_jw(hpq, hpqrs, 1), hpq.shape[0]
     )
 
-    np.testing.assert_almost_equal(np.linalg.norm(U_exact - U_trotter), 0, decimal=tol)
+    np.testing.assert_almost_equal(
+        np.linalg.norm(U_exact - U_trotter), 0, decimal=tol)
 
 
 def test_make_trotter_slice_jw_2_qbits():
@@ -65,7 +66,8 @@ def test_make_trotter_slice_jw_4_qbits():
 
 def checks_trotter_slice(hpq, hpqrs):
     number_qubits = hpq.shape[0]
-    a = fermionic_hamiltonian_exponential(hpq, hpqrs)
+    hamiltonian = Hamiltonian(hpq, hpqrs)
+    a = hamiltonian.exponential()
     rout1 = make_trotter_slice_jw(hpq, hpqrs, 1)
     b = get_unitary_from_circuit(rout1, number_qubits)
     assert np.linalg.norm(a - b) < TOL1
@@ -76,7 +78,8 @@ def checks_trotter_slice(hpq, hpqrs):
 def test_hpq_number_operator():
     number_qubits = 2
     hpq = np.zeros((2, 2))
-    hpqrs = np.zeros((number_qubits, number_qubits, number_qubits, number_qubits))
+    hpqrs = np.zeros((number_qubits, number_qubits,
+                     number_qubits, number_qubits))
     hpq[1][1] = 2
 
     c = get_unitary_from_circuit(_number_operator_jw(hpq, 1), number_qubits)
@@ -87,21 +90,25 @@ def test_hpq_number_operator():
 def test_hpq_excitation_operator():
     number_qubits = 2
     hpq = np.zeros((number_qubits, number_qubits))
-    hpqrs = np.zeros((number_qubits, number_qubits, number_qubits, number_qubits))
+    hpqrs = np.zeros((number_qubits, number_qubits,
+                     number_qubits, number_qubits))
     hpq[0][1] = 2
     hpq[1][0] = 2
 
-    c = get_unitary_from_circuit(_excitation_operator_jw(hpq, 1), number_qubits)
+    c = get_unitary_from_circuit(
+        _excitation_operator_jw(hpq, 1), number_qubits)
     a = checks_trotter_slice(hpq, hpqrs)
     assert np.linalg.norm(c - a) < TOL1
 
     number_qubits = 5
     hpq = np.zeros((number_qubits, number_qubits))
-    hpqrs = np.zeros((number_qubits, number_qubits, number_qubits, number_qubits))
+    hpqrs = np.zeros((number_qubits, number_qubits,
+                     number_qubits, number_qubits))
     hpq[4][0] = 2
     hpq[0][4] = 2
 
-    c = get_unitary_from_circuit(_excitation_operator_jw(hpq, 1), number_qubits)
+    c = get_unitary_from_circuit(
+        _excitation_operator_jw(hpq, 1), number_qubits)
     a = checks_trotter_slice(hpq, hpqrs)
     assert np.linalg.norm(c - a) < TOL1
 
@@ -109,7 +116,8 @@ def test_hpq_excitation_operator():
 def test_hpqqp_coulomb_operator():
     number_qubits = 3
     hpq = np.zeros((number_qubits, number_qubits))
-    hpqrs = np.zeros((number_qubits, number_qubits, number_qubits, number_qubits))
+    hpqrs = np.zeros((number_qubits, number_qubits,
+                     number_qubits, number_qubits))
     hpqrs[0][2][2][0] = -1.5
 
     c = get_unitary_from_circuit(
@@ -120,7 +128,8 @@ def test_hpqqp_coulomb_operator():
 
     number_qubits = 4
     hpq = np.zeros((number_qubits, number_qubits))
-    hpqrs = np.zeros((number_qubits, number_qubits, number_qubits, number_qubits))
+    hpqrs = np.zeros((number_qubits, number_qubits,
+                     number_qubits, number_qubits))
     hpqrs[3][0][0][3] = 6.5489
 
     c = get_unitary_from_circuit(
@@ -134,7 +143,8 @@ def test_hpqqr_numberexcitation_operator():
     # cas r<q<p
     number_qubits = 3
     hpq = np.zeros((number_qubits, number_qubits))
-    hpqrs = np.zeros((number_qubits, number_qubits, number_qubits, number_qubits))
+    hpqrs = np.zeros((number_qubits, number_qubits,
+                     number_qubits, number_qubits))
     hpqrs[2][1][1][0] = -1.5
     hpqrs[0][1][1][2] = -1.5
     c = get_unitary_from_circuit(
@@ -146,7 +156,8 @@ def test_hpqqr_numberexcitation_operator():
     # cas q<r
     number_qubits = 5
     hpq = np.zeros((number_qubits, number_qubits))
-    hpqrs = np.zeros((number_qubits, number_qubits, number_qubits, number_qubits))
+    hpqrs = np.zeros((number_qubits, number_qubits,
+                     number_qubits, number_qubits))
     hpqrs[4][0][0][1] = -1.5
     hpqrs[1][0][0][4] = -1.5
     c = get_unitary_from_circuit(
@@ -158,7 +169,8 @@ def test_hpqqr_numberexcitation_operator():
     # Cas q>p
     number_qubits = 5
     hpq = np.zeros((number_qubits, number_qubits))
-    hpqrs = np.zeros((number_qubits, number_qubits, number_qubits, number_qubits))
+    hpqrs = np.zeros((number_qubits, number_qubits,
+                     number_qubits, number_qubits))
     hpqrs[2][4][4][0] = -1.5
     hpqrs[0][4][4][2] = -1.5
     c = get_unitary_from_circuit(
@@ -172,7 +184,8 @@ def test_hpqrs_doubleexcitation_operator():
     # cas 4 qubits test de base pour verifier le circuit le plus simple (sans gestion du circuit optimise)
     number_qubits = 4
     hpq = np.zeros((number_qubits, number_qubits))
-    hpqrs = np.zeros((number_qubits, number_qubits, number_qubits, number_qubits))
+    hpqrs = np.zeros((number_qubits, number_qubits,
+                     number_qubits, number_qubits))
     hpqrs[3][2][1][0] = -2
     hpqrs[0][1][2][3] = -2
 
@@ -185,7 +198,8 @@ def test_hpqrs_doubleexcitation_operator():
     # cas 6 qubits prise en compte circuit optimise
     number_qubits = 6
     hpq = np.zeros((number_qubits, number_qubits))
-    hpqrs = np.zeros((number_qubits, number_qubits, number_qubits, number_qubits))
+    hpqrs = np.zeros((number_qubits, number_qubits,
+                     number_qubits, number_qubits))
     hpqrs[5][3][2][0] = 2.25
     hpqrs[0][2][3][5] = 2.25
 
@@ -198,7 +212,8 @@ def test_hpqrs_doubleexcitation_operator():
     # Second cas gestion porte Z controlee eloignee et de l'ecartement entre q et r
     number_qubits = 6
     hpq = np.zeros((number_qubits, number_qubits))
-    hpqrs = np.zeros((number_qubits, number_qubits, number_qubits, number_qubits))
+    hpqrs = np.zeros((number_qubits, number_qubits,
+                     number_qubits, number_qubits))
     hpqrs[5][3][1][0] = 4.587
     hpqrs[0][1][3][5] = 4.587
 
@@ -240,17 +255,21 @@ def test_n_terms():
     pauli_dict["X"] = np.array([[0, 1], [1, 0]])
     pauli_dict["I"] = np.array([[1, 0], [0, 1]])
 
-    terms = ["".join(list(np.random.choice(paulis, 2))) for _ in range(n_terms)]
+    terms = ["".join(list(np.random.choice(paulis, 2)))
+             for _ in range(n_terms)]
     terms = list(set(terms))
     n_terms = len(terms)
     coeffs = np.random.randn(n_terms)
     U_mats = [
-        sp.linalg.expm(-1j * coeff * np.kron(pauli_dict[key[0]], pauli_dict[key[1]]))
+        sp.linalg.expm(-1j * coeff *
+                       np.kron(pauli_dict[key[0]], pauli_dict[key[1]]))
         for coeff, key in zip(coeffs, terms)
     ]
     U_mat = np.linalg.multi_dot(U_mats[::-1])
     terms = [Term(coeff, term, [0, 1]) for coeff, term in zip(coeffs, terms)]
-    qrout2 = make_spin_hamiltonian_trotter_slice(Observable(2, pauli_terms=terms))
+    qrout2 = make_spin_hamiltonian_trotter_slice(
+        Observable(2, pauli_terms=terms))
     U_mat_circ = get_unitary_from_circuit(qrout2, nqbits)
     # print(terms)
-    np.testing.assert_almost_equal(np.linalg.norm(U_mat - U_mat_circ), 0, decimal=13)
+    np.testing.assert_almost_equal(
+        np.linalg.norm(U_mat - U_mat_circ), 0, decimal=13)

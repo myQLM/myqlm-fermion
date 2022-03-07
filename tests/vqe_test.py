@@ -4,7 +4,6 @@ import unittest
 
 from qat.lang.AQASM import QRoutine, RY, RX
 from qat.qpus import LinAlg
-from qat.fermion.fermionic_util import exact_eigen_energies
 from qat.fermion.transforms import transform_to_jw_basis
 from qat.fermion.hamiltonians import ElectronicStructureHamiltonian
 from qat.fermion.vqe import VQE
@@ -28,7 +27,7 @@ def simple_circuit_twoparameters(x):
 
 class TestVQE(unittest.TestCase):
     def test_VQE_SPSA_JW_1qb(self):
-        spsa_optimizer = lambda fun, theta0: spsa_minimize(
+        def spsa_optimizer(fun, theta0): return spsa_minimize(
             fun, theta0, precision=1e-6, maxiter=500, c=0.05, a=1, A=0
         )
 
@@ -48,7 +47,7 @@ class TestVQE(unittest.TestCase):
         self.assertAlmostEqual(energy, 0.0, 3)
 
     def test_VQE_SPSA_JW_2qb(self):
-        spsa_optimizer = lambda fun, theta0: spsa_minimize(
+        def spsa_optimizer(fun, theta0): return spsa_minimize(
             fun, theta0, precision=1e-6, maxiter=500, c=0.05, a=1, A=0
         )
         nqbit = 2
@@ -57,7 +56,8 @@ class TestVQE(unittest.TestCase):
         hpq[1, 0] = hpq[0, 1] = 2
         hpqrs = np.zeros((nqbit, nqbit, nqbit, nqbit))
 
-        min_theoritical_energy = min(exact_eigen_energies(hpq, hpqrs)[0])
+        hamiltonian = ElectronicStructureHamiltonian(hpq, hpqrs)
+        min_theoritical_energy = min(hamiltonian.eigenenergies()[0])
         hamilt = ElectronicStructureHamiltonian(hpq=hpq, hpqrs=hpqrs)
         hamilt_sp = transform_to_jw_basis(hamilt)
         qpu = LinAlg()
@@ -65,10 +65,12 @@ class TestVQE(unittest.TestCase):
             hamilt_sp,
             spsa_optimizer,
             simple_circuit_twoparameters,
-            np.array([random.random() * 2 * np.pi, random.random() * 2 * np.pi]),
+            np.array([random.random() * 2 * np.pi,
+                     random.random() * 2 * np.pi]),
             qpu,
         )
-        self.assertAlmostEqual(min_theoritical_energy, calculated_energy, delta=5e-3)
+        self.assertAlmostEqual(min_theoritical_energy,
+                               calculated_energy, delta=5e-3)
 
 
 if __name__ == "__main__":

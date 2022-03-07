@@ -7,7 +7,7 @@ from scipy.sparse.linalg import eigsh
 import itertools
 
 from qat.fermion.util import init_creation_ops, dag
-from qat.fermion.impurity.hamiltonians import make_embedded_model, make_anderson_model
+from qat.fermion.hamiltonians import make_embedded_model, make_anderson_model
 
 
 def test_anderson():
@@ -38,12 +38,14 @@ def test_risb_embedding():
     d = {ind: dag(c_dag) for ind, c_dag in d_dag.items()}
 
     int_kernel = 1.0 * np.fromfunction(
-        lambda i, j, k, l: (i == j) * (i % 2 == 0) * (k == l) * (k == i + 1) * 1,
+        lambda i, j, k, l: (i == j) * (i % 2 == 0) *
+        (k == l) * (k == i + 1) * 1,
         (2 * Nc, 2 * Nc, 2 * Nc, 2 * Nc),
         dtype=float,
     )
     int_kernel_sym = 1.0 * np.fromfunction(
-        lambda i, j, k, l: (i == j) * (i % 2 == 1) * (k == l) * (k == i - 1) * 1,
+        lambda i, j, k, l: (i == j) * (i % 2 == 1) *
+        (k == l) * (k == i - 1) * 1,
         (2 * Nc, 2 * Nc, 2 * Nc, 2 * Nc),
         dtype=float,
     )
@@ -51,12 +53,14 @@ def test_risb_embedding():
 
     # cluster ordering:
     int_kernel_fermion = 1.0 * np.fromfunction(
-        lambda i, j, k, l: (i == k) * (i % 2 == 0) * (j == l) * (j == i + 1) * 1,
+        lambda i, j, k, l: (i == k) * (i % 2 == 0) *
+        (j == l) * (j == i + 1) * 1,
         (2 * Nc, 2 * Nc, 2 * Nc, 2 * Nc),
         dtype=float,
     )
     int_kernel_sym_fermion = 1.0 * np.fromfunction(
-        lambda i, j, k, l: (i == k) * (i % 2 == 1) * (j == l) * (j == i - 1) * 1,
+        lambda i, j, k, l: (i == k) * (i % 2 == 1) *
+        (j == l) * (j == i - 1) * 1,
         (2 * Nc, 2 * Nc, 2 * Nc, 2 * Nc),
         dtype=float,
     )
@@ -72,7 +76,8 @@ def test_risb_embedding():
         / 2
         * sum(
             [
-                int_kernel[i, j, k, l] * d_dag[i].dot(d[j]).dot(d_dag[k]).dot(d[l])
+                int_kernel[i, j, k, l] *
+                d_dag[i].dot(d[j]).dot(d_dag[k]).dot(d[l])
                 for i, j, k, l in itertools.product(range(M), repeat=4)
             ]
         )

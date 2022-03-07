@@ -1,7 +1,7 @@
 import numpy as np
 
 from qat.plugins import ZeroNoiseExtrapolator
-from qat.fermion.ansatz_circuits import make_shallow_circ
+from qat.fermion.circuits import shallow
 from qat.fermion.transforms import transform_to_jw_basis
 from qat.fermion.hamiltonians import ElectronicStructureHamiltonian
 
@@ -15,9 +15,10 @@ eps2 = 0.006
 hw_model = make_depolarizing_hardware_model(
     eps1=eps1, eps2=eps2, depol_type="randomizing", correl_type="multi_qubit"
 )
-noisy_qpu = NoisyQProc(hardware_model=hw_model, sim_method="deterministic-vectorized")
+noisy_qpu = NoisyQProc(hardware_model=hw_model,
+                       sim_method="deterministic-vectorized")
 
-circ = make_shallow_circ()
+circ = shallow()
 theta = np.random.random(8)
 bd_circ = circ.bind_variables({r"\theta_{%i}" % i: theta[i] for i in range(8)})
 
