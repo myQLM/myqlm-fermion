@@ -10,7 +10,7 @@ import numpy as np
 from bitstring import BitArray
 
 from qat.core import Term
-from qat.lang.AQASM import X, Program
+from qat.lang.AQASM import X, Program, QRoutine
 from ..trotterisation import make_spin_hamiltonian_trotter_slice
 from ..hamiltonians import Hamiltonian, ElectronicStructureHamiltonian
 from ..util import tobin
@@ -250,6 +250,86 @@ def build_cluster_operator(l_ex_op, nqbits):
 
     return t_opti
 
+def build_ucc_ansatz(cluster_ops, ket_hf, n_steps=1):
+    r"""Builds the parametric state preparation circuit implementing the
+    provided cluster operator.
+    The returned function maps :math:`\vec{\theta}` to a QRoutine
+    describing :math:`Q` such as:
+    .. math::
+        Q \vert \vec{0} \rangle
+            &= \vert \mathrm{UCC} (\vec{\theta}) \rangle \\
+            &= e^{T(\vec{\theta})} \vert \mathrm{HF}\rangle
+    Args:
+        cluster_ops (list<Hamiltonian>): the cluster operators iT (note the i factor)
+        ket_hf (int): The Hartree-Fock state in integer representation
+        n_steps(int): number of trotter steps
+    Returns:
+        lambda function: The parametric state preparation implementing the UCCSD method, theta -> QRoutine
+    Warning: 
+        Deprecated
+    """
+    nqbits = cluster_ops[0].nbqbits
+    n_ops = len(cluster_ops)
+    # convert to string
+    ket_hf_init_sp = [int(c) for c in tobin(ket_hf, nqbits)]
+
+    # 1.1 Construction of the QRoutine corresponding to U such as |HF> =
+    # U |0>
+    qrout_hf = QRoutine(arity=nqbits)
+    for j in range(nqbits):
+        if int(ket_hf_init_sp[j]) == 1:
+            qrout_hf.apply(X, j)
+
+    def qroutwparam(theta):
+        r"""Returns the QRoutine describing :math:`Q` such as:
+        .. math::
+            Q \vert \vec{0} \rangle
+                &= \vert \mathrm{UCC} (\vec{\theta}) \rangle \\
+                &= e^{T(\vec{\theta})} \vert \mathrm{HF}\rangle
+        Args:
+            theta (lst(float)): The trial parametrization as a
+                dictionary corresponding to the factors of each
+                excitation operator.
+        Returns:
+            qrout_uccsd (QRoutine): The QRoutine implementing
+                :math: `\vert UCCSD(\vec{\theta})\rangle` with the
+                fixed parameter set ``theta`` given in input.
+        """
+        qrout_uccsd = QRoutine(arity=nqbits)
+        qubit_range = list(range(nqbits))
+        assert n_ops == len(
+            theta
+        ), "received {0} cluster operators and {1} variational parameters".format(
+            n_ops, len(theta)
+        )
+        # 1.2 Application of qrout_hf
+        qrout_uccsd.apply(qrout_hf, qubit_range)
+
+        # 2. Construction of the QRoutine corresponding to exp T =
+        # exp (sum_op_index theta_op_index * ex_op_op_index)
+        for i in range(n_steps):
+            terms = []
+            for angle, cluster_op in zip(
+                theta, cluster_ops
+            ):  # op_index = (i, a) or (i, j, a, b)
+                for term in cluster_op.terms:
+                    assert isinstance(term.coeff, (float, complex))
+                    if isinstance(term.coeff, complex):
+                        assert term.coeff.imag < 1e-13
+                        term.coeff = term.coeff.real
+                    coeff = angle * term.coeff
+                    terms.append(Term(coeff, term.op, term.qbits))
+
+            # 2.2 QRoutine implementation
+            cluster_op_obs = Hamiltonian(nqbits, terms)
+            qrout_expt = make_spin_hamiltonian_trotter_slice(
+                cluster_op_obs
+            )  # approx to exp(-i O), with O = i T
+            qrout_uccsd.apply(qrout_expt, qubit_range[: qrout_expt.arity])
+
+        return qrout_uccsd
+
+    return qroutwparam
 
 def construct_ucc_ansatz(cluster_ops, ket_hf, n_steps=1):
     r"""Builds the parametric state preparation circuit implementing the

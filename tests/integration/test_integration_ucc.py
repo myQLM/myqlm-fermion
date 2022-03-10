@@ -113,7 +113,7 @@ def test_basic(use_pyscf=False, verbose=False):
     # encoding the initial state to new encoding
     hf_init_sp = recode_integer(hf_init, code(nqbits))
 
-    # Finally: build_uccsd
+    # Finally: construct_ucc_ansatz
     qrout = build_ucc_ansatz(cluster_ops_sp, hf_init_sp)
 
     # we define the cost function to be minimized (the energy)
