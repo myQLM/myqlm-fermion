@@ -1,9 +1,21 @@
+# Build & install
 /build
 /myqlm_fermion.egg-info
-del_fermion.sh
+*.pyc
+*.eggs
+
+# Cache files
 /.pytest_cache
 /tests/__pycache__
 /qat/__pycache__
 __pycache__
-*.pyc
-*.eggs
+
+# Code analysis
+tests/prof
+htmlcov/
+.coverage
+
+# Dev scripts
+install
+uninstall
+clear_cache

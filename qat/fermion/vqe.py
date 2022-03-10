@@ -1,5 +1,4 @@
 from qat.lang.AQASM import Program
-from qat.plugins import ObservableSplitter
 
 
 def VQE(

@@ -45,8 +45,7 @@ def make_hubbard_dimer(U, t_hopping):
     hpqrs = np.zeros((nqbit, nqbit, nqbit, nqbit))
     for i in [0, 1]:
         for sig in [0, 1]:
-            hpqrs[2 * i + sig, 2 * i + 1 - sig,
-                  2 * i + sig, 2 * i + 1 - sig] = -U
+            hpqrs[2 * i + sig, 2 * i + 1 - sig, 2 * i + sig, 2 * i + 1 - sig] = -U
 
     return ElectronicStructureHamiltonian(hpq=hpq, hpqrs=hpqrs)
 
@@ -294,8 +293,7 @@ def test_hubbard_molecule__from_notebook():
         qrout = QRoutine()
         qrout.new_wires(4)
         state_prep = AbstractGate("STATE_PREPARATION", [np.ndarray])
-        state_normalizing_factor = np.sqrt(
-            sum(coeff**2 for coeff in eigen_state))
+        state_normalizing_factor = np.sqrt(sum(coeff**2 for coeff in eigen_state))
         qrout.apply(
             state_prep(np.array(eigen_state) / state_normalizing_factor),
             [0, 1, 2, 3],

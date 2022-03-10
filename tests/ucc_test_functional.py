@@ -94,8 +94,7 @@ def test_basic(use_pyscf=False, verbose=False):
     active_noons, active_orb_energies = [], []
     for ind in active_inds:
         active_noons.extend([noons[ind], noons[ind]])
-        active_orb_energies.extend(
-            [orbital_energies[ind], orbital_energies[ind]])
+        active_orb_energies.extend([orbital_energies[ind], orbital_energies[ind]])
     nb_active_els = nels - 2 * len(occ_inds)
     cluster_ops, theta_0, hf_init = get_cluster_ops_and_init_guess(
         nb_active_els, active_noons, active_orb_energies, H_active.hpqrs
@@ -148,13 +147,11 @@ def test_more_basic(use_pyscf=False, verbose=False):
         noons,
     ) = prepare_h2(use_pyscf)
     hpq, hpqrs = convert_to_h_integrals(one_body_integrals, two_body_integrals)
-    H = ElectronicStructureHamiltonian(
-        hpq, hpqrs, constant_coeff=nuclear_repulsion)
+    H = ElectronicStructureHamiltonian(hpq, hpqrs, constant_coeff=nuclear_repulsion)
     noons_full, orb_energies_full = [], []
     for ind in range(len(noons)):
         noons_full.extend([noons[ind], noons[ind]])
-        orb_energies_full.extend(
-            [orbital_energies[ind], orbital_energies[ind]])
+        orb_energies_full.extend([orbital_energies[ind], orbital_energies[ind]])
 
     cluster_ops, theta_0, hf_init = get_cluster_ops_and_init_guess(
         nels, noons_full, orb_energies_full, H.hpqrs

@@ -48,12 +48,10 @@ def transform_integrals_to_new_basis(
     if old_version:
         n = one_body_integrals.shape[0]
         h_hat_ij = np.zeros(one_body_integrals.shape, one_body_integrals.dtype)
-        h_hat_ijkl = np.zeros(two_body_integrals.shape,
-                              two_body_integrals.dtype)
+        h_hat_ijkl = np.zeros(two_body_integrals.shape, two_body_integrals.dtype)
 
         for i, j, p, q in product(range(n), repeat=4):
-            h_hat_ij[i, j] += U_mat[p, i] * \
-                one_body_integrals[p, q] * U_matd[j, q]
+            h_hat_ij[i, j] += U_mat[p, i] * one_body_integrals[p, q] * U_matd[j, q]
 
         for i, j, k, l, p, q, r, s in product(range(n), repeat=8):
             h_hat_ijkl[i, j, k, l] += (
@@ -102,8 +100,7 @@ def compute_active_space_integrals(
         core_constant += 2 * one_body_integrals[i, i]
         for j in occupied_indices:
             core_constant += (
-                2 * two_body_integrals[i, j, j, i] -
-                two_body_integrals[i, j, i, j]
+                2 * two_body_integrals[i, j, j, i] - two_body_integrals[i, j, i, j]
             )
 
     # Modified one electron integrals
@@ -118,8 +115,7 @@ def compute_active_space_integrals(
         core_constant,
         one_body_integrals_new[np.ix_(active_indices, active_indices)],
         two_body_integrals[
-            np.ix_(active_indices, active_indices,
-                   active_indices, active_indices)
+            np.ix_(active_indices, active_indices, active_indices, active_indices)
         ],
     )
 
@@ -159,8 +155,7 @@ def convert_to_h_integrals(one_body_integrals, two_body_integrals):
 
     nb_qubits = 2 * one_body_integrals.shape[0]
 
-    one_body_coefficients = np.zeros(
-        (nb_qubits, nb_qubits), dtype=np.complex128)
+    one_body_coefficients = np.zeros((nb_qubits, nb_qubits), dtype=np.complex128)
     two_body_coefficients = np.zeros(
         (nb_qubits, nb_qubits, nb_qubits, nb_qubits), dtype=np.complex128
     )
@@ -603,9 +598,9 @@ def select_excitation_operators(
         var_noons_1e[(a + 1, i + 1)] = noons[a // 2] - noons[i // 2]
 
     for n_unocc, a in enumerate(active_unoccupied_orbitals[::1]):
-        for b in active_unoccupied_orbitals[n_unocc + 1:]:
+        for b in active_unoccupied_orbitals[n_unocc + 1 :]:
             for n_occ, i in enumerate(active_occupied_orbitals[::1]):
-                for j in active_occupied_orbitals[n_occ + 1:]:
+                for j in active_occupied_orbitals[n_occ + 1 :]:
                     if (a % 2 == i % 2 and b % 2 == j % 2) or (
                         a % 2 == j % 2 and b % 2 == i % 2
                     ):
@@ -809,8 +804,7 @@ def get_cluster_ops_and_init_guess(
 
     # find theta_init (MP2)
     ket_hf_init, as_occ, as_unocc, theta_init = init_uccsd(
-        active_size, n_active_els, hpqrs, list(
-            range(active_size)), active_orb_energies
+        active_size, n_active_els, hpqrs, list(range(active_size)), active_orb_energies
     )
 
     exc_op_list = select_excitation_operators(active_noons, as_occ, as_unocc)

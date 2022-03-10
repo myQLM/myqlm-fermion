@@ -108,7 +108,6 @@ def transform_to_jw_basis(fermion_hamiltonian):
         spin_hamiltonian = transform_to_jw_basis(hamiltonian)
         print("H(spin) = ", spin_hamiltonian)
 
-
     """
 
     nqbits = fermion_hamiltonian.nbqbits

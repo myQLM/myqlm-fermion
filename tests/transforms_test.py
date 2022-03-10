@@ -4,7 +4,6 @@
 Testing transforms
 """
 import pytest
-from itertools import product
 import numpy as np
 
 from qat.core import Term

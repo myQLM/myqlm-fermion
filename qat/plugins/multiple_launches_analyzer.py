@@ -4,8 +4,6 @@ import copy
 from qat.core import BatchResult
 from qat.core.plugins import AbstractPlugin
 
-from qat.core.console import display
-
 
 class MultipleLaunchesAnalyzer(AbstractPlugin):
     """

@@ -8,15 +8,16 @@ from qat.lang.AQASM import Program, QRoutine, AbstractGate, X, RY, CNOT
 from qat.core import default_gate_set
 
 
-def fSim_gen(theta, phi): return np.array(
-    [
-        [1, 0, 0, 0],
-        [0, np.cos(theta), -1j * np.sin(theta), 0],
-        [0, -1j * np.sin(theta), np.cos(theta), 0],
-        [0, 0, 0, np.exp(-1j * phi)],
-    ],
-    dtype="complex",
-)
+def fSim_gen(theta, phi):
+    return np.array(
+        [
+            [1, 0, 0, 0],
+            [0, np.cos(theta), -1j * np.sin(theta), 0],
+            [0, -1j * np.sin(theta), np.cos(theta), 0],
+            [0, 0, 0, np.exp(-1j * phi)],
+        ],
+        dtype="complex",
+    )
 
 
 fSim = AbstractGate(
@@ -54,11 +55,9 @@ def make_fSim_fan_routine(nbqbits, theta):
     ind_theta += 2
 
     for j in range(nbqbits // 2 - 1):
-        qrout.apply(
-            fSim(theta[ind_theta], theta[ind_theta + 1]), q1 - j - 1, q1 - j)
+        qrout.apply(fSim(theta[ind_theta], theta[ind_theta + 1]), q1 - j - 1, q1 - j)
         ind_theta += 2
-        qrout.apply(
-            fSim(theta[ind_theta], theta[ind_theta + 1]), q2 + j, q2 + j + 1)
+        qrout.apply(fSim(theta[ind_theta], theta[ind_theta + 1]), q2 + j, q2 + j + 1)
         ind_theta += 2
 
     return qrout
