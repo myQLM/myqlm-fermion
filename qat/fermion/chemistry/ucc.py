@@ -16,9 +16,7 @@ from ..hamiltonians import Hamiltonian, ElectronicStructureHamiltonian
 from ..util import tobin
 
 
-def transform_integrals_to_new_basis(
-    one_body_integrals, two_body_integrals, U_mat, old_version=False
-):
+def transform_integrals_to_new_basis(one_body_integrals, two_body_integrals, U_mat):
     """
     Change one and two body integrals (indices p, q...) to
     new basis (indices i, j...) using transformation U such that
@@ -40,29 +38,8 @@ def transform_integrals_to_new_basis(
 
     Returns:
         np.array, np.array: one- and two-body integrals :math:`\hat{I}_{ij}` and :math:`\hat{I}_{ijkl}`
-
-    Warning:
-        Very slow (N^8) implementation. Can be made N^5.
     """
     U_matd = np.conj(U_mat.T)
-    if old_version:
-        n = one_body_integrals.shape[0]
-        h_hat_ij = np.zeros(one_body_integrals.shape, one_body_integrals.dtype)
-        h_hat_ijkl = np.zeros(two_body_integrals.shape, two_body_integrals.dtype)
-
-        for i, j, p, q in product(range(n), repeat=4):
-            h_hat_ij[i, j] += U_mat[p, i] * one_body_integrals[p, q] * U_matd[j, q]
-
-        for i, j, k, l, p, q, r, s in product(range(n), repeat=8):
-            h_hat_ijkl[i, j, k, l] += (
-                U_mat[p, i]
-                * U_mat[q, j]
-                * two_body_integrals[p, q, r, s]
-                * U_matd[k, r]
-                * U_matd[l, s]
-            )
-
-        return h_hat_ij, h_hat_ijkl
 
     h_hat_ij = np.einsum("pi,pq,jq", U_mat, one_body_integrals, U_matd)
     h_hat_ijkl = np.einsum(
@@ -70,6 +47,19 @@ def transform_integrals_to_new_basis(
     )
 
     return h_hat_ij, h_hat_ijkl
+
+
+def compute_core_constant(one_body_integrals, two_body_integrals, occupied_indices):
+
+    core_constant = 0.0
+    for i in occupied_indices:
+        core_constant += 2 * one_body_integrals[i, i]
+        for j in occupied_indices:
+            core_constant += (
+                2 * two_body_integrals[i, j, j, i] - two_body_integrals[i, j, i, j]
+            )
+
+    return core_constant
 
 
 def compute_active_space_integrals(
@@ -95,13 +85,11 @@ def compute_active_space_integrals(
             4D array of two-body integrals :math:`I_{uvwx}^{(a)}`, core constant :math:`c^{(a)}`
     """
     # Modified core constant
-    core_constant = 0.0
-    for i in occupied_indices:
-        core_constant += 2 * one_body_integrals[i, i]
-        for j in occupied_indices:
-            core_constant += (
-                2 * two_body_integrals[i, j, j, i] - two_body_integrals[i, j, i, j]
-            )
+    core_constant = compute_core_constant(
+        one_body_integrals, two_body_integrals, occupied_indices
+    )
+
+    print("CORE_CONSTANT = ", core_constant)
 
     # Modified one electron integrals
     one_body_integrals_new = np.copy(one_body_integrals)
@@ -250,6 +238,7 @@ def build_cluster_operator(l_ex_op, nqbits):
 
     return t_opti
 
+
 def build_ucc_ansatz(cluster_ops, ket_hf, n_steps=1):
     r"""Builds the parametric state preparation circuit implementing the
     provided cluster operator.
@@ -330,6 +319,7 @@ def build_ucc_ansatz(cluster_ops, ket_hf, n_steps=1):
         return qrout_uccsd
 
     return qroutwparam
+
 
 def construct_ucc_ansatz(cluster_ops, ket_hf, n_steps=1):
     r"""Builds the parametric state preparation circuit implementing the
@@ -415,8 +405,8 @@ def select_active_orbitals(noons, nb_e, threshold_1=2e-2, threshold_2=2e-3):
         active_so (list(int)): The list of active spatial orbitals.
         inactive_occupied_so (list(int)): The list of core spatial
             orbitals.
-
     """
+
     active_so, inactive_occupied_so = [], []  # Active and core space orbitals.
 
     for idx, noon in enumerate(noons):
@@ -579,19 +569,9 @@ def init_uccsd(nb_o, nb_e, int2e, l_ao, orbital_energies):
     # convert to integer
     hf_init = BitArray("0b" + "".join([str(int(c)) for c in ket_hf_init])).uint
 
-    # 2. Construction of the lists of active occupied and unoccupied
-    #    orbitals
-    active_occupied_orbitals = []
-    active_unoccupied_orbitals = []
-    nb_oo = min(l_ao)
-
-    nb_e_left = nb_e - nb_oo
-    for i in l_ao:
-        if nb_e_left > 0:
-            active_occupied_orbitals.append(i)
-            nb_e_left -= 1
-        else:
-            active_unoccupied_orbitals.append(i)
+    active_occupied_orbitals, active_unoccupied_orbitals = construct_active_orbitals(
+        nb_e, l_ao
+    )
 
     # 3. Construction of theta_MP2 (to use it as a trial
     #    parametrization)
@@ -604,7 +584,24 @@ def init_uccsd(nb_o, nb_e, int2e, l_ao, orbital_energies):
     )
     # Note: At least for initialization, theta_a_i = 0
 
-    return hf_init, active_occupied_orbitals, active_unoccupied_orbitals, theta_init
+    return hf_init, theta_init
+
+
+def construct_active_orbitals(nb_e, l_ao):
+
+    active_occupied_orbitals = []
+    active_unoccupied_orbitals = []
+    nb_oo = min(l_ao)
+
+    nb_e_left = nb_e - nb_oo
+    for i in l_ao:
+        if nb_e_left > 0:
+            active_occupied_orbitals.append(i)
+            nb_e_left -= 1
+        else:
+            active_unoccupied_orbitals.append(i)
+
+    return active_occupied_orbitals, active_unoccupied_orbitals
 
 
 def select_excitation_operators(
@@ -792,12 +789,12 @@ def get_active_space_hamiltonian(
     Args:
         one_body_integrals (np.array): 2D array of one-body integrals :math:`I_{uv}`
         two_body_integrals (np.array): 4D array of two-body integrals :math:`I_{uvwx}`
+        threshold_1 (float, optional): The upper threshold :math:`\varepsilon_1` on
+            the NOON of an active orbital. Defaults to 0.02.
         noons (list<float>): the natural-orbital occupation numbers :math:`n_i`, sorted
             in descending order (from high occupations to low occupations)
         nels (int): The number of electrons :math:`N_e`.
         nuclear_repulsion (float): value of the nuclear repulsion energy :math:`E_\mathrm{core}`.
-        threshold_1 (float, optional): The upper threshold :math:`\varepsilon_1` on
-            the NOON of an active orbital. Defaults to 0.02.
         threshold_2 (float, optional): The lower threshold :math:`\varepsilon_2` on
             the NOON of an active orbital. Defaults to 0.001.
 
@@ -826,11 +823,12 @@ def get_active_space_hamiltonian(
     return H_active, active_indices, occupied_indices
 
 
-def get_cluster_ops_and_init_guess(
-    n_active_els, active_noons, active_orb_energies, hpqrs
+def get_cluster_ops(
+    active_noons,
+    actives_occupied_orbitals,
+    actives_unoccupied_orbitals,
 ):
-    r"""Build the cluster operator and find initial guess using Møller-Plesset
-    perturbation theory.
+    r"""Build the cluster operator.
 
     The UCCSD cluster operator is defined (in normal-ordered form) as:
 
@@ -844,6 +842,33 @@ def get_cluster_ops_and_init_guess(
     where :math:`i, j \in \mathcal{O}'`, and :math:`a, b \in \mathcal{I}'`,
     with :math:`\mathcal{I}'` (resp. :math:`\mathcal{O}'`) the list of inoccupied
     (resp. occupied) orbitals (doubled due to spin degeneracy)
+
+    Args:
+        active_noons (list<float>): the natural-orbital occupation numbers
+            :math:`n_i`, sorted in descending order (from high occupations
+            to low occupations) (doubled due to spin degeneracy)
+        active_orb_energies (list<float>): the energies of the molecular orbitals
+            :math:`\epsilon_i` (doubled due to spin degeneracy)
+        hpqrs (np.array): the 4D array of (active) two-body integrals :math:`h_{pqrs}`
+
+    Returns:
+        list<Hamiltonian>, list<float>, int:
+
+        - the list of cluster operators :math:`\{T_{a}^{i}, a \in \mathcal{I}', i \in \mathcal{O}' \} \cup \{T_{ab}^{ij}, a>b, i>j, a,b \in \mathcal{I}', i,j \in \mathcal{O}'\}`
+    """
+    active_size = len(active_noons)
+
+    exc_op_list = select_excitation_operators(
+        active_noons, actives_occupied_orbitals, actives_unoccupied_orbitals
+    )
+
+    cluster_list = build_cluster_operator(exc_op_list, active_size)
+
+    return cluster_list
+
+
+def guess_init_state(n_active_els, active_noons, active_orb_energies, hpqrs):
+    r"""Find initial guess using Møller-Plesset perturbation theory.
 
     The trial parametrization is efficiently improved upon the
     Hartree-Fock solution (which would set every initial parameter to
@@ -882,16 +907,25 @@ def get_cluster_ops_and_init_guess(
     """
     active_size = len(active_noons)
 
-    # find theta_init (MP2)
-    ket_hf_init, as_occ, as_unocc, theta_init = init_uccsd(
+    (ket_hf_init, theta_init,) = init_uccsd(
         active_size, n_active_els, hpqrs, list(range(active_size)), active_orb_energies
     )
 
-    exc_op_list = select_excitation_operators(active_noons, as_occ, as_unocc)
-    cluster_list = build_cluster_operator(exc_op_list, active_size)
+    actives_occupied_orbitals, actives_unoccupied_orbitals = construct_active_orbitals(
+        n_active_els, list(range(active_size))
+    )
+
+    exc_op_list = select_excitation_operators(
+        active_noons, actives_occupied_orbitals, actives_unoccupied_orbitals
+    )
     theta_list = [
         theta_init[op_index] if op_index in theta_init else 0
         for op_index in exc_op_list
     ]
 
-    return cluster_list, theta_list, ket_hf_init
+    return (
+        theta_list,
+        ket_hf_init,
+        actives_occupied_orbitals,
+        actives_unoccupied_orbitals,
+    )

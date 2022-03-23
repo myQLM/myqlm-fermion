@@ -11,6 +11,7 @@ r"""
            Bull - Rue Jean Jaurès - B.P. 68 - 78340 Les Clayes-sous-Bois
 
 """
+from .wrapper import Molecule, MolecularHamiltonian
 
 # Try to find other packages in other folders (with separate build directory)
 from pkgutil import extend_path

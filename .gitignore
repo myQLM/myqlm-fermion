@@ -9,6 +9,7 @@
 /tests/__pycache__
 /qat/__pycache__
 __pycache__
+doc/notebooks/.ipynb_checkpoints/
 
 # Code analysis
 tests/prof
@@ -19,3 +20,4 @@ htmlcov/
 install
 uninstall
 clear_cache
+fix_rights

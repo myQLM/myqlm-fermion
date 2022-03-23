@@ -1,11 +1,25 @@
 import numpy as np
 import scipy.sparse as sp
 from itertools import product
+from typing import Callable
+
 import qat.linalg
 from qat.core.simutil import wavefunction
 
 from qat.lang.AQASM import Program, QRoutine, AbstractGate, X, RY, CNOT
 from qat.core import default_gate_set
+
+
+def copy_doc(copy_func: Callable) -> Callable:
+    """
+    Copy docstring from one function or class to another.
+    """
+
+    def wrapper(func: Callable) -> Callable:
+        func.__doc__ = copy_func.__doc__
+        return func
+
+    return wrapper
 
 
 def fSim_gen(theta, phi):

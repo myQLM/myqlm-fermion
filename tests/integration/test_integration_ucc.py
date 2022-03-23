@@ -86,9 +86,9 @@ def test_basic(use_pyscf=False, verbose=False):
     H_active, active_inds, occ_inds = get_active_space_hamiltonian(
         one_body_integrals,
         two_body_integrals,
+        nuclear_repulsion,
         noons,
         nels,
-        nuclear_repulsion,
         threshold_2=1e-3,
     )
     active_noons, active_orb_energies = [], []
