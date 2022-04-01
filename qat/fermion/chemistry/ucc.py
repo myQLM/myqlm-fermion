@@ -89,8 +89,6 @@ def compute_active_space_integrals(
         one_body_integrals, two_body_integrals, occupied_indices
     )
 
-    print("CORE_CONSTANT = ", core_constant)
-
     # Modified one electron integrals
     one_body_integrals_new = np.copy(one_body_integrals)
     for u, v, i in itertools.product(active_indices, active_indices, occupied_indices):
@@ -852,7 +850,7 @@ def get_cluster_ops(
         hpqrs (np.array): the 4D array of (active) two-body integrals :math:`h_{pqrs}`
 
     Returns:
-        list<Hamiltonian>, list<float>, int:
+        list<Hamiltonian>:
 
         - the list of cluster operators :math:`\{T_{a}^{i}, a \in \mathcal{I}', i \in \mathcal{O}' \} \cup \{T_{ab}^{ij}, a>b, i>j, a,b \in \mathcal{I}', i,j \in \mathcal{O}'\}`
     """
