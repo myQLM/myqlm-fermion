@@ -10,6 +10,7 @@
 /qat/__pycache__
 __pycache__
 doc/notebooks/.ipynb_checkpoints/
+misc/.ipynb_checkpoints/
 
 # Code analysis
 tests/prof
