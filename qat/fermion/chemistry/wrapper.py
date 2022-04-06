@@ -2,6 +2,7 @@ from typing import Union, List
 
 import numpy as np
 from copy import deepcopy
+from warnings import warn
 
 from .ucc import (
     transform_integrals_to_new_basis,
@@ -32,7 +33,7 @@ class MolecularHamiltonian(object):
         two_body_integrals: np.ndarray,
         constant_coeff: np.ndarray,
     ):
-        """MolecularHamiltonian container class.
+        """MolecularHamiltonian helper class.
 
         Args:
             one_body_integrals (np.ndarray): One-body integrals
@@ -61,8 +62,8 @@ class MolecularHamiltonian(object):
         s = " MolecularHamiltonian(\n"
         s += f" - constant_coeff : {self.constant_coeff}\n"
         s += f" - integrals shape\n"
-        s += f"    * one_body_integral : {self.one_body_integrals.shape}\n"
-        s += f"    * two_body_integral : {self.two_body_integrals.shape}\n"
+        s += f"    * one_body_integrals : {self.one_body_integrals.shape}\n"
+        s += f"    * two_body_integrals : {self.two_body_integrals.shape}\n"
 
         return s
 
@@ -138,16 +139,13 @@ class MolecularHamiltonian(object):
             E_\mathrm{core}^{(a)} = E_\mathrm{core} + \sum_{i\in\mathcal{O}} I_{ii} + \sum_{ij\in\mathcal{O}} 2 I_{ijji} - I_{ijij}
 
         Args:
-            one_body_integrals (np.array): 2D array of one-body integrals :math:`I_{uv}`
-            two_body_integrals (np.array): 4D array of two-body integrals :math:`I_{uvwx}`
-            threshold_1 (float, optional): The upper threshold :math:`\varepsilon_1` on
-                the NOON of an active orbital. Defaults to 0.02.
             noons (list<float>): the natural-orbital occupation numbers :math:`n_i`, sorted
                 in descending order (from high occupations to low occupations)
-            nels (int): The number of electrons :math:`N_e`.
-            nuclear_repulsion (float): value of the nuclear repulsion energy :math:`E_\mathrm{core}`.
+            n_electrons (int): The number of electrons :math:`N_e`.
+            threshold_1 (float, optional): The upper threshold :math:`\varepsilon_1` on
+                the NOON of an active orbital.
             threshold_2 (float, optional): The lower threshold :math:`\varepsilon_2` on
-                the NOON of an active orbital. Defaults to 0.001.
+                the NOON of an active orbital.
 
         Returns:
             MolecularHamiltonian, list<int>, list<int>:
@@ -213,6 +211,15 @@ class MoleculeInfo(object):
         noons: Union[np.ndarray, List[float]],
         orbital_energies: np.ndarray,
     ):
+        """MoleculeInfo helper class.
+
+        Args:
+            hamiltonian (MolecularHamiltonian): The MolecularHamiltonian of the studied molecule
+            n_electrons (int): Number of electrons
+            noons (Union[np.ndarray, List[float]]): Natural orbital occupation number
+            orbital_energies (np.ndarray): Orbital energies
+        """
+
         self.hamiltonian = hamiltonian
         self.n_electrons = n_electrons
         self.noons = noons
@@ -222,6 +229,9 @@ class MoleculeInfo(object):
         self.occupied_indices = None
 
     def __repr__(self):
+        """
+        __repr__ method
+        """
 
         h_str = self.hamiltonian.__repr__().replace("*", "**").replace("-", "*")
 
@@ -248,26 +258,84 @@ class MoleculeInfo(object):
 
     @property
     def one_body_integrals(self):
+        """Getter for the one body integrals in the hamiltonian
+
+        Returns:
+            np.ndarray: One body integrals
+        """
         return self.hamiltonian.one_body_integrals
 
     @property
     def two_body_integrals(self):
+        """Getter for the two body integrals in the hamiltonian
+
+        Returns:
+            np.ndarray: Two body integrals
+        """
         return self.hamiltonian.two_body_integrals
 
     @property
     def constant_coeff(self):
+        """Getter for the constant coefficient in the hamiltonian
+
+        Returns:
+            np.ndarray: Constant coefficient
+        """
         return self.hamiltonian.constant_coeff
+    
+    @property
+    def active_space(self):
+        """Getter for the active space
+
+        Returns:
+            List[int] : List of active indices
+            List[int] : List of occupied indices
+        """
+
+        if self.active_indices is None and self.occupied_indices is None:
+            warn("The active space has not been computed.")
+
+        return self.active_space, self.occupied_indices
+
+    @property
+    def active_indices(self):
+        """Getter for the active indices
+
+        Returns:
+            List[int] : List of active indices
+        """
+
+        if self.active_indices is None:
+            warn("The active space has not been computed.")
+
+        return self.active_space
+
+    @property
+    def occupied_indices(self):
+        """Getter for the occupied indices
+
+        Returns:
+            List[int] : List of active indices
+        """
+
+        if self.occupied_indices is None:
+            warn("The active space has not been computed.")
+
+        return self.occupied_indices
 
     def copy(self):
+        """
+        Copy the MoleculeInfo class.
+        """
         return deepcopy(self)
 
     def _get_active_orbitals_info(self):
-        """Utility function which computes active orbital related informations.
+        """Utility function which computes active orbitals related informations.
 
         Returns:
-            n_active_electrons: Number of active electrons
-            active_noons: Active natural orbital occupation numbers
-            active_orbital_energies: Active orbital energies
+            n_active_electrons: Number of active electrons.
+            active_noons: Active natural orbital occupation numbers.
+            active_orbital_energies: Active orbital energies.
         """
         active_noons, active_orbital_energies = [], []
 
@@ -284,7 +352,48 @@ class MoleculeInfo(object):
     def restrict_active_space(
         self, threshold_1: float = 2.0e-2, threshold_2: float = 2.0e-3
     ):
+        r"""Restricts the right active space and freezes core electrons
+        according to their NOONs :math:`n_i`.
 
+        This function is an implementation of the *Complete Active Space*
+        (CAS) approach. It divides orbital space into sets of *active* and
+        *inactive* orbitals, the occupation number of the latter remaining
+        unchanged during the computation.
+
+        The active space indices are defined as:
+
+        .. math::
+
+            \mathcal{A} = \{i, n_i \in [\varepsilon_2, 2 - \varepsilon_1[\} \cup \{i, n_i \geq 2-\varepsilon_1, 2(i+1)\geq N_e \}
+
+        The inactive occupied orbitals are defined as:
+
+        .. math::
+
+            \mathcal{O} = \{i, n_i \geq 2 -\varepsilon_1, 2(i+1) < N_e \}
+
+        The restriction of the one- and two-body integrals (and update of the core energy)
+        is then carried out according to:
+
+        .. math::
+
+            \forall u,v \in \mathcal{A},\; I^{(a)}_{uv} = I_{uv} + \sum_{i\in \mathcal{O}} 2 I_{i,u,v,i} - I_{i,u,i,v}
+
+        .. math::
+
+            \forall u,v,w,x \in \mathcal{A}, I^{(a)}_{uvwx} = I_{uvwx}
+
+        .. math::
+
+            E_\mathrm{core}^{(a)} = E_\mathrm{core} + \sum_{i\in\mathcal{O}} I_{ii} + \sum_{ij\in\mathcal{O}} 2 I_{ijji} - I_{ijij}
+
+        Args:
+            threshold_1 (float, optional): The upper threshold :math:`\varepsilon_1` on
+                the NOON of an active orbital.
+            threshold_2 (float, optional): The lower threshold :math:`\varepsilon_2` on
+                the NOON of an active orbital. 
+
+        """
         (
             self.hamiltonian,
             self.active_indices,
@@ -292,7 +401,8 @@ class MoleculeInfo(object):
         ) = self.hamiltonian.select_active_space(
             self.noons, self.n_electrons, threshold_1, threshold_2
         )
-
+        
+    @property
     def unpack(self):
         """Allow for the unpacking of a selection of MoleculeInfo attributes.
 
@@ -304,12 +414,12 @@ class MoleculeInfo(object):
             occupied_indices (List[int]) : Occupied indices
         """
 
-        output = (
-            self.n_electrons,
-            self.noons,
-            self.orbital_energies,
-            self.active_indices,
-            self.occupied_indices,
-        )
+        output = {
+            "n_electrons" : self.n_electrons,
+            "noons" : self.noons,
+            "orbital_energies" : self.orbital_energies,
+            "active_indices" : self.active_indices,
+            "occupied_indices" : self.occupied_indices,
+        }        
 
         return output
