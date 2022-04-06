@@ -212,8 +212,8 @@ class MoleculeInfo(object):
         self.noons = noons
         self.orbital_energies = orbital_energies
 
-        self.active_indices = None
-        self.occupied_indices = None
+        self._active_indices = None
+        self._occupied_indices = None
 
     def __repr__(self):
         """
@@ -231,14 +231,14 @@ class MoleculeInfo(object):
         s += f" - noons = {self.noons}\n"
         s += f" - orbital energies = {self.orbital_energies}\n"
 
-        if self.active_indices is not None:
+        if self._active_indices is not None:
             s += " - active space:\n"
-            s += f"    * active indices : {self.active_indices}\n"
+            s += f"    * active indices : {self._active_indices}\n"
 
         if not all(
-            cond is None for cond in (self.active_indices, self.occupied_indices)
+            cond is None for cond in (self._active_indices, self._occupied_indices)
         ):
-            s += f"    * occupied indices : {self.occupied_indices}\n"
+            s += f"    * occupied indices : {self._occupied_indices}\n"
 
         s += ")"
         return s
@@ -279,10 +279,10 @@ class MoleculeInfo(object):
             List[int] : List of occupied indices
         """
 
-        if self.active_indices is None and self.occupied_indices is None:
+        if self._active_indices is None and self._occupied_indices is None:
             warn("The active space has not been computed.")
 
-        return self.active_space, self.occupied_indices
+        return self._active_indices, self._occupied_indices
 
     @property
     def active_indices(self):
@@ -292,10 +292,10 @@ class MoleculeInfo(object):
             List[int] : List of active indices
         """
 
-        if self.active_indices is None:
+        if self._active_indices is None:
             warn("The active space has not been computed.")
 
-        return self.active_space
+        return self._active_indices
 
     @property
     def occupied_indices(self):
@@ -305,10 +305,30 @@ class MoleculeInfo(object):
             List[int] : List of active indices
         """
 
-        if self.occupied_indices is None:
+        if self._occupied_indices is None:
             warn("The active space has not been computed.")
 
-        return self.occupied_indices
+        return self._occupied_indices
+
+    @active_indices.setter
+    def active_indices(self, value):
+        """Setter for the active indices
+
+        Returns:
+            List[int] : List of active indices
+        """
+
+        self._active_indices = value
+
+    @occupied_indices.setter
+    def occupied_indices(self, value):
+        """Setter for the occupied indices
+
+        Returns:
+            List[int] : List of active indices
+        """
+
+        self._occupied_indices = value
 
     def copy(self):
         """
