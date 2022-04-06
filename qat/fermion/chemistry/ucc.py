@@ -804,6 +804,7 @@ def get_active_space_hamiltonian(
         - the list of indices corresponding to the occupied orbitals, :math:`\mathcal{O}`
 
     """
+
     active_indices, occupied_indices = select_active_orbitals(
         noons=noons, nb_e=nels, threshold_1=threshold_1, threshold_2=threshold_2
     )
@@ -865,7 +866,7 @@ def get_cluster_ops(
     return cluster_list
 
 
-def guess_init_state(n_active_els, active_noons, active_orb_energies, hpqrs):
+def _guess_init_state(n_active_els, active_noons, active_orb_energies, hpqrs):
     r"""Find initial guess using Møller-Plesset perturbation theory.
 
     The trial parametrization is efficiently improved upon the
@@ -927,3 +928,122 @@ def guess_init_state(n_active_els, active_noons, active_orb_energies, hpqrs):
         actives_occupied_orbitals,
         actives_unoccupied_orbitals,
     )
+
+
+def guess_init_params(
+    one_body_integrals,
+    two_body_integrals,
+    n_electrons,
+    noons,
+    orbital_energies,
+    active_indices,
+    occupied_indices,
+):
+    """Find initial parameters using Møller-Plesset perturbation theory.
+
+    The trial parametrization is efficiently improved upon the
+    Hartree-Fock solution (which would set every initial parameter to
+    zero) thanks to the following formula identifying the UCC parameters
+    in the Møller-Plesset (MP2) solution :
+
+    .. math::
+
+        \theta_a^i = 0
+
+    .. math::
+
+        \theta_{a, b}^{i, j} = \frac{h_{a, b, i, j} -
+        h_{a, b, j, i}}{\epsilon_i + \epsilon_j -\epsilon_a -
+        \epsilon_b}
+
+    where :math:`h_{p, q, r, s}` is the 2-electron molecular orbital integral,
+    and :math:`\epsilon_i` is the orbital energy.
+
+    Returns:
+        theta_init (Dict[int, float]): The trial MP2 parametrization as a dictionary
+        corresponding to the factors of each excitation operator (only the terms
+        above ``threshold`` are stored.)
+    """
+
+    n_electrons, noons, orbital_energies = _get_active_orbitals_info(
+        noons, n_electrons, orbital_energies, active_indices, occupied_indices
+    )
+
+    _, hpqrs = convert_to_h_integrals(one_body_integrals, two_body_integrals)
+    (
+        theta_list,
+        _,
+        _,
+        _,
+    ) = _guess_init_state(n_electrons, noons, orbital_energies, hpqrs)
+
+    return theta_list
+
+
+def get_hf_ket(n_electrons, noons, orbital_energies, active_indices, occupied_indices):
+    """Get Hartree-Fock state stored as a vector with right-to-left orbitals indexing.
+
+    Args:
+        nb_o (int): The number of active spin-orbitals.
+        nb_e (int): The number of active electrons.
+
+    Returns:
+        np.ndarray: Hartree-Fock state.
+    """
+
+    n_active_electrons, active_noons, _ = _get_active_orbitals_info(
+        noons, n_electrons, orbital_energies, active_indices, occupied_indices
+    )
+
+    ket_hf_init = np.zeros(len(active_noons))
+    for i in range(n_active_electrons):
+        ket_hf_init[i] = 1
+
+    hf_init = BitArray("0b" + "".join([str(int(c)) for c in ket_hf_init])).uint
+
+    return hf_init
+
+
+def get_cluster_ops(
+    n_electrons, noons, orbital_energies, active_indices, occupied_indices
+):
+
+    active_electrons, active_noons, _ = _get_active_orbitals_info(
+        noons, n_electrons, orbital_energies, active_indices, occupied_indices
+    )
+
+    (
+        actives_occupied_orbitals,
+        actives_unoccupied_orbitals,
+    ) = construct_active_orbitals(active_electrons, list(range(len(active_noons))))
+
+    active_size = len(active_noons)
+
+    exc_op_list = select_excitation_operators(
+        active_noons, actives_occupied_orbitals, actives_unoccupied_orbitals
+    )
+
+    cluster_list = build_cluster_operator(exc_op_list, active_size)
+
+    return cluster_list
+
+
+def _get_active_orbitals_info(
+    noons, n_electrons, orbital_energies, active_indices, occupied_indices
+):
+    """Utility function which computes active orbital related informations.
+
+    Returns:
+        n_active_electrons: Number of active electrons
+        active_noons: Active natural orbital occupation numbers
+        active_orbital_energies: Active orbital energies
+    """
+    active_noons, active_orbital_energies = [], []
+
+    for ind in active_indices:
+        active_noons.extend([noons[ind], noons[ind]])
+        active_orbital_energies.extend([orbital_energies[ind], orbital_energies[ind]])
+
+    n_active_electrons = n_electrons - 2 * len(occupied_indices)
+
+    return n_active_electrons, active_noons, active_orbital_energies

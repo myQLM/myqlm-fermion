@@ -1,23 +1,15 @@
-from typing import Union, List, Iterable
-from dataclasses import dataclass
+from typing import Union, List
 
 import numpy as np
 from copy import deepcopy
-from bitstring import BitArray
 
-from qat.core import Observable, Term
 from .ucc import (
-    get_cluster_ops,
     transform_integrals_to_new_basis,
     select_active_orbitals,
     compute_active_space_integrals,
-    guess_init_state,
     convert_to_h_integrals,
-    construct_active_orbitals,
-    compute_core_constant,
 )
 from ..hamiltonians import ElectronicStructureHamiltonian
-from collections.abc import Mapping
 from typing import Callable
 
 
@@ -38,22 +30,20 @@ class MolecularHamiltonian(object):
         self,
         one_body_integrals: np.ndarray,
         two_body_integrals: np.ndarray,
-        nuclear_repulsion: np.ndarray,
+        constant_coeff: np.ndarray,
     ):
         """MolecularHamiltonian container class.
 
         Args:
             one_body_integrals (np.ndarray): One-body integrals
             two_body_integrals (np.ndarray): Two-body integrals
-            nuclear_repulsion (np.ndarray): Nuclear repulsion
+            constant_coeff (np.ndarray): Constant coefficient
         """
 
         self.one_body_integrals = one_body_integrals
         self.two_body_integrals = two_body_integrals
-        self.nuclear_repulsion = nuclear_repulsion
+        self.constant_coeff = constant_coeff
         self.core_constant = 0
-        self.active_indices = None
-        self.occupied_indices = None
 
     def __getitem__(self, key):
         return self.__dict__[key]
@@ -69,26 +59,14 @@ class MolecularHamiltonian(object):
 
     def __repr__(self):
         s = " MolecularHamiltonian(\n"
-        s += f" - nuclear repulsion : {self.nuclear_repulsion}\n"
+        s += f" - constant_coeff : {self.constant_coeff}\n"
         s += f" - integrals shape\n"
-        s += f"    * one body integral : {self.one_body_integrals.shape}\n"
-        s += f"    * two body integral : {self.two_body_integrals.shape}\n"
+        s += f"    * one_body_integral : {self.one_body_integrals.shape}\n"
+        s += f"    * two_body_integral : {self.two_body_integrals.shape}\n"
 
-        if self.active_indices is not None:
-            s += " - active space:\n"
-            s += f"    * active indices : {self.active_indices}\n"
-
-        if not all(
-            cond is None for cond in (self.active_indices, self.occupied_indices)
-        ):
-            s += f"    * occupied indices : {self.occupied_indices}\n"
-
-        s += ")"
         return s
 
-    def transform_basis(
-        self, transformation_matrix: np.ndarray, flip: bool = True, inplace=False
-    ):
+    def transform_basis(self, transformation_matrix: np.ndarray):
         """
         Change one and two body integrals (indices p, q...) to
         new basis (indices i, j...) using transformation U such that
@@ -110,21 +88,12 @@ class MolecularHamiltonian(object):
         Returns:
             np.array, np.array: one- and two-body integrals :math:`\hat{I}_{ij}` and :math:`\hat{I}_{ijkl}`
         """
-        if flip:
-            transformation_matrix = np.flip(transformation_matrix, axis=1)
 
         integrals = transform_integrals_to_new_basis(
             self.one_body_integrals, self.two_body_integrals, transformation_matrix
         )
 
-        if inplace:
-            self.one_body_integrals = integrals[0]
-            self.two_body_integrals = integrals[1]
-
-        else:
-            return MolecularHamiltonian(
-                integrals[0], integrals[1], self.nuclear_repulsion
-            )
+        return MolecularHamiltonian(integrals[0], integrals[1], self.constant_coeff)
 
     def select_active_space(
         self,
@@ -132,12 +101,61 @@ class MolecularHamiltonian(object):
         n_electrons,
         threshold_1: float = 2.0e-2,
         threshold_2: float = 2.0e-3,
-        reverse: bool = True,
-        inplace=False,
     ):
+        r"""Selects the right active space and freezes core electrons
+        according to their NOONs :math:`n_i`.
 
-        if reverse:
-            noons = list(reversed(noons))
+        This function is an implementation of the *Complete Active Space*
+        (CAS) approach. It divides orbital space into sets of *active* and
+        *inactive* orbitals, the occupation number of the latter remaining
+        unchanged during the computation.
+
+        The active space indices are defined as:
+
+        .. math::
+
+            \mathcal{A} = \{i, n_i \in [\varepsilon_2, 2 - \varepsilon_1[\} \cup \{i, n_i \geq 2-\varepsilon_1, 2(i+1)\geq N_e \}
+
+        The inactive occupied orbitals are defined as:
+
+        .. math::
+
+            \mathcal{O} = \{i, n_i \geq 2 -\varepsilon_1, 2(i+1) < N_e \}
+
+        The restriction of the one- and two-body integrals (and update of the core energy)
+        is then carried out according to:
+
+        .. math::
+
+            \forall u,v \in \mathcal{A},\; I^{(a)}_{uv} = I_{uv} + \sum_{i\in \mathcal{O}} 2 I_{i,u,v,i} - I_{i,u,i,v}
+
+        .. math::
+
+            \forall u,v,w,x \in \mathcal{A}, I^{(a)}_{uvwx} = I_{uvwx}
+
+        .. math::
+
+            E_\mathrm{core}^{(a)} = E_\mathrm{core} + \sum_{i\in\mathcal{O}} I_{ii} + \sum_{ij\in\mathcal{O}} 2 I_{ijji} - I_{ijij}
+
+        Args:
+            one_body_integrals (np.array): 2D array of one-body integrals :math:`I_{uv}`
+            two_body_integrals (np.array): 4D array of two-body integrals :math:`I_{uvwx}`
+            threshold_1 (float, optional): The upper threshold :math:`\varepsilon_1` on
+                the NOON of an active orbital. Defaults to 0.02.
+            noons (list<float>): the natural-orbital occupation numbers :math:`n_i`, sorted
+                in descending order (from high occupations to low occupations)
+            nels (int): The number of electrons :math:`N_e`.
+            nuclear_repulsion (float): value of the nuclear repulsion energy :math:`E_\mathrm{core}`.
+            threshold_2 (float, optional): The lower threshold :math:`\varepsilon_2` on
+                the NOON of an active orbital. Defaults to 0.001.
+
+        Returns:
+            MolecularHamiltonian, list<int>, list<int>:
+
+            - the molecular Hamiltonian in active space :math:`H^{(a)}`
+            - the list of indices corresponding to the active orbitals, :math:`\mathcal{A}`
+            - the list of indices corresponding to the occupied orbitals, :math:`\mathcal{O}`
+        """
 
         active_indices, occupied_indices = select_active_orbitals(
             noons=noons,
@@ -146,45 +164,45 @@ class MolecularHamiltonian(object):
             threshold_2=threshold_2,
         )
 
-        if inplace:
+        hamiltonian = self.copy()
 
-            self.active_indices, self.occupied_indices = (
-                active_indices,
-                occupied_indices,
-            )
+        hamiltonian.active_indices, hamiltonian.occupied_indices = (
+            active_indices,
+            occupied_indices,
+        )
 
-            (
-                self.core_constant,
-                self.one_body_integrals,
-                self.two_body_integrals,
-            ) = compute_active_space_integrals(
-                self.one_body_integrals,
-                self.two_body_integrals,
-                self.active_indices,
-                self.occupied_indices,
-            )
+        (
+            hamiltonian.core_constant,
+            hamiltonian.one_body_integrals,
+            hamiltonian.two_body_integrals,
+        ) = compute_active_space_integrals(
+            hamiltonian.one_body_integrals,
+            hamiltonian.two_body_integrals,
+            active_indices,
+            occupied_indices,
+        )
 
-        else:
+        return hamiltonian, active_indices, occupied_indices
 
-            hamiltonian = self.copy()
+    def get_electronic_hamiltonian(self):
+        """Converts the MolecularHamiltonian to an ElectronicStructureHamiltonian.
 
-            hamiltonian.active_indices, hamiltonian.occupied_indices = (
-                active_indices,
-                occupied_indices,
-            )
+        Returns:
+            :py:class:`~qat.fermion.ElectronicStructureHamiltonian`: Electronic structure hamiltonian
+        """
 
-            (
-                hamiltonian.core_constant,
-                hamiltonian.one_body_integrals,
-                hamiltonian.two_body_integrals,
-            ) = compute_active_space_integrals(
-                hamiltonian.one_body_integrals,
-                hamiltonian.two_body_integrals,
-                active_indices,
-                occupied_indices,
-            )
+        hpq, hpqrs = convert_to_h_integrals(
+            self.one_body_integrals, self.two_body_integrals
+        )
 
-            return hamiltonian
+        H_electronic = ElectronicStructureHamiltonian(
+            hpq,
+            hpqrs,
+            constant_coeff=self.constant_coeff + self.core_constant,
+            do_clean_up=False,
+        )
+
+        return H_electronic
 
 
 class MoleculeInfo(object):
@@ -200,6 +218,9 @@ class MoleculeInfo(object):
         self.noons = noons
         self.orbital_energies = orbital_energies
 
+        self.active_indices = None
+        self.occupied_indices = None
+
     def __repr__(self):
 
         h_str = self.hamiltonian.__repr__().replace("*", "**").replace("-", "*")
@@ -212,6 +233,16 @@ class MoleculeInfo(object):
         s += f" - n_electrons = {self.n_electrons}\n"
         s += f" - noons = {self.noons}\n"
         s += f" - orbital energies = {self.orbital_energies}\n"
+
+        if self.active_indices is not None:
+            s += " - active space:\n"
+            s += f"    * active indices : {self.active_indices}\n"
+
+        if not all(
+            cond is None for cond in (self.active_indices, self.occupied_indices)
+        ):
+            s += f"    * occupied indices : {self.occupied_indices}\n"
+
         s += ")"
         return s
 
@@ -224,26 +255,13 @@ class MoleculeInfo(object):
         return self.hamiltonian.two_body_integrals
 
     @property
-    def nuclear_repulsion(self):
-        return self.hamiltonian.nuclear_repulsion
-
-    @property
-    def n_active_electrons(self):
-        if self.occupied_indices is not None:
-            return self.n_electrons - 2 * len(self.occupied_indices)
-
-    @property
-    def active_indices(self):
-        return self.hamiltonian.active_indices
-
-    @property
-    def occupied_indices(self):
-        return self.hamiltonian.occupied_indices
+    def constant_coeff(self):
+        return self.hamiltonian.constant_coeff
 
     def copy(self):
         return deepcopy(self)
 
-    def get_active_orbitals_info(self):
+    def _get_active_orbitals_info(self):
         """Utility function which computes active orbital related informations.
 
         Returns:
@@ -263,117 +281,35 @@ class MoleculeInfo(object):
 
         return n_active_electrons, active_noons, active_orbital_energies
 
-    def guess_init_params(self):
-        """Find initial parameters using Møller-Plesset perturbation theory.
-
-        The trial parametrization is efficiently improved upon the
-        Hartree-Fock solution (which would set every initial parameter to
-        zero) thanks to the following formula identifying the UCC parameters
-        in the Møller-Plesset (MP2) solution :
-
-        .. math::
-
-            \theta_a^i = 0
-
-        .. math::
-
-            \theta_{a, b}^{i, j} = \frac{h_{a, b, i, j} -
-            h_{a, b, j, i}}{\epsilon_i + \epsilon_j -\epsilon_a -
-            \epsilon_b}
-
-        where :math:`h_{p, q, r, s}` is the 2-electron molecular orbital integral,
-        and :math:`\epsilon_i` is the orbital energy.
-
-        Returns:
-            theta_init (Dict[int, float]): The trial MP2 parametrization as a dictionary
-            corresponding to the factors of each excitation operator (only the terms
-            above ``threshold`` are stored.)
-        """
+    def restrict_active_space(
+        self, threshold_1: float = 2.0e-2, threshold_2: float = 2.0e-3
+    ):
 
         (
-            n_active_electrons,
-            active_noons,
-            active_orbital_energies,
-        ) = self.get_active_orbitals_info()
-
-        _, hpqrs = convert_to_h_integrals(
-            self.one_body_integrals, self.two_body_integrals
-        )
-        (theta_list, _, _, _,) = guess_init_state(
-            n_active_electrons, active_noons, active_orbital_energies, hpqrs
+            self.hamiltonian,
+            self.active_indices,
+            self.occupied_indices,
+        ) = self.hamiltonian.select_active_space(
+            self.noons, self.n_electrons, threshold_1, threshold_2
         )
 
-        return theta_list
-
-    def get_hf_ket(self):
-        """Get Hartree-Fock state stored as a vector with right-to-left orbitals indexing.
-
-        Args:
-            nb_o (int): The number of active spin-orbitals.
-            nb_e (int): The number of active electrons.
+    def unpack(self):
+        """Allow for the unpacking of a selection of MoleculeInfo attributes.
 
         Returns:
-            np.ndarray: Hartree-Fock state.
-        """
-        n_active_electrons, active_noons, _ = self.get_active_orbitals_info()
-
-        ket_hf_init = np.zeros(len(active_noons))
-        for i in range(n_active_electrons):
-            ket_hf_init[i] = 1
-
-        hf_init = BitArray("0b" + "".join([str(int(c)) for c in ket_hf_init])).uint
-
-        return hf_init
-
-    def get_cluster_ops(self):
-
-        n_active_electrons, active_noons, _ = self.get_active_orbitals_info()
-        (
-            actives_occupied_orbitals,
-            actives_unoccupied_orbitals,
-        ) = construct_active_orbitals(
-            n_active_electrons, list(range(len(active_noons)))
-        )
-
-        return get_cluster_ops(
-            active_noons, actives_occupied_orbitals, actives_unoccupied_orbitals
-        )
-
-    def get_cluster_ops_and_init_guess(self):
-        (
-            theta_list,
-            ket_hf_init,
-            _,
-            _,
-            _,
-        ) = self.guess_init_state()
-
-        cluster_list = self.get_cluster_ops()
-
-        return cluster_list, ket_hf_init, theta_list
-
-    def get_electronic_hamiltonian(self):
-        """Converts the MolecularHamiltonian to an ElectronicStructureHamiltonian.
-
-        Returns:
-            :py:class:`~qat.fermion.ElectronicStructureHamiltonian`: Electronic structure hamiltonian
+            n_electrons (int) : Number of electrons
+            noons (List[np.ndarray]) : Natural orbitals occupation numbers
+            orbital_energies (List[np.ndarray]) : Orbital energies
+            active_indices (List[int]) : Actives indices
+            occupied_indices (List[int]) : Occupied indices
         """
 
-        hpq, hpqrs = convert_to_h_integrals(
-            self.one_body_integrals, self.two_body_integrals
+        output = (
+            self.n_electrons,
+            self.noons,
+            self.orbital_energies,
+            self.active_indices,
+            self.occupied_indices,
         )
 
-        # self.core_constant = compute_core_constant(
-        #     self.one_body_integrals,
-        #     self.two_body_integrals,
-        #     occupied_indices=occupied_indices,
-        # )
-
-        H_electronic = ElectronicStructureHamiltonian(
-            hpq,
-            hpqrs,
-            constant_coeff=self.nuclear_repulsion + self.hamiltonian.core_constant,
-            do_clean_up=False,
-        )
-
-        return H_electronic
+        return output

@@ -4,10 +4,8 @@ import scipy
 import numpy as np
 from qat.fermion.hamiltonians import ElectronicStructureHamiltonian
 from qat.fermion.chemistry.pyscf_tools import perform_pyscf_computation
-from qat.fermion.chemistry.ucc import (
-    get_cluster_ops_and_init_guess,
-    get_active_space_hamiltonian,
-)
+from qat.fermion.chemistry.ucc import get_active_space_hamiltonian
+from qat.fermion.chemistry.ucc_deprecated import get_cluster_ops_and_init_guess
 from qat.fermion.chemistry.ucc import convert_to_h_integrals
 from qat.fermion.transforms import recode_integer
 from qat.fermion.transforms import transform_to_jw_basis, get_jw_code
@@ -86,9 +84,9 @@ def test_basic(use_pyscf=False, verbose=False):
     H_active, active_inds, occ_inds = get_active_space_hamiltonian(
         one_body_integrals,
         two_body_integrals,
-        nuclear_repulsion,
         noons,
         nels,
+        nuclear_repulsion,
         threshold_2=1e-3,
     )
     active_noons, active_orb_energies = [], []
@@ -96,6 +94,7 @@ def test_basic(use_pyscf=False, verbose=False):
         active_noons.extend([noons[ind], noons[ind]])
         active_orb_energies.extend([orbital_energies[ind], orbital_energies[ind]])
     nb_active_els = nels - 2 * len(occ_inds)
+
     cluster_ops, theta_0, hf_init = get_cluster_ops_and_init_guess(
         nb_active_els, active_noons, active_orb_energies, H_active.hpqrs
     )
