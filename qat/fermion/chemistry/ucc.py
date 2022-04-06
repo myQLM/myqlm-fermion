@@ -501,7 +501,7 @@ def _theta_ab_ij(
     return theta
 
 
-def init_uccsd(nb_o, nb_e, int2e, l_ao, orbital_energies):
+def _init_uccsd(nb_o, nb_e, int2e, l_ao, orbital_energies):
     r"""Executes the different (classical) methods whose results are
     needed to set up the state preparation and the Hamiltonian.
 
@@ -906,7 +906,7 @@ def _guess_init_state(n_active_els, active_noons, active_orb_energies, hpqrs):
     """
     active_size = len(active_noons)
 
-    (ket_hf_init, theta_init,) = init_uccsd(
+    (ket_hf_init, theta_init,) = _init_uccsd(
         active_size, n_active_els, hpqrs, list(range(active_size)), active_orb_energies
     )
 

@@ -5,8 +5,8 @@ import numpy as np
 from .ucc import (
     select_excitation_operators,
     build_cluster_operator,
-    init_uccsd,
     construct_active_orbitals,
+    _init_uccsd,
     _theta_ab_ij,
 )
 
@@ -106,7 +106,7 @@ def guess_init_state(n_active_els, active_noons, active_orb_energies, hpqrs):
 
     active_size = len(active_noons)
 
-    (ket_hf_init, theta_init,) = init_uccsd(
+    (ket_hf_init, theta_init,) = _init_uccsd(
         active_size, n_active_els, hpqrs, list(range(active_size)), active_orb_energies
     )
 

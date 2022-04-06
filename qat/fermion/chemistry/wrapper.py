@@ -11,19 +11,6 @@ from .ucc import (
     convert_to_h_integrals,
 )
 from ..hamiltonians import ElectronicStructureHamiltonian
-from typing import Callable
-
-
-def _copy_doc(copy_func: Callable) -> Callable:
-    """
-    Copy docstring from one function or class to another.
-    """
-    # FIXME :  See qat/core/application.py if problems with Sphinx doc
-    def wrapper(func: Callable) -> Callable:
-        func.__doc__ = copy_func.__doc__
-        return func
-
-    return wrapper
 
 
 class MolecularHamiltonian(object):
@@ -282,7 +269,7 @@ class MoleculeInfo(object):
             np.ndarray: Constant coefficient
         """
         return self.hamiltonian.constant_coeff
-    
+
     @property
     def active_space(self):
         """Getter for the active space
@@ -391,7 +378,7 @@ class MoleculeInfo(object):
             threshold_1 (float, optional): The upper threshold :math:`\varepsilon_1` on
                 the NOON of an active orbital.
             threshold_2 (float, optional): The lower threshold :math:`\varepsilon_2` on
-                the NOON of an active orbital. 
+                the NOON of an active orbital.
 
         """
         (
@@ -401,7 +388,7 @@ class MoleculeInfo(object):
         ) = self.hamiltonian.select_active_space(
             self.noons, self.n_electrons, threshold_1, threshold_2
         )
-        
+
     @property
     def unpack(self):
         """Allow for the unpacking of a selection of MoleculeInfo attributes.
@@ -415,11 +402,11 @@ class MoleculeInfo(object):
         """
 
         output = {
-            "n_electrons" : self.n_electrons,
-            "noons" : self.noons,
-            "orbital_energies" : self.orbital_energies,
-            "active_indices" : self.active_indices,
-            "occupied_indices" : self.occupied_indices,
-        }        
+            "n_electrons": self.n_electrons,
+            "noons": self.noons,
+            "orbital_energies": self.orbital_energies,
+            "active_indices": self.active_indices,
+            "occupied_indices": self.occupied_indices,
+        }
 
         return output
