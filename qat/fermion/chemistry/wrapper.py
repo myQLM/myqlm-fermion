@@ -1,8 +1,10 @@
+from argparse import ArgumentError
 from typing import Union, List
 
 import numpy as np
 from copy import deepcopy
 from warnings import warn
+import inspect
 
 from .ucc import (
     transform_integrals_to_new_basis,
@@ -144,7 +146,7 @@ class MolecularHamiltonian(object):
 
         active_indices, occupied_indices = select_active_orbitals(
             noons=noons,
-            nb_e=n_electrons,
+            n_electrons=n_electrons,
             threshold_1=threshold_1,
             threshold_2=threshold_2,
         )
@@ -212,9 +214,6 @@ class MoleculeInfo(object):
         self.noons = noons
         self.orbital_energies = orbital_energies
 
-        self._active_indices = None
-        self._occupied_indices = None
-
     def __repr__(self):
         """
         __repr__ method
@@ -224,22 +223,13 @@ class MoleculeInfo(object):
 
         s = "MoleculeInfo(\n"
         s += " - MolecularHamiltonian(\n"
+
         for st in h_str.splitlines()[1:]:
             s += f"   {st}\n"
 
         s += f" - n_electrons = {self.n_electrons}\n"
         s += f" - noons = {self.noons}\n"
         s += f" - orbital energies = {self.orbital_energies}\n"
-
-        if self._active_indices is not None:
-            s += " - active space:\n"
-            s += f"    * active indices : {self._active_indices}\n"
-
-        if not all(
-            cond is None for cond in (self._active_indices, self._occupied_indices)
-        ):
-            s += f"    * occupied indices : {self._occupied_indices}\n"
-
         s += ")"
         return s
 
@@ -270,91 +260,11 @@ class MoleculeInfo(object):
         """
         return self.hamiltonian.constant_coeff
 
-    @property
-    def active_space(self):
-        """Getter for the active space
-
-        Returns:
-            List[int] : List of active indices
-            List[int] : List of occupied indices
-        """
-
-        if self._active_indices is None and self._occupied_indices is None:
-            warn("The active space has not been computed.")
-
-        return self._active_indices, self._occupied_indices
-
-    @property
-    def active_indices(self):
-        """Getter for the active indices
-
-        Returns:
-            List[int] : List of active indices
-        """
-
-        if self._active_indices is None:
-            warn("The active space has not been computed.")
-
-        return self._active_indices
-
-    @property
-    def occupied_indices(self):
-        """Getter for the occupied indices
-
-        Returns:
-            List[int] : List of active indices
-        """
-
-        if self._occupied_indices is None:
-            warn("The active space has not been computed.")
-
-        return self._occupied_indices
-
-    @active_indices.setter
-    def active_indices(self, value):
-        """Setter for the active indices
-
-        Returns:
-            List[int] : List of active indices
-        """
-
-        self._active_indices = value
-
-    @occupied_indices.setter
-    def occupied_indices(self, value):
-        """Setter for the occupied indices
-
-        Returns:
-            List[int] : List of active indices
-        """
-
-        self._occupied_indices = value
-
     def copy(self):
         """
         Copy the MoleculeInfo class.
         """
         return deepcopy(self)
-
-    def _get_active_orbitals_info(self):
-        """Utility function which computes active orbitals related informations.
-
-        Returns:
-            n_active_electrons: Number of active electrons.
-            active_noons: Active natural orbital occupation numbers.
-            active_orbital_energies: Active orbital energies.
-        """
-        active_noons, active_orbital_energies = [], []
-
-        for ind in self.hamiltonian.active_indices:
-            active_noons.extend([self.noons[ind], self.noons[ind]])
-            active_orbital_energies.extend(
-                [self.orbital_energies[ind], self.orbital_energies[ind]]
-            )
-
-        n_active_electrons = self.n_electrons - 2 * len(self.occupied_indices)
-
-        return n_active_electrons, active_noons, active_orbital_energies
 
     def restrict_active_space(
         self, threshold_1: float = 2.0e-2, threshold_2: float = 2.0e-3
@@ -403,30 +313,67 @@ class MoleculeInfo(object):
         """
         (
             self.hamiltonian,
-            self.active_indices,
-            self.occupied_indices,
+            active_indices,
+            occupied_indices,
         ) = self.hamiltonian.select_active_space(
             self.noons, self.n_electrons, threshold_1, threshold_2
         )
 
-    @property
-    def unpack(self):
-        """Allow for the unpacking of a selection of MoleculeInfo attributes.
+        self._update_molecule_active(active_indices, occupied_indices)
 
-        Returns:
-            n_electrons (int) : Number of electrons
-            noons (List[np.ndarray]) : Natural orbitals occupation numbers
-            orbital_energies (List[np.ndarray]) : Orbital energies
-            active_indices (List[int]) : Actives indices
-            occupied_indices (List[int]) : Occupied indices
+    def _update_molecule_active(self, active_indices, occupied_indices):
+        """Update MoleculeInfo attributes depending on the input active space indices and occupied indices.
+
+        Args:
+            active_indices (List[int]): List of active indices
+            occupied_indices (List[int]): List of occupied indices
         """
 
-        output = {
-            "n_electrons": self.n_electrons,
-            "noons": self.noons,
-            "orbital_energies": self.orbital_energies,
-            "active_indices": self.active_indices,
-            "occupied_indices": self.occupied_indices,
-        }
+        self.noons = [self.noons[idx] for idx in active_indices]
+        self.orbital_energies = [self.orbital_energies[idx] for idx in active_indices]
+        self.n_electrons = self.n_electrons - 2 * len(occupied_indices)
 
-        return output
+    def get_attr_dict(self):
+        d = self.__dict__.copy()
+        d.update(
+            {
+                "one_body_integrals": self.one_body_integrals,
+                "two_body_integrals": self.two_body_integrals,
+                "constant_coeff": self.constant_coeff,
+            }
+        )
+
+        return d
+
+    def apply(self, func):
+        """Unpack the corresponding MoleculeInfo attributes and apply the function onto them. This function
+        will automatically select the right attributes depending on the arguments names in the input function.
+
+        This method will ignore function arguments with an assigned default value.
+
+        Args:
+            func (Callable): Function to apply on the MoleculeInfo attributes
+        """
+        # Get function signature
+        signature = inspect.signature(func)
+
+        # Get function arguments names
+        args_name = list(signature.parameters)
+
+        # Remove default values from args_name list
+        for name in args_name.copy():
+            if signature.parameters[name].default is not inspect._empty:
+                args_name.remove(name)
+
+        # Define the dictionary with available attributes
+        attr_dict = self.get_attr_dict()
+
+        # Check that this dict contains all the necessary function arguments
+        for arg in args_name:
+            if arg not in attr_dict.keys():
+                raise AttributeError(f"Attribute {arg} not found.")
+
+        # Getting the arguments in the correct order
+        args = [attr_dict[arg] for arg in args_name]
+
+        return func(*args)

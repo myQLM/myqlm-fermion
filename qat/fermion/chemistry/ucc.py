@@ -340,6 +340,7 @@ def construct_ucc_ansatz(cluster_ops, ket_hf, n_steps=1):
     Returns:
         Program: The parametric program implementing the UCCSD method
     """
+
     nqbits = cluster_ops[0].nbqbits
     n_ops = len(cluster_ops)
     # convert to string
@@ -380,7 +381,7 @@ def construct_ucc_ansatz(cluster_ops, ket_hf, n_steps=1):
     return prog
 
 
-def select_active_orbitals(noons, nb_e, threshold_1=2e-2, threshold_2=2e-3):
+def select_active_orbitals(noons, n_electrons, threshold_1=2e-2, threshold_2=2e-3):
     r"""Selects the right active space and freezes core electrons
     according to their NOONs.
 
@@ -409,7 +410,7 @@ def select_active_orbitals(noons, nb_e, threshold_1=2e-2, threshold_2=2e-3):
 
     for idx, noon in enumerate(noons):
         if noon >= 2 - threshold_1:
-            if 2 * (idx + 1) < nb_e:
+            if 2 * (idx + 1) < n_electrons:
                 # Either considered 'core electron' because there are at
                 # least 2 remaining electrons (that would be activated.)
                 inactive_occupied_so.append(idx)
@@ -822,51 +823,51 @@ def get_active_space_hamiltonian(
     return H_active, active_indices, occupied_indices
 
 
-def get_cluster_ops(
-    active_noons,
-    actives_occupied_orbitals,
-    actives_unoccupied_orbitals,
-):
-    r"""Build the cluster operator.
+# def get_cluster_ops(
+#     active_noons,
+#     actives_occupied_orbitals,
+#     actives_unoccupied_orbitals,
+# ):
+#     r"""Build the cluster operator.
 
-    The UCCSD cluster operator is defined (in normal-ordered form) as:
+#     The UCCSD cluster operator is defined (in normal-ordered form) as:
 
-    .. math::
+#     .. math::
 
-        T(\theta) = \sum_{a, i} \theta_a^i (c^\dagger_a c_i -
-        c^\dagger_i c_a) + \sum_{a > b, i > j} \theta_{a, b}^{i, j}
-        (c^\dagger_a c^\dagger_b c_i c_j - c^\dagger_i c^\dagger_j c_a
-        c_b)
+#         T(\theta) = \sum_{a, i} \theta_a^i (c^\dagger_a c_i -
+#         c^\dagger_i c_a) + \sum_{a > b, i > j} \theta_{a, b}^{i, j}
+#         (c^\dagger_a c^\dagger_b c_i c_j - c^\dagger_i c^\dagger_j c_a
+#         c_b)
 
-    where :math:`i, j \in \mathcal{O}'`, and :math:`a, b \in \mathcal{I}'`,
-    with :math:`\mathcal{I}'` (resp. :math:`\mathcal{O}'`) the list of inoccupied
-    (resp. occupied) orbitals (doubled due to spin degeneracy)
+#     where :math:`i, j \in \mathcal{O}'`, and :math:`a, b \in \mathcal{I}'`,
+#     with :math:`\mathcal{I}'` (resp. :math:`\mathcal{O}'`) the list of inoccupied
+#     (resp. occupied) orbitals (doubled due to spin degeneracy)
 
-    Args:
-        active_noons (list<float>): the natural-orbital occupation numbers
-            :math:`n_i`, sorted in descending order (from high occupations
-            to low occupations) (doubled due to spin degeneracy)
-        active_orb_energies (list<float>): the energies of the molecular orbitals
-            :math:`\epsilon_i` (doubled due to spin degeneracy)
-        hpqrs (np.array): the 4D array of (active) two-body integrals :math:`h_{pqrs}`
+#     Args:
+#         active_noons (list<float>): the natural-orbital occupation numbers
+#             :math:`n_i`, sorted in descending order (from high occupations
+#             to low occupations) (doubled due to spin degeneracy)
+#         active_orb_energies (list<float>): the energies of the molecular orbitals
+#             :math:`\epsilon_i` (doubled due to spin degeneracy)
+#         hpqrs (np.array): the 4D array of (active) two-body integrals :math:`h_{pqrs}`
 
-    Returns:
-        list<Hamiltonian>:
+#     Returns:
+#         list<Hamiltonian>:
 
-        - the list of cluster operators :math:`\{T_{a}^{i}, a \in \mathcal{I}', i \in \mathcal{O}' \} \cup \{T_{ab}^{ij}, a>b, i>j, a,b \in \mathcal{I}', i,j \in \mathcal{O}'\}`
-    """
-    active_size = len(active_noons)
+#         - the list of cluster operators :math:`\{T_{a}^{i}, a \in \mathcal{I}', i \in \mathcal{O}' \} \cup \{T_{ab}^{ij}, a>b, i>j, a,b \in \mathcal{I}', i,j \in \mathcal{O}'\}`
+#     """
+#     active_size = len(active_noons)
 
-    exc_op_list = select_excitation_operators(
-        active_noons, actives_occupied_orbitals, actives_unoccupied_orbitals
-    )
+#     exc_op_list = select_excitation_operators(
+#         active_noons, actives_occupied_orbitals, actives_unoccupied_orbitals
+#     )
 
-    cluster_list = build_cluster_operator(exc_op_list, active_size)
+#     cluster_list = build_cluster_operator(exc_op_list, active_size)
 
-    return cluster_list
+#     return cluster_list
 
 
-def _guess_init_state(n_active_els, active_noons, active_orb_energies, hpqrs):
+def _compute_init_state(n_active_els, active_noons, active_orb_energies, hpqrs):
     r"""Find initial guess using Møller-Plesset perturbation theory.
 
     The trial parametrization is efficiently improved upon the
@@ -936,8 +937,6 @@ def guess_init_params(
     n_electrons,
     noons,
     orbital_energies,
-    active_indices,
-    occupied_indices,
 ):
     """Find initial parameters using Møller-Plesset perturbation theory.
 
@@ -965,9 +964,8 @@ def guess_init_params(
         above ``threshold`` are stored.)
     """
 
-    n_electrons, noons, orbital_energies = _get_active_orbitals_info(
-        noons, n_electrons, orbital_energies, active_indices, occupied_indices
-    )
+    noons = _extend_list(noons)
+    orbital_energies = _extend_list(orbital_energies)
 
     _, hpqrs = convert_to_h_integrals(one_body_integrals, two_body_integrals)
     (
@@ -975,13 +973,14 @@ def guess_init_params(
         _,
         _,
         _,
-    ) = _guess_init_state(n_electrons, noons, orbital_energies, hpqrs)
+    ) = _compute_init_state(n_electrons, noons, orbital_energies, hpqrs)
 
     return theta_list
 
 
-def get_hf_ket(n_electrons, noons, orbital_energies, active_indices, occupied_indices):
-    """Get Hartree-Fock state stored as a vector with right-to-left orbitals indexing.
+def get_hf_ket(n_electrons, noons):
+    """
+    Get Hartree-Fock state stored as a vector with right-to-left orbitals indexing.
 
     Args:
         nb_o (int): The number of active spin-orbitals.
@@ -991,9 +990,22 @@ def get_hf_ket(n_electrons, noons, orbital_energies, active_indices, occupied_in
         np.ndarray: Hartree-Fock state.
     """
 
-    n_active_electrons, active_noons, _ = _get_active_orbitals_info(
-        noons, n_electrons, orbital_energies, active_indices, occupied_indices
-    )
+    noons = _extend_list(noons)
+    hf_init = _hf_ket(n_electrons, noons)
+
+    return hf_init
+
+
+def _hf_ket(n_active_electrons, active_noons):
+    """Construct the Hartree-Fock state bitstring.
+
+    Args:
+        n_active_electrons (_type_): Number of active electrons.
+        active_noons (_type_): Number of active natural orbital occupation numbers.
+
+    Returns:
+        int: Hartree-Fock state.
+    """
 
     ket_hf_init = np.zeros(len(active_noons))
     for i in range(n_active_electrons):
@@ -1004,23 +1016,20 @@ def get_hf_ket(n_electrons, noons, orbital_energies, active_indices, occupied_in
     return hf_init
 
 
-def get_cluster_ops(
-    n_electrons, noons, orbital_energies, active_indices, occupied_indices
-):
+def get_cluster_ops(n_electrons, noons, orbital_energies):
 
-    active_electrons, active_noons, _ = _get_active_orbitals_info(
-        noons, n_electrons, orbital_energies, active_indices, occupied_indices
-    )
+    noons = _extend_list(noons)
+    orbital_energies = _extend_list(orbital_energies)
 
     (
         actives_occupied_orbitals,
         actives_unoccupied_orbitals,
-    ) = construct_active_orbitals(active_electrons, list(range(len(active_noons))))
+    ) = construct_active_orbitals(n_electrons, list(range(len(noons))))
 
-    active_size = len(active_noons)
+    active_size = len(noons)
 
     exc_op_list = select_excitation_operators(
-        active_noons, actives_occupied_orbitals, actives_unoccupied_orbitals
+        noons, actives_occupied_orbitals, actives_unoccupied_orbitals
     )
 
     cluster_list = build_cluster_operator(exc_op_list, active_size)
@@ -1028,22 +1037,18 @@ def get_cluster_ops(
     return cluster_list
 
 
-def _get_active_orbitals_info(
-    noons, n_electrons, orbital_energies, active_indices, occupied_indices
-):
-    """Utility function which computes active orbital related informations.
+def _extend_list(lst):
+    """Extend a list by cloning every element.
+
+    Args:
+        lst (list): List to extend
 
     Returns:
-        n_active_electrons: Number of active electrons
-        active_noons: Active natural orbital occupation numbers
-        active_orbital_energies: Active orbital energies
+        extended_lst: Extended list
     """
-    active_noons, active_orbital_energies = [], []
 
-    for ind in active_indices:
-        active_noons.extend([noons[ind], noons[ind]])
-        active_orbital_energies.extend([orbital_energies[ind], orbital_energies[ind]])
+    extended_lst = []
+    for idx in range(len(lst)):
+        extended_lst.extend((lst[idx], lst[idx]))
 
-    n_active_electrons = n_electrons - 2 * len(occupied_indices)
-
-    return n_active_electrons, active_noons, active_orbital_energies
+    return extended_lst
