@@ -105,6 +105,53 @@ def compute_active_space_integrals(
         ],
     )
 
+def _one_body_integrals_to_h(one_body_integrals):
+    nb_qubits = 2 * one_body_integrals.shape[0]
+
+    one_body_coefficients = np.zeros((nb_qubits, nb_qubits), dtype=np.complex128)
+
+    # Build the coefficients of the Hamiltonian:
+    for p, q in itertools.product(range(nb_qubits // 2), repeat=2):
+        y = one_body_integrals[p, q]
+
+        # Populate 1-body coefficients. Require p and q have same spin.
+        for sp in [0, 1]:
+            one_body_coefficients[2 * p + sp, 2 * q + sp] = y
+
+    return one_body_coefficients
+
+def _two_body_integrals_to_h(two_body_integrals):
+
+    nb_qubits = 2 * two_body_integrals.shape[0]
+
+    two_body_coefficients = np.zeros(
+        (nb_qubits, nb_qubits, nb_qubits, nb_qubits), dtype=np.complex128
+    )
+
+    # Build the coefficients of the Hamiltonian:
+    for p, q in itertools.product(range(nb_qubits // 2), repeat=2):
+
+        # Continue looping to prepare 2-body coefficients.
+        for r, s in itertools.product(range(nb_qubits // 2), repeat=2):
+            x = two_body_integrals[p, q, r, s]
+
+            # Require p,s and q,r to have same spin.
+
+            # Handle mixed spins.
+            for sp in [0, 1]:
+                two_body_coefficients[
+                    2 * p + sp, 2 * q + (1 - sp), 2 * r + (1 - sp), 2 * s + sp
+                ] = x
+
+            # Handle same spins.
+            if p != q and r != s:
+                for sp in [0, 1]:
+                    two_body_coefficients[
+                        2 * p + sp, 2 * q + sp, 2 * r + sp, 2 * s + sp
+                    ] = x
+
+    return two_body_coefficients
+
 
 def convert_to_h_integrals(one_body_integrals, two_body_integrals):
     r"""Convert from :math:`I_{uv},I_{uvwx}` to :math:`h_{pq},h_{pqrs}`, with
@@ -139,39 +186,8 @@ def convert_to_h_integrals(one_body_integrals, two_body_integrals):
         np.array, np.array: the :math:`h_{pq}` and :math:`h_{pqrs}` integrals.
     """
 
-    nb_qubits = 2 * one_body_integrals.shape[0]
-
-    one_body_coefficients = np.zeros((nb_qubits, nb_qubits), dtype=np.complex128)
-    two_body_coefficients = np.zeros(
-        (nb_qubits, nb_qubits, nb_qubits, nb_qubits), dtype=np.complex128
-    )
-
-    # Build the coefficients of the Hamiltonian:
-    for p, q in itertools.product(range(nb_qubits // 2), repeat=2):
-        y = one_body_integrals[p, q]
-
-        # Populate 1-body coefficients. Require p and q have same spin.
-        for sp in [0, 1]:
-            one_body_coefficients[2 * p + sp, 2 * q + sp] = y
-
-        # Continue looping to prepare 2-body coefficients.
-        for r, s in itertools.product(range(nb_qubits // 2), repeat=2):
-            x = two_body_integrals[p, q, r, s]
-
-            # Require p,s and q,r to have same spin.
-
-            # Handle mixed spins.
-            for sp in [0, 1]:
-                two_body_coefficients[
-                    2 * p + sp, 2 * q + (1 - sp), 2 * r + (1 - sp), 2 * s + sp
-                ] = x
-
-            # Handle same spins.
-            if p != q and r != s:
-                for sp in [0, 1]:
-                    two_body_coefficients[
-                        2 * p + sp, 2 * q + sp, 2 * r + sp, 2 * s + sp
-                    ] = x
+    one_body_coefficients = _one_body_integrals_to_h(one_body_integrals)
+    two_body_coefficients = _two_body_integrals_to_h(two_body_integrals)
 
     return one_body_coefficients, two_body_coefficients
 
@@ -932,7 +948,6 @@ def _compute_init_state(n_active_els, active_noons, active_orb_energies, hpqrs):
 
 
 def guess_init_params(
-    one_body_integrals,
     two_body_integrals,
     n_electrons,
     noons,
@@ -967,7 +982,7 @@ def guess_init_params(
     noons = _extend_list(noons)
     orbital_energies = _extend_list(orbital_energies)
 
-    _, hpqrs = convert_to_h_integrals(one_body_integrals, two_body_integrals)
+    hpqrs = _two_body_integrals_to_h(two_body_integrals)
     (
         theta_list,
         _,
@@ -1016,10 +1031,9 @@ def _hf_ket(n_active_electrons, active_noons):
     return hf_init
 
 
-def get_cluster_ops(n_electrons, noons, orbital_energies):
+def get_cluster_ops(n_electrons, noons):
 
     noons = _extend_list(noons)
-    orbital_energies = _extend_list(orbital_energies)
 
     (
         actives_occupied_orbitals,

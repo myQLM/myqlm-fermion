@@ -1,5 +1,5 @@
 from argparse import ArgumentError
-from typing import Union, List
+from typing import Callable, Union, List
 
 import numpy as np
 from copy import deepcopy
@@ -87,8 +87,8 @@ class MolecularHamiltonian(object):
 
     def select_active_space(
         self,
-        noons,
-        n_electrons,
+        noons: List[float],
+        n_electrons: int,
         threshold_1: float = 2.0e-2,
         threshold_2: float = 2.0e-3,
     ):
@@ -321,7 +321,9 @@ class MoleculeInfo(object):
 
         self._update_molecule_active(active_indices, occupied_indices)
 
-    def _update_molecule_active(self, active_indices, occupied_indices):
+    def _update_molecule_active(
+        self, active_indices: List[int], occupied_indices: List[int]
+    ):
         """Update MoleculeInfo attributes depending on the input active space indices and occupied indices.
 
         Args:
@@ -333,7 +335,7 @@ class MoleculeInfo(object):
         self.orbital_energies = [self.orbital_energies[idx] for idx in active_indices]
         self.n_electrons = self.n_electrons - 2 * len(occupied_indices)
 
-    def get_attr_dict(self):
+    def _get_attr_dict(self):
         d = self.__dict__.copy()
         d.update(
             {
@@ -345,15 +347,17 @@ class MoleculeInfo(object):
 
         return d
 
-    def apply(self, func):
-        """Unpack the corresponding MoleculeInfo attributes and apply the function onto them. This function
-        will automatically select the right attributes depending on the arguments names in the input function.
+    def apply(self, func: Callable):
+        """Unpack the corresponding MoleculeInfo attributes and apply the function onto them.
 
-        This method will ignore function arguments with an assigned default value.
+        This method will automatically select the right attributes depending on the arguments
+        names in the input function.It will ignore function arguments with an assigned
+        default value.
 
         Args:
             func (Callable): Function to apply on the MoleculeInfo attributes
         """
+
         # Get function signature
         signature = inspect.signature(func)
 
@@ -366,14 +370,14 @@ class MoleculeInfo(object):
                 args_name.remove(name)
 
         # Define the dictionary with available attributes
-        attr_dict = self.get_attr_dict()
+        attr_dict = self._get_attr_dict()
 
         # Check that this dict contains all the necessary function arguments
         for arg in args_name:
             if arg not in attr_dict.keys():
                 raise AttributeError(f"Attribute {arg} not found.")
 
-        # Getting the arguments in the correct order
+        # Get the arguments in the correct order
         args = [attr_dict[arg] for arg in args_name]
 
         return func(*args)
