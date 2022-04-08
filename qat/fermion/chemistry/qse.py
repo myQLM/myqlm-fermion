@@ -3,21 +3,24 @@ Quantum Subspace Expansion (QSE)
 """
 import itertools as it
 import numpy as np
+from typing import List, Tuple, Optional
 from scipy.linalg import eig
 
-from qat.core import Term
+from qat.core import Term, Circuit, Observable
+from qat.core.qpu import QPUHandler
+
 from ..hamiltonians import Hamiltonian
 
 
 def apply_quantum_subspace_expansion(
-    hamiltonian,
-    state_prep_circ,
-    expansion_operators,
-    qpu,
-    nbshots=0,
-    threshold=1e-15,
-    return_matrices=False,
-):
+    hamiltonian: Hamiltonian,
+    state_prep_circ: Circuit,
+    expansion_operators: List[Observable],
+    qpu: QPUHandler,
+    nbshots: int = 0,
+    threshold: float = 1e-15,
+    return_matrices: bool = False,
+) -> Tuple[float, Optional[np.ndarray], Optional[np.ndarray]]:
     r"""Apply quantum subspace expansion (QSE) to the given Hamiltonian.
 
     QSE is a method that improves the quality of noisy results at
@@ -51,24 +54,24 @@ def apply_quantum_subspace_expansion(
 
     Args:
 
-        hamiltonian (Hamiltonian): the Hamiltonian in its spin representation
-        state_prep_circ (Circuit): the state prep circuit
+        hamiltonian (Hamiltonian): the Hamiltonian in its spin representation.
+        state_prep_circ (Circuit): the state prep circuit.
         expansion_operators (list<Hamiltonian>): The set of operators :math:`{O_i}_i`
             generating the subspace of interest.
         qpu (QPUHandler): the QPU.
         nbshots (int, optional): The number of shots. Defaults to 0:
-            infinite number of shots
+            infinite number of shots.
         threshold (float, optional): The numerical threshold.
         return_matrices (bool, optional): If set to ``True``, the
             function returns the matrices :math:`H^{(s)}` and :math:`S`. Defaults to False.
 
     Returns:
-        float [, np.array, np.array]:
 
-        - Improved energy provided by the QSE procedure.
-        - The subspace Hamiltonian :math:`H^{(s)}`. Only if `return_matrices` is True
-        - The overlap matrix :math:`S`.  Only if `return_matrices` is True
-
+        e_qse (float):  Improved energy provided by the QSE procedure.
+        matrix_h (Optional[np.ndarray]): The subspace Hamiltonian :math:`H^{(s)}`. Only if
+            `return_matrices` is True.
+        matrix_s (Optional[np.ndarray]): The overlap matrix :math:`S`.  Only if
+            `return_matrices` is True.
 
     Example:
 
@@ -125,9 +128,8 @@ def apply_quantum_subspace_expansion(
                                                  qpu,
                                                  return_matrices=False)
         print("E(QSE) = %s (err = %s %%)"%(e_qse, 100*abs((e_qse-E_min)/E_min)))
-
-
     """
+
     matrix_h, matrix_s = _build_quantum_subspace_expansion(
         hamiltonian,
         state_prep_circ,
@@ -145,8 +147,13 @@ def apply_quantum_subspace_expansion(
 
 
 def _build_quantum_subspace_expansion(
-    hamiltonian, state_prep_circ, expansion_operators, qpu, nbshots=0, threshold=1e-15
-):
+    hamiltonian: Hamiltonian,
+    state_prep_circ: Circuit,
+    expansion_operators: List[Observable],
+    qpu: QPUHandler,
+    nbshots: int = 0,
+    threshold: float = 1e-15,
+) -> Tuple[np.matrix, np.matrix]:
     r"""Build the quantum subspace expansion (QSE) of the Hamiltonian as
     a matrix and the corresponding overlap matrix.
 
@@ -171,17 +178,17 @@ def _build_quantum_subspace_expansion(
 
     Args:
 
-        hamiltonian (Hamiltonian): the Hamiltonian
-        expansion_operators (list(Observable)): the list of operators
-            generating the subspace of interest.
+        hamiltonian (Hamiltonian): the Hamiltonian.
+        state_prep_circ (Circuit): the state prep circuit.
         qpu (QPUHandler): the qpu.
+        expansion_operators (list(Observable)): the list of operators.
+            generating the subspace of interest.
         nbshots (int, optional): The number of shots.
         threshold (float, optional): The numerical threshold.
 
     Returns:
-        matrix_h (np.matrix(np.complex128)): The subspace Hamiltonian.
-        matrix_s (np.matrix(np.complex128)): The overlap matrix of the
-            subspace.
+        matrix_h (np.matrix): The subspace Hamiltonian.
+        matrix_s (np.matrix): The overlap matrix of the subspace.
     """
     dim = len(expansion_operators)
 
@@ -213,7 +220,9 @@ def _build_quantum_subspace_expansion(
     return matrix_h, matrix_s
 
 
-def build_linear_pauli_expansion(pauli_gates, nb_qubits):
+def build_linear_pauli_expansion(
+    pauli_gates: List[str], nb_qubits: int
+) -> List[Observable]:
     r"""Builds first-order all-qubit expansion from the listed Pauli
     gates.
 
@@ -221,16 +230,18 @@ def build_linear_pauli_expansion(pauli_gates, nb_qubits):
     function outputs a list with ``QubitOperators X0, X1, Y1, Y0``.
 
     Args:
-        pauli_gates (lst(str)): The Pauli gates to use in the expansion,
+        pauli_gates (List[str]): The Pauli gates to use in the expansion,
             as a list of strings among ``'I' 'X', 'Y', 'Z'``.
         nb_qubits (int): The number of qubits.
 
     Returns:
-        expansion_operators (lst(QubitOperator)): The expansion as a
+        expansion_operators (List[Observable]): The expansion as a
             list of QubitOperator acting on ``nb_qubits`` qubits.
     """
     expansion_operators = []
+
     for (pauli, qbit) in it.product(pauli_gates, range(nb_qubits)):
         op = Hamiltonian(nb_qubits, [Term(1.0, pauli, [qbit])])
         expansion_operators.append(op)
+
     return expansion_operators

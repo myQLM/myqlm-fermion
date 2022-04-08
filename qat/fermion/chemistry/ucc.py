@@ -5,18 +5,20 @@ Tools imported from notebook
 
 """
 import itertools
-from itertools import product
 import numpy as np
 from bitstring import BitArray
+from typing import Any, List, Tuple, Callable, Optional, Dict
 
 from qat.core import Term
-from qat.lang.AQASM import X, Program, QRoutine
+from qat.lang.AQASM import X, Program
 from ..trotterisation import make_spin_hamiltonian_trotter_slice
 from ..hamiltonians import Hamiltonian, ElectronicStructureHamiltonian
 from ..util import tobin
 
 
-def transform_integrals_to_new_basis(one_body_integrals, two_body_integrals, U_mat):
+def transform_integrals_to_new_basis(
+    one_body_integrals: np.ndarray, two_body_integrals: np.ndarray, U_mat: np.ndarray
+) -> Tuple[np.ndarray, np.ndarray]:
     """
     Change one and two body integrals (indices p, q...) to
     new basis (indices i, j...) using transformation U such that
@@ -32,13 +34,15 @@ def transform_integrals_to_new_basis(one_body_integrals, two_body_integrals, U_m
         \hat{I}_{ijkl}=\sum_{pqrs}U_{pi}U_{qj}I_{pqrs}U_{kr}^{\dagger}U_{ls}^{\dagger}
 
     Args:
-        one_body_integrals (np.array): one-body integrals :math:`I_{pq}`
-        two_body_integrals (np.array): two-body integrals :math:`I_{pqrs}`
-        U_mat (np.array): transformation matrix :math:`U`
+        one_body_integrals (np.ndarray): one-body integrals :math:`I_{pq}`.
+        two_body_integrals (np.ndarray): two-body integrals :math:`I_{pqrs}`.
+        U_mat (np.ndarray): transformation matrix :math:`U`.
 
     Returns:
-        np.array, np.array: one- and two-body integrals :math:`\hat{I}_{ij}` and :math:`\hat{I}_{ijkl}`
+        h_hat_ij (np.ndarray): one-body integrals :math:`\hat{I}_{ij}`.
+        h_hat_ijkl (np.ndarray): two-body integrals :math:`\hat{I}_{ijkl}`.
     """
+
     U_matd = np.conj(U_mat.T)
 
     h_hat_ij = np.einsum("pi,pq,jq", U_mat, one_body_integrals, U_matd)
@@ -49,7 +53,21 @@ def transform_integrals_to_new_basis(one_body_integrals, two_body_integrals, U_m
     return h_hat_ij, h_hat_ijkl
 
 
-def compute_core_constant(one_body_integrals, two_body_integrals, occupied_indices):
+def compute_core_constant(
+    one_body_integrals: np.ndarray,
+    two_body_integrals: np.ndarray,
+    occupied_indices: List[int],
+) -> float:
+    """Compute the core constant from the one- and two-body integrals.
+
+    Args:
+        one_body_integrals (np.ndarray): One-body integrals.
+        two_body_integrals (np.ndarray): Two-body integrals.
+        occupied_indices (List[int]): Occupied indices.
+
+    Returns:
+        float: Core constant.
+    """
 
     core_constant = 0.0
     for i in occupied_indices:
@@ -63,10 +81,12 @@ def compute_core_constant(one_body_integrals, two_body_integrals, occupied_indic
 
 
 def compute_active_space_integrals(
-    one_body_integrals, two_body_integrals, active_indices, occupied_indices
-):
-    r"""
-    restrict 1 and 2 body integrals for given list of active indices
+    one_body_integrals: np.ndarray,
+    two_body_integrals: np.ndarray,
+    active_indices: List[int],
+    occupied_indices: List[int],
+) -> Tuple[np.ndarray, np.ndarray, float]:
+    r"""Restrict one- and two-body integrals for given list of active indices.
 
     .. math::
 
@@ -77,12 +97,16 @@ def compute_active_space_integrals(
         c^{(a)} = c + \sum_{i\in\mathcal{O}) I_{ii} + \sum_{ij\in\mathcal{O} 2I_{ijji} - I_{ijij}
 
     Args:
-        one_body_integrals (np.array): 2D array of one-body integrals :math:`I_{uv}`
-        two_body_integrals (np.array): 4D array of two-body integrals :math:`I_{uvwx}`
+        one_body_integrals (np.ndarray): 2D array of one-body integrals :math:`I_{uv}`.
+        two_body_integrals (np.ndarray): 4D array of two-body integrals :math:`I_{uvwx}`.
+        active_indices (List[int]): Active indices.
+        occupied_indices (List[int]): Occupied indices.
 
     Returns:
-        np.array, np.array, float: 2D array of one-body integrals :math:`I_{uv}^{(a)}`,
-            4D array of two-body integrals :math:`I_{uvwx}^{(a)}`, core constant :math:`c^{(a)}`
+        Tuple[np.ndarray, np.ndarray, float]:
+            - 2D array of one-body integrals :math:`I_{uv}^{(a)}`.
+            - 4D array of two-body integrals :math:`I_{uvwx}^{(a)}`.
+            - core constant :math:`c^{(a)}`.
     """
     # Modified core constant
     core_constant = compute_core_constant(
@@ -105,7 +129,17 @@ def compute_active_space_integrals(
         ],
     )
 
-def _one_body_integrals_to_h(one_body_integrals):
+
+def _one_body_integrals_to_h(one_body_integrals: np.ndarray) -> np.ndarray:
+    """Converts one-body integrals to one-body (spin-resolved) coefficient.
+
+    Args:
+        one_body_integrals (np.ndarray): One body integrals.
+
+    Returns:
+        np.ndarray: One-body coefficient.
+    """
+
     nb_qubits = 2 * one_body_integrals.shape[0]
 
     one_body_coefficients = np.zeros((nb_qubits, nb_qubits), dtype=np.complex128)
@@ -120,7 +154,16 @@ def _one_body_integrals_to_h(one_body_integrals):
 
     return one_body_coefficients
 
-def _two_body_integrals_to_h(two_body_integrals):
+
+def _two_body_integrals_to_h(two_body_integrals: np.ndarray) -> np.ndarray:
+    """Converts two-body integrals to two-body (spin-resolved) coefficient.
+
+    Args:
+        two_body_integrals (np.ndarray): Two body integrals.
+
+    Returns:
+        np.ndarray: Two-body coefficient.
+    """
 
     nb_qubits = 2 * two_body_integrals.shape[0]
 
@@ -153,8 +196,10 @@ def _two_body_integrals_to_h(two_body_integrals):
     return two_body_coefficients
 
 
-def convert_to_h_integrals(one_body_integrals, two_body_integrals):
-    r"""Convert from :math:`I_{uv},I_{uvwx}` to :math:`h_{pq},h_{pqrs}`, with
+def convert_to_h_integrals(
+    one_body_integrals: np.ndarray, two_body_integrals: np.ndarray
+) -> Tuple[np.ndarray, np.ndarray]:
+    """Convert from :math:`I_{uv},I_{uvwx}` to :math:`h_{pq},h_{pqrs}`, with
 
     .. math::
 
@@ -179,11 +224,13 @@ def convert_to_h_integrals(one_body_integrals, two_body_integrals):
     ElectronicStructureHamiltonian type
 
     Args:
-        one_body_integrals (np.array): 2D array of one-body integrals :math:`I_{uv}`
-        two_body_integrals (np.array): 4D array of two-body integrals :math:`I_{uvwx}`
+        one_body_integrals (np.ndarray): 2D array of one-body integrals :math:`I_{uv}`.
+        two_body_integrals (np.ndarray): 4D array of two-body integrals :math:`I_{uvwx}`.
 
     Returns:
-        np.array, np.array: the :math:`h_{pq}` and :math:`h_{pqrs}` integrals.
+        Tuple[np.ndarray, np.ndarray]:
+            - the :math:`h_{pq}` integrals.
+            - the :math:`h_{pqrs}` integrals.
     """
 
     one_body_coefficients = _one_body_integrals_to_h(one_body_integrals)
@@ -192,7 +239,7 @@ def convert_to_h_integrals(one_body_integrals, two_body_integrals):
     return one_body_coefficients, two_body_coefficients
 
 
-def build_cluster_operator(l_ex_op, nqbits):
+def build_cluster_operator(l_ex_op: List[Tuple[int]], nqbits: int) -> List[Hamiltonian]:
     r"""Builds the cluster operator and reduces the trial
     parametrization to match the selected excitation operators.
 
@@ -215,15 +262,15 @@ def build_cluster_operator(l_ex_op, nqbits):
     parameters.
 
     Args:
-        l_ex_op (list(tuple(int))): The list of of (a, b, i, j) and (a,
+        l_ex_op (List[Tuple[int]]): The list of of (a, b, i, j) and (a,
             i) tuples describing the excitation operators (without
             Hermitan conjugate, i.e. only excitation from unoccupied to
             occupied orbitals) to consider among the set associated to
             the active orbitals.
-        nqbits (int): the total number of qubits
+        nqbits (int): The total number of qubits.
 
     Returns:
-        t_opti (list<FermionOperator>): The cluster operator (times i) "iT"
+        t_opti (List[Hamiltonian]): The cluster operator (times i) "iT"
             as a dictionary corresponding to each group of fermionic
             excitation operators parametrized identically.
     """
@@ -253,89 +300,9 @@ def build_cluster_operator(l_ex_op, nqbits):
     return t_opti
 
 
-def build_ucc_ansatz(cluster_ops, ket_hf, n_steps=1):
-    r"""Builds the parametric state preparation circuit implementing the
-    provided cluster operator.
-    The returned function maps :math:`\vec{\theta}` to a QRoutine
-    describing :math:`Q` such as:
-    .. math::
-        Q \vert \vec{0} \rangle
-            &= \vert \mathrm{UCC} (\vec{\theta}) \rangle \\
-            &= e^{T(\vec{\theta})} \vert \mathrm{HF}\rangle
-    Args:
-        cluster_ops (list<Hamiltonian>): the cluster operators iT (note the i factor)
-        ket_hf (int): The Hartree-Fock state in integer representation
-        n_steps(int): number of trotter steps
-    Returns:
-        lambda function: The parametric state preparation implementing the UCCSD method, theta -> QRoutine
-    Warning: 
-        Deprecated
-    """
-    nqbits = cluster_ops[0].nbqbits
-    n_ops = len(cluster_ops)
-    # convert to string
-    ket_hf_init_sp = [int(c) for c in tobin(ket_hf, nqbits)]
-
-    # 1.1 Construction of the QRoutine corresponding to U such as |HF> =
-    # U |0>
-    qrout_hf = QRoutine(arity=nqbits)
-    for j in range(nqbits):
-        if int(ket_hf_init_sp[j]) == 1:
-            qrout_hf.apply(X, j)
-
-    def qroutwparam(theta):
-        r"""Returns the QRoutine describing :math:`Q` such as:
-        .. math::
-            Q \vert \vec{0} \rangle
-                &= \vert \mathrm{UCC} (\vec{\theta}) \rangle \\
-                &= e^{T(\vec{\theta})} \vert \mathrm{HF}\rangle
-        Args:
-            theta (lst(float)): The trial parametrization as a
-                dictionary corresponding to the factors of each
-                excitation operator.
-        Returns:
-            qrout_uccsd (QRoutine): The QRoutine implementing
-                :math: `\vert UCCSD(\vec{\theta})\rangle` with the
-                fixed parameter set ``theta`` given in input.
-        """
-        qrout_uccsd = QRoutine(arity=nqbits)
-        qubit_range = list(range(nqbits))
-        assert n_ops == len(
-            theta
-        ), "received {0} cluster operators and {1} variational parameters".format(
-            n_ops, len(theta)
-        )
-        # 1.2 Application of qrout_hf
-        qrout_uccsd.apply(qrout_hf, qubit_range)
-
-        # 2. Construction of the QRoutine corresponding to exp T =
-        # exp (sum_op_index theta_op_index * ex_op_op_index)
-        for i in range(n_steps):
-            terms = []
-            for angle, cluster_op in zip(
-                theta, cluster_ops
-            ):  # op_index = (i, a) or (i, j, a, b)
-                for term in cluster_op.terms:
-                    assert isinstance(term.coeff, (float, complex))
-                    if isinstance(term.coeff, complex):
-                        assert term.coeff.imag < 1e-13
-                        term.coeff = term.coeff.real
-                    coeff = angle * term.coeff
-                    terms.append(Term(coeff, term.op, term.qbits))
-
-            # 2.2 QRoutine implementation
-            cluster_op_obs = Hamiltonian(nqbits, terms)
-            qrout_expt = make_spin_hamiltonian_trotter_slice(
-                cluster_op_obs
-            )  # approx to exp(-i O), with O = i T
-            qrout_uccsd.apply(qrout_expt, qubit_range[: qrout_expt.arity])
-
-        return qrout_uccsd
-
-    return qroutwparam
-
-
-def construct_ucc_ansatz(cluster_ops, ket_hf, n_steps=1):
+def construct_ucc_ansatz(
+    cluster_ops: List[Hamiltonian], ket_hf: int, n_steps: int = 1
+) -> Program:
     r"""Builds the parametric state preparation circuit implementing the
     provided cluster operator.
 
@@ -349,55 +316,51 @@ def construct_ucc_ansatz(cluster_ops, ket_hf, n_steps=1):
             &= e^{T(\vec{\theta})} \vert \mathrm{HF}\rangle
 
     Args:
-        cluster_ops (list<Hamiltonian>): the cluster operators iT (note the i factor)
-        ket_hf (int): The Hartree-Fock state in integer representation
-        n_steps(int): number of trotter steps
+        cluster_ops (List[Hamiltonian]): the cluster operators iT (note the i factor).
+        ket_hf (int): The Hartree-Fock state in integer representation.
+        n_steps(int): number of trotter steps.
 
     Returns:
-        Program: The parametric program implementing the UCCSD method
+        Program: The parametric program implementing the UCCSD method.
     """
 
+    # Define system
     nqbits = cluster_ops[0].nbqbits
     n_ops = len(cluster_ops)
-    # convert to string
+
+    # Get Hartree-Fock state binary representation
     ket_hf_init_sp = [int(c) for c in tobin(ket_hf, nqbits)]
 
+    # Initialize a program
     prog = Program()
     reg = prog.qalloc(nqbits)
 
-    # 1. Construction of the QRoutine corresponding to U such as |HF> =
-    # U |0>
+    # Initialize the HF state
     for j in range(nqbits):
         if int(ket_hf_init_sp[j]) == 1:
             prog.apply(X, reg[j])
 
-    # 2. Construction of the QRoutine corresponding to exp T =
-    # exp (sum_op_index theta_op_index * ex_op_op_index)
+    # Define the parameters to optimize
     theta = [prog.new_var(float, "\\theta_{%s}" % i) for i in range(n_ops)]
-    for i in range(n_steps):
-        terms = []
-        for angle, cluster_op in zip(
-            theta, cluster_ops
-        ):  # op_index = (i, a) or (i, j, a, b)
-            for term in cluster_op.terms:
-                assert isinstance(term.coeff, (float, complex))
-                if isinstance(term.coeff, complex):
-                    assert term.coeff.imag < 1e-13
-                    term.coeff = term.coeff.real
-                coeff = angle * term.coeff
-                terms.append(Term(coeff, term.op, term.qbits))
 
-        # 2.2 QRoutine implementation
-        cluster_op_obs = Hamiltonian(nqbits, terms)
+    # Define the Hamiltonian and trotterize
+    for i in range(n_steps):
+        hamiltonian = sum([th * T for th, T in zip(theta, cluster_ops)])
+
         qrout_expt = make_spin_hamiltonian_trotter_slice(
-            cluster_op_obs
-        )  # approx to exp(-i O), with O = i T
+            Hamiltonian(nqbits, hamiltonian.terms)
+        )
         prog.apply(qrout_expt, reg[: qrout_expt.arity])
 
     return prog
 
 
-def select_active_orbitals(noons, n_electrons, threshold_1=2e-2, threshold_2=2e-3):
+def select_active_orbitals(
+    noons: List[float],
+    n_electrons: int,
+    threshold_1: Optional[float] = 2e-2,
+    threshold_2: Optional[float] = 2e-3,
+) -> Tuple[List[int], List[int]]:
     r"""Selects the right active space and freezes core electrons
     according to their NOONs.
 
@@ -408,33 +371,35 @@ def select_active_orbitals(noons, n_electrons, threshold_1=2e-2, threshold_2=2e-
 
 
     Args:
-        noons (np.array(float)): The natural orbital occupation numbers
+        noons (np.ndarray): The natural orbital occupation numbers
             in descending order (from high occupations to low occupations)
         nb_e (int): The number of electrons.
-        threshold_1 (float, optional): The upper threshold :math:`\varepsilon_1` on
+        threshold_1 (Optional[float]): The upper threshold :math:`\varepsilon_1` on
             the NOON of an active orbital. Defaults to 0.02.
-        threshold_2 (float, optional): The lower threshold :math:`\varepsilon_2` on
+        threshold_2 (Optional[float]): The lower threshold :math:`\varepsilon_2` on
             the NOON of an active orbital. Defaults to 0.001.
 
     Returns:
-        active_so (list(int)): The list of active spatial orbitals.
-        inactive_occupied_so (list(int)): The list of core spatial
-            orbitals.
+        active_so (List[int]): The list of active spatial orbitals.
+        inactive_occupied_so (List[int]): The list of core spatial orbitals.
     """
 
-    active_so, inactive_occupied_so = [], []  # Active and core space orbitals.
+    # Initialize active and core space orbitals lists
+    active_so, inactive_occupied_so = [], []
 
     for idx, noon in enumerate(noons):
+
         if noon >= 2 - threshold_1:
+
             if 2 * (idx + 1) < n_electrons:
-                # Either considered 'core electron' because there are at
-                # least 2 remaining electrons (that would be activated.)
                 inactive_occupied_so.append(idx)
+
             else:
-                # Or it is the last 2 electrons
                 active_so.append(idx)
+
         elif noon >= threshold_2:
             active_so.append(idx)
+
         else:
             break
 
@@ -442,13 +407,12 @@ def select_active_orbitals(noons, n_electrons, threshold_1=2e-2, threshold_2=2e-
 
 
 def _theta_ab_ij(
-    active_occupied_orbitals,
-    active_unoccupied_orbitals,
-    l_ao,
-    int2e,
-    orbital_energies,
-    threshold=1e-15,
-):
+    active_occupied_orbitals: List[int],
+    active_unoccupied_orbitals: List[int],
+    int2e: np.ndarray,
+    orbital_energies: List[float],
+    threshold: float = 1e-15,
+) -> Dict[Tuple[int], float]:
     r"""Build the trial parametrization based upon a variational
     method known as second ordre Møller-Plesset (MP2).
 
@@ -478,22 +442,21 @@ def _theta_ab_ij(
         j}`of :math:`a^\dagger_a a^\dagger_b a_i a_j`.
 
     Args:
-        active_occupied_orbitals (list(int)): The list of the active
+        active_occupied_orbitals (List[int]): The list of the active
             occupied orbitals.
-        active_unoccupied_orbitals (list(int)): The list of the active
+        active_unoccupied_orbitals (List[int]): The list of the active
             unoccupied orbitals.
-        l_ao (list(int)): The list of active spin-orbitals.
-        int2e (np.array(float)): The 2-electron integrals corrected for
+        int2e (np.ndarray): The 2-electron integrals corrected for
             and reduced to the active space.
-        orbital_energies (np.array(float)): The vector of orbital
+        orbital_energies (List[float]): The vector of orbital
             energies.
         threshold (float): The numerical threshold used to
             nullify smaller terms through out the execution of the code.
 
     Returns:
-        theta (dic(tuple(int), float)): The trial MP2 parametrization as
+        theta (Dict[Tuple[int], float]): The trial MP2 parametrization as
             a dictionary corresponding to the factors of each excitation
-            operator (only the terms above ``threshold`` are stored.)
+            operator (only the terms above ``threshold`` are stored).
     """
     theta = {}
 
@@ -503,6 +466,7 @@ def _theta_ab_ij(
         active_unoccupied_orbitals,
         active_unoccupied_orbitals,
     ):
+
         if i != j and a != b:
             val_calc = (int2e[a, b, i, j] - int2e[a, b, j, i]) / (
                 orbital_energies[i]
@@ -510,15 +474,25 @@ def _theta_ab_ij(
                 - orbital_energies[a]
                 - orbital_energies[b]
             )
+
             if abs(val_calc) >= threshold and abs(val_calc) != np.inf:
+
                 if abs(val_calc.imag) < threshold:
                     theta[(a, b, i, j)] = val_calc.real
+
                 else:
                     theta[(a, b, i, j)] = val_calc
+
     return theta
 
 
-def _init_uccsd(nb_o, nb_e, int2e, l_ao, orbital_energies):
+def _init_uccsd(
+    nb_o: int,
+    nb_e: int,
+    int2e: np.ndarray,
+    l_ao: List[int],
+    orbital_energies: List[float],
+) -> Tuple[np.ndarray, List[int], List[int], Dict[Tuple[int], float]]:
     r"""Executes the different (classical) methods whose results are
     needed to set up the state preparation and the Hamiltonian.
 
@@ -555,45 +529,45 @@ def _init_uccsd(nb_o, nb_e, int2e, l_ao, orbital_energies):
     Args:
         nb_o (int): The number of active spin-orbitals.
         nb_e (int): The number of active electrons.
-        int2e (np.array(float)): The 2-electron integrals corrected for
+        int2e (np.ndarray): The 2-electron integrals corrected for
             and reduced to the active space.
-        l_ao (list(int)): The list of active spin-orbitals, sorted by
+        l_ao (List[int]): The list of active spin-orbitals, sorted by
             decreasing NOON
-        orbital_energies (np.array(flaot)): The vector of spin-orbital
+        orbital_energies (List[float]): The vector of spin-orbital
             energies restricted to the active space.
         threshold (float): The numerical threshold used to
             remove smaller terms throughout the execution of the code.
 
     Return:
-        ket_hf_init (np.array(float)): The Hartree-Fock state stored
+        ket_hf_init (np.ndarray): The Hartree-Fock state stored
             as a vector with right-to-left orbitals indexing.
-        active_occupied_orbitals (list(int)): The list of the active
+        active_occupied_orbitals (List[int]): The list of the active
             occupied orbitals.
-        active_unoccupied_orbitals (list(int)): The list of the active
+        active_unoccupied_orbitals (List[int]): The list of the active
             unoccupied orbitals.
-        theta_init (dic(tuple(int), float)): The trial MP2
+        theta_init (Dict[Tuple[int], float]): The trial MP2
             parametrization as a dictionary corresponding to the factors
             of each excitation operator (only the terms above
             ``threshold`` are stored.)
     """
 
-    # 1. Construction of the ket vector representing RHF state
+    # Construction of the ket vector representing RHF state
     ket_hf_init = np.zeros(nb_o)
+
     for i in range(nb_e):
         ket_hf_init[i] = 1
-    # convert to integer
+
+    # Convert to integer
     hf_init = BitArray("0b" + "".join([str(int(c)) for c in ket_hf_init])).uint
 
     active_occupied_orbitals, active_unoccupied_orbitals = construct_active_orbitals(
         nb_e, l_ao
     )
 
-    # 3. Construction of theta_MP2 (to use it as a trial
-    #    parametrization)
+    # Construction of theta_MP2 (to use it as a trial parametrization)
     theta_init = _theta_ab_ij(
         active_occupied_orbitals,
         active_unoccupied_orbitals,
-        l_ao,
         int2e,
         orbital_energies,
     )
@@ -602,7 +576,20 @@ def _init_uccsd(nb_o, nb_e, int2e, l_ao, orbital_energies):
     return hf_init, theta_init
 
 
-def construct_active_orbitals(nb_e, l_ao):
+def construct_active_orbitals(
+    nb_e: int, l_ao: List[int]
+) -> Tuple[List[int], List[int]]:
+    """Construct the active occupied and unoccupied orbitals.
+
+    Args:
+        nb_e (int): Number of electrons.
+        l_ao (List[int]): The list of active spin-orbitals, sorted by decreasing NOON.
+
+    Returns:
+        Tuple[List[int], List[int]]:
+            - active occupied orbitals
+            - active unoccupied orbitals
+    """
 
     active_occupied_orbitals = []
     active_unoccupied_orbitals = []
@@ -620,12 +607,12 @@ def construct_active_orbitals(nb_e, l_ao):
 
 
 def select_excitation_operators(
-    noons,
-    active_occupied_orbitals,
-    active_unoccupied_orbitals,
-    max_nb_single_ex=None,
-    max_nb_double_ex=None,
-):
+    noons: List[float],
+    active_occupied_orbitals: List[int],
+    active_unoccupied_orbitals: List[int],
+    max_nb_single_ex: Optional[int] = None,
+    max_nb_double_ex: Optional[int] = None,
+) -> List[Tuple[int]]:
     r"""Selects the excitation operators to will be used to build the
     cluster operator.
 
@@ -649,37 +636,36 @@ def select_excitation_operators(
     and ``max_nb_double_ex``.)
 
     Args:
-        l_ao (list(int)): The list of active spin-orbitals.
-        noons (np.array(float)): The natural orbital occupation numbers
+        noons (np.ndarray): The natural orbital occupation numbers
             in an array of size nb_so (number of spatial orbitals.)
-        active_occupied_orbitals (list(int)): The list of the active
+        active_occupied_orbitals (List[int]): The list of the active
             occupied orbitals.
-        active_unoccupied_orbitals (list(int)): The list of the active
+        active_unoccupied_orbitals (List[int]): The list of the active
             unoccupied orbitals.
-        max_nb_single_ex (int, optional): Limit the number of single
+        max_nb_single_ex (Optional[int]): Limit the number of single
             excitation to consider. The number of parameter is the sum
             of this argument and the one below. The default value, 0,
             implies the implementation of UCCD.
-        max_nb_double_ex (int, optional):  Limit the number of
+        max_nb_double_ex (Optional[int]):  Limit the number of
             double excitation to consider. The number of parameter is
             the sum of this argument and the one above. The default
             value, 3, implies a (partial) implementation of UCC_D.
 
     Returns:
-        l_ex_op (list(tuple(int))): The list of of (a, b, i, j) and (a,
+        l_ex_op (List[Tuple[int]]): The list of of (a, b, i, j) and (a,
             i) tuples describing the excitation operators (without
             Hermitian conjugate, i.e. only excitation from unoccupied to
             occupied orbitals) to consider among the set associated to
             the active orbitals.
 
     Notes:
-        noons should be made optional, since it is used only if max_nb_single_ex
+        NOONs should be made optional, since it is used only if max_nb_single_ex
         max_nb_double_ex are not None
     """
+
     l_ex_op = []
 
-    # 1. Determination of NOON variation induced by excitation between 2
-    #    orbitals
+    # Determination of NOON variation induced by excitation between 2 orbitals
     var_noons_1e, var_noons_2e = {}, {}
 
     for a, i in itertools.product(
@@ -693,6 +679,7 @@ def select_excitation_operators(
         for b in active_unoccupied_orbitals[n_unocc + 1 :]:
             for n_occ, i in enumerate(active_occupied_orbitals[::1]):
                 for j in active_occupied_orbitals[n_occ + 1 :]:
+
                     if (a % 2 == i % 2 and b % 2 == j % 2) or (
                         a % 2 == j % 2 and b % 2 == i % 2
                     ):
@@ -708,39 +695,46 @@ def select_excitation_operators(
 
     sorted_ex_op_1e = sorted(var_noons_1e, key=var_noons_1e.get)[::-1]
     sorted_ex_op_2e = sorted(var_noons_2e, key=var_noons_2e.get)[::-1]
-    # Normal-ordered excitation operators ordered by induced NOON
-    # variation.
+    # Normal-ordered excitation operators ordered by induced NOON variation.
 
-    # 2. Selection of dominant one-electron excitation operators
+    # Selection of dominant one-electron excitation operators
     if max_nb_single_ex is None:
         l_ex_op += sorted_ex_op_1e
+
     else:
         for i in range(max_nb_single_ex):
+
             if i < len(sorted_ex_op_1e):
                 l_ex_op.append(sorted_ex_op_1e[i])
+
             else:
                 break
-    # 3. Selection of dominant two-electron excitation operators
+
+    # Selection of dominant two-electron excitation operators
     if max_nb_double_ex is None:
         l_ex_op += sorted_ex_op_2e
+
     else:
         for i in range(max_nb_double_ex):
+
             if i < len(sorted_ex_op_2e):
                 l_ex_op.append(sorted_ex_op_2e[i])
+
             else:
                 break
+
     return l_ex_op
 
 
 def get_active_space_hamiltonian(
-    one_body_integrals,
-    two_body_integrals,
-    noons,
-    nels,
-    nuclear_repulsion,
-    threshold_1=0.02,
-    threshold_2=1e-3,
-):
+    one_body_integrals: np.ndarray,
+    two_body_integrals: np.ndarray,
+    noons: List[float],
+    nels: int,
+    nuclear_repulsion: float,
+    threshold_1: Optional[float] = 0.02,
+    threshold_2: Optional[float] = 1e-3,
+) -> Tuple[ElectronicStructureHamiltonian, List[int], List[int]]:
     r"""Selects the right active space and freezes core electrons
     according to their NOONs :math:`n_i`.
 
@@ -802,28 +796,26 @@ def get_active_space_hamiltonian(
 
 
     Args:
-        one_body_integrals (np.array): 2D array of one-body integrals :math:`I_{uv}`
-        two_body_integrals (np.array): 4D array of two-body integrals :math:`I_{uvwx}`
-        threshold_1 (float, optional): The upper threshold :math:`\varepsilon_1` on
+        one_body_integrals (np.ndarray): 2D array of one-body integrals :math:`I_{uv}`.
+        two_body_integrals (np.ndarray): 4D array of two-body integrals :math:`I_{uvwx}`.
+        threshold_1 (Optional[float]): The upper threshold :math:`\varepsilon_1` on
             the NOON of an active orbital. Defaults to 0.02.
-        noons (list<float>): the natural-orbital occupation numbers :math:`n_i`, sorted
-            in descending order (from high occupations to low occupations)
+        noons (List[float]): the natural-orbital occupation numbers :math:`n_i`, sorted
+            in descending order (from high occupations to low occupations).
         nels (int): The number of electrons :math:`N_e`.
         nuclear_repulsion (float): value of the nuclear repulsion energy :math:`E_\mathrm{core}`.
-        threshold_2 (float, optional): The lower threshold :math:`\varepsilon_2` on
+        threshold_2 (Optional[float]): The lower threshold :math:`\varepsilon_2` on
             the NOON of an active orbital. Defaults to 0.001.
 
     Returns:
-        ElectronicStructureHamiltonian, list<int>, list<int>:
-
-        - the Hamiltonian in active space :math:`H^{(a)}`
-        - the list of indices corresponding to the active orbitals, :math:`\mathcal{A}`
-        - the list of indices corresponding to the occupied orbitals, :math:`\mathcal{O}`
-
+         Tuple[ElectronicStructureHamiltonian, List[int], List[int]]:
+            - the Hamiltonian in active space :math:`H^{(a)}`,
+            - the list of indices corresponding to the active orbitals, :math:`\mathcal{A}`,
+            - the list of indices corresponding to the occupied orbitals, :math:`\mathcal{O}`.
     """
 
     active_indices, occupied_indices = select_active_orbitals(
-        noons=noons, nb_e=nels, threshold_1=threshold_1, threshold_2=threshold_2
+        noons=noons, n_electrons=nels, threshold_1=threshold_1, threshold_2=threshold_2
     )
 
     core_constant, one_body_as, two_body_as = compute_active_space_integrals(
@@ -839,51 +831,12 @@ def get_active_space_hamiltonian(
     return H_active, active_indices, occupied_indices
 
 
-# def get_cluster_ops(
-#     active_noons,
-#     actives_occupied_orbitals,
-#     actives_unoccupied_orbitals,
-# ):
-#     r"""Build the cluster operator.
-
-#     The UCCSD cluster operator is defined (in normal-ordered form) as:
-
-#     .. math::
-
-#         T(\theta) = \sum_{a, i} \theta_a^i (c^\dagger_a c_i -
-#         c^\dagger_i c_a) + \sum_{a > b, i > j} \theta_{a, b}^{i, j}
-#         (c^\dagger_a c^\dagger_b c_i c_j - c^\dagger_i c^\dagger_j c_a
-#         c_b)
-
-#     where :math:`i, j \in \mathcal{O}'`, and :math:`a, b \in \mathcal{I}'`,
-#     with :math:`\mathcal{I}'` (resp. :math:`\mathcal{O}'`) the list of inoccupied
-#     (resp. occupied) orbitals (doubled due to spin degeneracy)
-
-#     Args:
-#         active_noons (list<float>): the natural-orbital occupation numbers
-#             :math:`n_i`, sorted in descending order (from high occupations
-#             to low occupations) (doubled due to spin degeneracy)
-#         active_orb_energies (list<float>): the energies of the molecular orbitals
-#             :math:`\epsilon_i` (doubled due to spin degeneracy)
-#         hpqrs (np.array): the 4D array of (active) two-body integrals :math:`h_{pqrs}`
-
-#     Returns:
-#         list<Hamiltonian>:
-
-#         - the list of cluster operators :math:`\{T_{a}^{i}, a \in \mathcal{I}', i \in \mathcal{O}' \} \cup \{T_{ab}^{ij}, a>b, i>j, a,b \in \mathcal{I}', i,j \in \mathcal{O}'\}`
-#     """
-#     active_size = len(active_noons)
-
-#     exc_op_list = select_excitation_operators(
-#         active_noons, actives_occupied_orbitals, actives_unoccupied_orbitals
-#     )
-
-#     cluster_list = build_cluster_operator(exc_op_list, active_size)
-
-#     return cluster_list
-
-
-def _compute_init_state(n_active_els, active_noons, active_orb_energies, hpqrs):
+def _compute_init_state(
+    n_electrons: int,
+    noons: List[float],
+    orbital_energies: List[float],
+    hpqrs: np.ndarray,
+) -> Tuple[List[Hamiltonian], int, List[int], List[int]]:
     r"""Find initial guess using Møller-Plesset perturbation theory.
 
     The trial parametrization is efficiently improved upon the
@@ -905,34 +858,35 @@ def _compute_init_state(n_active_els, active_noons, active_orb_energies, hpqrs):
     and :math:`\epsilon_i` is the orbital energy.
 
     Args:
-        n_active_els (int): the number of active electrons of the system
-        active_noons (list<float>): the natural-orbital occupation numbers
+        n_electrons (int): the number of active electrons of the system.
+        noons (List[float]): the natural-orbital occupation numbers
             :math:`n_i`, sorted in descending order (from high occupations
-            to low occupations) (doubled due to spin degeneracy)
-        active_orb_energies (list<float>): the energies of the molecular orbitals
-            :math:`\epsilon_i` (doubled due to spin degeneracy)
-        hpqrs (np.array): the 4D array of (active) two-body integrals :math:`h_{pqrs}`
+            to low occupations) (doubled due to spin degeneracy).
+        orbital_energies (List[float]): the energies of the molecular orbitals
+            :math:`\epsilon_i` (doubled due to spin degeneracy).
+        hpqrs (np.ndarray): the 4D array of (active) two-body integrals :math:`h_{pqrs}`.
 
     Returns:
-        list<Hamiltonian>, list<float>, int:
-
-        - the list of cluster operators :math:`\{T_{a}^{i}, a \in \mathcal{I}', i \in \mathcal{O}' \} \cup \{T_{ab}^{ij}, a>b, i>j, a,b \in \mathcal{I}', i,j \in \mathcal{O}'\}`
-        - the list of initial coefficients :math:`\{\theta_{a}^{i}, a \in \mathcal{I}', i \in \mathcal{O}' \} \cup \{\theta_{ab}^{ij}, a>b, i>j, a,b \in \mathcal{I}', i,j \in \mathcal{O}'\}`
-        - the integer corresponding to the occupation of the Hartree-Fock solution
+        Tuple[List[int], int, List[int], List[int]]:
+            - the list of initial coefficients :math:`\{\theta_{a}^{i}, a \in \mathcal{I}', i \in \mathcal{O}' \} \cup \{\theta_{ab}^{ij}, a>b, i>j, a,b \in \mathcal{I}', i,j \in \mathcal{O}'\}`,
+            - the integer corresponding to the occupation of the Hartree-Fock solution,
+            - the active occupied orbitals indices,
+            - the active unoccupied orbitals indices.
 
     """
-    active_size = len(active_noons)
+
+    active_size = len(noons)
 
     (ket_hf_init, theta_init,) = _init_uccsd(
-        active_size, n_active_els, hpqrs, list(range(active_size)), active_orb_energies
+        active_size, n_electrons, hpqrs, list(range(active_size)), orbital_energies
     )
 
     actives_occupied_orbitals, actives_unoccupied_orbitals = construct_active_orbitals(
-        n_active_els, list(range(active_size))
+        n_electrons, list(range(active_size))
     )
 
     exc_op_list = select_excitation_operators(
-        active_noons, actives_occupied_orbitals, actives_unoccupied_orbitals
+        noons, actives_occupied_orbitals, actives_unoccupied_orbitals
     )
     theta_list = [
         theta_init[op_index] if op_index in theta_init else 0
@@ -948,11 +902,11 @@ def _compute_init_state(n_active_els, active_noons, active_orb_energies, hpqrs):
 
 
 def guess_init_params(
-    two_body_integrals,
-    n_electrons,
-    noons,
-    orbital_energies,
-):
+    two_body_integrals: np.ndarray,
+    n_electrons: int,
+    noons: List[float],
+    orbital_energies: List[float],
+) -> List[float]:
     """Find initial parameters using Møller-Plesset perturbation theory.
 
     The trial parametrization is efficiently improved upon the
@@ -973,10 +927,21 @@ def guess_init_params(
     where :math:`h_{p, q, r, s}` is the 2-electron molecular orbital integral,
     and :math:`\epsilon_i` is the orbital energy.
 
+    Args:
+
+        two_body_integrals (np.ndarray): 4D array of two-body integrals :math:`I_{uvwx}`.
+        n_electrons (int): The number of active electrons of the system.
+        noons (List[float]): the natural-orbital occupation numbers
+            :math:`n_i`, sorted in descending order (from high occupations
+            to low occupations) (doubled due to spin degeneracy).
+        orbital_energies (List[float]): The energies of the molecular orbitals
+            :math:`\epsilon_i` (doubled due to spin degeneracy).
+
     Returns:
-        theta_init (Dict[int, float]): The trial MP2 parametrization as a dictionary
-        corresponding to the factors of each excitation operator (only the terms
-        above ``threshold`` are stored.)
+        theta_list (List[float]):
+            The list of initial coefficients :math:`\{\theta_{a}^{i}, a \in \mathcal{I}',
+            i \in \mathcal{O}' \} \cup \{\theta_{ab}^{ij}, a>b, i>j, a,b \in \mathcal{I}',
+            i,j \in \mathcal{O}'\}`,
     """
 
     noons = _extend_list(noons)
@@ -993,16 +958,18 @@ def guess_init_params(
     return theta_list
 
 
-def get_hf_ket(n_electrons, noons):
+def get_hf_ket(n_electrons: int, noons: List[float]) -> int:
     """
     Get Hartree-Fock state stored as a vector with right-to-left orbitals indexing.
 
     Args:
-        nb_o (int): The number of active spin-orbitals.
-        nb_e (int): The number of active electrons.
+        n_electrons (int): The number of active electrons of the system.
+        noons (List[float]): the natural-orbital occupation numbers
+            :math:`n_i`, sorted in descending order (from high occupations
+            to low occupations) (doubled due to spin degeneracy).
 
     Returns:
-        np.ndarray: Hartree-Fock state.
+        int: Hartree-Fock state.
     """
 
     noons = _extend_list(noons)
@@ -1011,19 +978,21 @@ def get_hf_ket(n_electrons, noons):
     return hf_init
 
 
-def _hf_ket(n_active_electrons, active_noons):
+def _hf_ket(n_electrons: int, noons: List[float]) -> int:
     """Construct the Hartree-Fock state bitstring.
 
     Args:
-        n_active_electrons (_type_): Number of active electrons.
-        active_noons (_type_): Number of active natural orbital occupation numbers.
+        n_electrons (int): The number of active electrons of the system.
+        noons (List[float]): the natural-orbital occupation numbers
+            :math:`n_i`, sorted in descending order (from high occupations
+            to low occupations) (doubled due to spin degeneracy).
 
     Returns:
         int: Hartree-Fock state.
     """
 
-    ket_hf_init = np.zeros(len(active_noons))
-    for i in range(n_active_electrons):
+    ket_hf_init = np.zeros(len(noons))
+    for i in range(n_electrons):
         ket_hf_init[i] = 1
 
     hf_init = BitArray("0b" + "".join([str(int(c)) for c in ket_hf_init])).uint
@@ -1031,7 +1000,21 @@ def _hf_ket(n_active_electrons, active_noons):
     return hf_init
 
 
-def get_cluster_ops(n_electrons, noons):
+def get_cluster_ops(n_electrons: int, noons: List[float]) -> List[Hamiltonian]:
+    """Compute the cluster operators.
+
+    Args:
+        n_electrons (int): The number of active electrons of the system.
+        noons (List[float]): the natural-orbital occupation numbers
+            :math:`n_i`, sorted in descending order (from high occupations
+            to low occupations) (doubled due to spin degeneracy).
+
+    Returns:
+        List[Hamiltonian]: The list of cluster operators :math:`\{T_{a}^{i}, a \in
+            \mathcal{I}', i \in \mathcal{O}' \} \cup \{T_{ab}^{ij}, a>b, i>j, a,b \in
+            \mathcal{I}', i,j \in \mathcal{O}'\}`
+
+    """
 
     noons = _extend_list(noons)
 
@@ -1051,14 +1034,14 @@ def get_cluster_ops(n_electrons, noons):
     return cluster_list
 
 
-def _extend_list(lst):
+def _extend_list(lst: List[Any]) -> List[Any]:
     """Extend a list by cloning every element.
 
     Args:
-        lst (list): List to extend
+        lst (List[Any]): List to extend
 
     Returns:
-        extended_lst: Extended list
+        extended_lst (List[Any]): Extended list
     """
 
     extended_lst = []

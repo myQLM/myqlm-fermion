@@ -1,5 +1,5 @@
 from argparse import ArgumentError
-from typing import Callable, Union, List
+from typing import Any, Callable, Dict, Optional, Tuple, Union, List
 
 import numpy as np
 from copy import deepcopy
@@ -56,10 +56,12 @@ class MolecularHamiltonian(object):
 
         return s
 
-    def transform_basis(self, transformation_matrix: np.ndarray):
+    def transform_basis(
+        self, transformation_matrix: np.ndarray
+    ) -> "MolecularHamiltonian":
         """
-        Change one and two body integrals (indices p, q...) to
-        new basis (indices i, j...) using transformation U such that
+        Change one and two body integrals (indices p, q...) to new basis (indices i, j...)
+        using transformation U such that
 
         .. math::
             \hat{c}_{i}=\sum_{q}U_{qi}c_{q}
@@ -73,10 +75,9 @@ class MolecularHamiltonian(object):
 
         Args:
             transformation_matrix (np.array): transformation matrix :math:`U`
-            flip (bool): If True, the transformation matrix is reversed.
 
         Returns:
-            np.array, np.array: one- and two-body integrals :math:`\hat{I}_{ij}` and :math:`\hat{I}_{ijkl}`
+            molecular_hamiltonian (MolecularHamiltonian): MolecularHamiltonian updated to the new basis.
         """
 
         integrals = transform_integrals_to_new_basis(
@@ -89,9 +90,9 @@ class MolecularHamiltonian(object):
         self,
         noons: List[float],
         n_electrons: int,
-        threshold_1: float = 2.0e-2,
-        threshold_2: float = 2.0e-3,
-    ):
+        threshold_1: Optional[float] = 2.0e-2,
+        threshold_2: Optional[float] = 2.0e-3,
+    ) -> Tuple["MolecularHamiltonian", List[int], List[int]]:
         r"""Selects the right active space and freezes core electrons
         according to their NOONs :math:`n_i`.
 
@@ -128,20 +129,19 @@ class MolecularHamiltonian(object):
             E_\mathrm{core}^{(a)} = E_\mathrm{core} + \sum_{i\in\mathcal{O}} I_{ii} + \sum_{ij\in\mathcal{O}} 2 I_{ijji} - I_{ijij}
 
         Args:
-            noons (list<float>): the natural-orbital occupation numbers :math:`n_i`, sorted
+            noons (List[float]): the natural-orbital occupation numbers :math:`n_i`, sorted
                 in descending order (from high occupations to low occupations)
             n_electrons (int): The number of electrons :math:`N_e`.
-            threshold_1 (float, optional): The upper threshold :math:`\varepsilon_1` on
+            threshold_1 (Optional[float]): The upper threshold :math:`\varepsilon_1` on
                 the NOON of an active orbital.
-            threshold_2 (float, optional): The lower threshold :math:`\varepsilon_2` on
+            threshold_2 (Optional[float]): The lower threshold :math:`\varepsilon_2` on
                 the NOON of an active orbital.
 
         Returns:
-            MolecularHamiltonian, list<int>, list<int>:
-
-            - the molecular Hamiltonian in active space :math:`H^{(a)}`
-            - the list of indices corresponding to the active orbitals, :math:`\mathcal{A}`
-            - the list of indices corresponding to the occupied orbitals, :math:`\mathcal{O}`
+            Tuple[MolecularHamiltonian, List[int], List[int]]:
+                - the molecular Hamiltonian in active space :math:`H^{(a)}`
+                - the list of indices corresponding to the active orbitals, :math:`\mathcal{A}`
+                - the list of indices corresponding to the occupied orbitals, :math:`\mathcal{O}`
         """
 
         active_indices, occupied_indices = select_active_orbitals(
@@ -171,7 +171,7 @@ class MolecularHamiltonian(object):
 
         return hamiltonian, active_indices, occupied_indices
 
-    def get_electronic_hamiltonian(self):
+    def get_electronic_hamiltonian(self) -> ElectronicStructureHamiltonian:
         """Converts the MolecularHamiltonian to an ElectronicStructureHamiltonian.
 
         Returns:
@@ -203,10 +203,10 @@ class MoleculeInfo(object):
         """MoleculeInfo helper class.
 
         Args:
-            hamiltonian (MolecularHamiltonian): The MolecularHamiltonian of the studied molecule
-            n_electrons (int): Number of electrons
-            noons (Union[np.ndarray, List[float]]): Natural orbital occupation number
-            orbital_energies (np.ndarray): Orbital energies
+            hamiltonian (MolecularHamiltonian): The MolecularHamiltonian of the studied molecule.
+            n_electrons (int): Number of electrons.
+            noons (Union[np.ndarray, List[float]]): Natural orbital occupation number.
+            orbital_energies (np.ndarray): Orbital energies.
         """
 
         self.hamiltonian = hamiltonian
@@ -234,40 +234,42 @@ class MoleculeInfo(object):
         return s
 
     @property
-    def one_body_integrals(self):
-        """Getter for the one body integrals in the hamiltonian
+    def one_body_integrals(self) -> np.ndarray:
+        """Getter for the one body integrals in the hamiltonian.
 
         Returns:
-            np.ndarray: One body integrals
+            np.ndarray: One body integrals.
         """
         return self.hamiltonian.one_body_integrals
 
     @property
-    def two_body_integrals(self):
-        """Getter for the two body integrals in the hamiltonian
+    def two_body_integrals(self) -> np.ndarray:
+        """Getter for the two body integrals in the hamiltonian.
 
         Returns:
-            np.ndarray: Two body integrals
+            np.ndarray: Two body integrals.
         """
         return self.hamiltonian.two_body_integrals
 
     @property
-    def constant_coeff(self):
-        """Getter for the constant coefficient in the hamiltonian
+    def constant_coeff(self) -> np.ndarray:
+        """Getter for the constant coefficient in the hamiltonian.
 
         Returns:
-            np.ndarray: Constant coefficient
+            np.ndarray: Constant coefficient.
         """
         return self.hamiltonian.constant_coeff
 
-    def copy(self):
+    def copy(self) -> "MolecularHamiltonian":
         """
         Copy the MoleculeInfo class.
         """
         return deepcopy(self)
 
     def restrict_active_space(
-        self, threshold_1: float = 2.0e-2, threshold_2: float = 2.0e-3
+        self,
+        threshold_1: Optional[float] = 2.0e-2,
+        threshold_2: Optional[float] = 2.0e-3,
     ):
         r"""Restricts the right active space and freezes core electrons
         according to their NOONs :math:`n_i`.
@@ -305,9 +307,9 @@ class MoleculeInfo(object):
             E_\mathrm{core}^{(a)} = E_\mathrm{core} + \sum_{i\in\mathcal{O}} I_{ii} + \sum_{ij\in\mathcal{O}} 2 I_{ijji} - I_{ijij}
 
         Args:
-            threshold_1 (float, optional): The upper threshold :math:`\varepsilon_1` on
+            threshold_1 (Optional[float]): The upper threshold :math:`\varepsilon_1` on
                 the NOON of an active orbital.
-            threshold_2 (float, optional): The lower threshold :math:`\varepsilon_2` on
+            threshold_2 (Optional[float]): The lower threshold :math:`\varepsilon_2` on
                 the NOON of an active orbital.
 
         """
@@ -335,7 +337,13 @@ class MoleculeInfo(object):
         self.orbital_energies = [self.orbital_energies[idx] for idx in active_indices]
         self.n_electrons = self.n_electrons - 2 * len(occupied_indices)
 
-    def _get_attr_dict(self):
+    def _get_attr_dict(self) -> Dict:
+        """Generate attributes dictionary (needed for inclusion of MolecularHamiltonian attributes).
+
+        Returns:
+            Dict: Dictionary containing MoleculeInfo and MolecularHamiltonian attributes.
+        """
+
         d = self.__dict__.copy()
         d.update(
             {
@@ -347,7 +355,7 @@ class MoleculeInfo(object):
 
         return d
 
-    def apply(self, func: Callable):
+    def apply(self, func: Callable) -> Any:
         """Unpack the corresponding MoleculeInfo attributes and apply the function onto them.
 
         This method will automatically select the right attributes depending on the arguments
@@ -356,6 +364,9 @@ class MoleculeInfo(object):
 
         Args:
             func (Callable): Function to apply on the MoleculeInfo attributes
+
+        Returns:
+            output (Any): Output of input function.
         """
 
         # Get function signature

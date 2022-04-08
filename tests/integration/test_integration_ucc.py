@@ -2,16 +2,21 @@
 # -*- coding: utf-8 -*-
 import scipy
 import numpy as np
-from qat.fermion.hamiltonians import ElectronicStructureHamiltonian
-from qat.fermion.chemistry.pyscf_tools import perform_pyscf_computation
-from qat.fermion.chemistry.ucc import get_active_space_hamiltonian
-from qat.fermion.chemistry.ucc_deprecated import get_cluster_ops_and_init_guess
-from qat.fermion.chemistry.ucc import convert_to_h_integrals
-from qat.fermion.transforms import recode_integer
-from qat.fermion.transforms import transform_to_jw_basis, get_jw_code
-from qat.fermion.chemistry.ucc import build_ucc_ansatz
+
 from qat.linalg import LinAlg
 from qat.lang.AQASM import Program
+
+from qat.fermion.hamiltonians import ElectronicStructureHamiltonian
+from qat.fermion.chemistry.pyscf_tools import perform_pyscf_computation
+from qat.fermion.chemistry.ucc import (
+    get_active_space_hamiltonian,
+    convert_to_h_integrals,
+)
+from qat.fermion.chemistry.ucc_deprecated import (
+    get_cluster_ops_and_init_guess,
+    build_ucc_ansatz,
+)
+from qat.fermion.transforms import recode_integer, transform_to_jw_basis, get_jw_code
 
 
 def prepare_h2(use_pyscf=False, verbose=False):
