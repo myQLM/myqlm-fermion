@@ -302,7 +302,9 @@ def build_cluster_operator(l_ex_op: List[Tuple[int]], nqbits: int) -> List[Hamil
 
 
 def construct_ucc_ansatz(
-    cluster_ops: List[Hamiltonian], ket_hf: int, n_steps: int = 1
+    cluster_ops: List[Hamiltonian],
+    ket_hf: int,
+    n_steps: int = 1,
 ) -> Program:
     r"""Builds the parametric state preparation circuit implementing the
     provided cluster operator.
@@ -325,37 +327,39 @@ def construct_ucc_ansatz(
         Program: The parametric program implementing the UCCSD method.
     """
 
-    # Define system
     nqbits = cluster_ops[0].nbqbits
-    n_ops = len(cluster_ops)
 
-    # Get Hartree-Fock state binary representation
-    ket_hf_init_sp = [int(c) for c in tobin(ket_hf, nqbits)]
-
-    # Initialize a program
     prog = Program()
     reg = prog.qalloc(nqbits)
 
-    # Initialize the HF state
-    for j in range(nqbits):
-        if int(ket_hf_init_sp[j]) == 1:
+    # Initialize the Hartree-Fock state into the Program
+    for j, char in enumerate(format(ket_hf, "0" + str(nqbits) + "b")):
+        if char == "1":
             prog.apply(X, reg[j])
 
     # Define the parameters to optimize
-    theta = [prog.new_var(float, "\\theta_{%s}" % i) for i in range(n_ops)]
+    theta = [
+        prog.new_var(float, "\\theta_{%s}" % i)
+        for i in range(len(cluster_ops) * n_steps)
+    ]
 
-    # Define the Hamiltonian
-    hamiltonian = sum([th * T for th, T in zip(theta, cluster_ops)])
+    # Trotterize the Hamiltonian (with 1 trotter step)
+    idx = 0
+    for _ in range(n_steps):
 
-    # Trotterize the Hamiltonian
-    qrout = make_trotterisation_routine(
-        hamiltonian, n_trotter_steps=n_steps, final_time=1
-    )
+        # Define the Hamiltonian for current Trotter step
+        hamiltonian = sum(
+            [th * T for th, T in zip(theta[idx : idx + len(cluster_ops)], cluster_ops)]
+        )
 
-    # Apply QRoutine onto the Program
-    prog.apply(qrout, reg)
+        # Trotterize the Hamiltonian and apply QRoutine
+        qrout = make_spin_hamiltonian_trotter_slice(hamiltonian, coeff=1.0 / n_steps)
+        prog.apply(qrout, reg)
 
-    return prog
+        # Take the next set (of length len(cluster_ops)) of thetas
+        idx += 3
+
+        return prog
 
 
 def select_active_orbitals(
