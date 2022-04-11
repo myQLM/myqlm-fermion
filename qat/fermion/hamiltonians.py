@@ -203,7 +203,7 @@ class Hamiltonian(Observable):
                     m_type(PAULI_MATS[op]),
                 )
             return kron_op(
-                id_type(2**qb, dtype="complex"),
+                id_type(2 ** qb, dtype="complex"),
                 kron_op(
                     m_type(PAULI_MATS[op]),
                     id_type(2 ** (nqbits - qb - 1), dtype="complex"),
@@ -232,12 +232,12 @@ class Hamiltonian(Observable):
 
         final_matrix = 0
         for term in self.terms:
-            matrix = id_type(2**self.nbqbits, dtype="complex")
+            matrix = id_type(2 ** self.nbqbits, dtype="complex")
             for op, qb in zip(term.op, term.qbits):
                 if op != "I":
                     matrix = matrix.dot(op_list[(op, qb)])
             final_matrix += term.coeff * matrix
-        final_matrix += self.constant_coeff * id_type(2**self.nbqbits)
+        final_matrix += self.constant_coeff * id_type(2 ** self.nbqbits)
         self.matrix = final_matrix
         return final_matrix
 
@@ -253,11 +253,11 @@ class Hamiltonian(Observable):
 
         final_matrix = 0
         for term in self.terms:
-            matrix = id_type(2**self.nbqbits, dtype="complex")
+            matrix = id_type(2 ** self.nbqbits, dtype="complex")
             for op, qb in zip(term.op, term.qbits):
                 matrix = matrix.dot(ops[op][qb])
             final_matrix += term.coeff * matrix
-        final_matrix += self.constant_coeff * id_type(2**self.nbqbits)
+        final_matrix += self.constant_coeff * id_type(2 ** self.nbqbits)
         self.matrix = final_matrix
         return final_matrix
 

@@ -1,11 +1,13 @@
 """ Functions for first-order Trotterization with Jordan-Wigner"""
 from math import pi
 import numpy as np
+
+from qat.core.variables import real
 from qat.lang.AQASM import QRoutine, PH, CNOT, H, RX, RZ, CustomGate, Z
 from .hamiltonians import ElectronicStructureHamiltonian, Hamiltonian
 
 
-def make_trotterisation_routine(hamiltonian, n_trotter_steps, final_time):
+def make_trotterisation_routine(hamiltonian, n_trotter_steps, final_time=1.0):
     r"""
     This function first trotterises the evolution operator :math:`e^{-i H t}` of
     a fermionic Hamiltonian or spin Hamiltonian :math:`H` using
@@ -111,7 +113,7 @@ def make_spin_hamiltonian_trotter_slice(hamiltonian, coeff=1.0):
         Qrout_one, ref = _one_operator_circuit(term.op, term.qbits)
         if Qrout_one.arity != 0:
             Qrout.apply(Qrout_one, term.qbits)
-        Qrout.apply(RZ(2 * coeff * np.real(term.coeff)), ref)
+        Qrout.apply(RZ(2 * coeff * real(term.coeff)), ref)
         if Qrout_one.arity != 0:
             Qrout.apply(Qrout_one.dag(), term.qbits)
     return Qrout

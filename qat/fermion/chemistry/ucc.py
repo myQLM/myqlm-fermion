@@ -14,6 +14,7 @@ from qat.lang.AQASM import X, Program
 from ..trotterisation import make_spin_hamiltonian_trotter_slice
 from ..hamiltonians import Hamiltonian, ElectronicStructureHamiltonian
 from ..util import tobin
+from ..trotterisation import make_trotterisation_routine
 
 
 def transform_integrals_to_new_basis(
@@ -343,14 +344,16 @@ def construct_ucc_ansatz(
     # Define the parameters to optimize
     theta = [prog.new_var(float, "\\theta_{%s}" % i) for i in range(n_ops)]
 
-    # Define the Hamiltonian and trotterize
-    for i in range(n_steps):
-        hamiltonian = sum([th * T for th, T in zip(theta, cluster_ops)])
+    # Define the Hamiltonian
+    hamiltonian = sum([th * T for th, T in zip(theta, cluster_ops)])
 
-        qrout_expt = make_spin_hamiltonian_trotter_slice(
-            Hamiltonian(nqbits, hamiltonian.terms)
-        )
-        prog.apply(qrout_expt, reg[: qrout_expt.arity])
+    # Trotterize the Hamiltonian
+    qrout = make_trotterisation_routine(
+        hamiltonian, n_trotter_steps=n_steps, final_time=1
+    )
+
+    # Apply QRoutine onto the Program
+    prog.apply(qrout, reg)
 
     return prog
 

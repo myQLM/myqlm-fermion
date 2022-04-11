@@ -123,8 +123,8 @@ def binary_generation(high, low):
     X = []
     for k in a[low:]:
         for w in range(len(X)):
-            L += [X[w] + 2**k]
-        L += [2**k]
+            L += [X[w] + 2 ** k]
+        L += [2 ** k]
         X = L
 
     L += [0]
@@ -171,9 +171,9 @@ def fractional_binary(number, precision):
 
     binary_list = [0 for _ in range(precision)]
     for i in range(1, precision + 1):
-        if (number - 1 / 2**i) >= 0:
+        if (number - 1 / 2 ** i) >= 0:
             binary_list[i - 1] = 1
-            number -= 1 / 2**i
+            number -= 1 / 2 ** i
     return binary_list
 
 
@@ -245,7 +245,7 @@ def init_creation_ops(Norb, sparse=False, verbose=False):
         if verbose:
             print("----------- creation op of color ", i)
         sign = None
-        for j in range(2**Norb):  # for each state j
+        for j in range(2 ** Norb):  # for each state j
             if verbose:
                 print("  applied to ", tobin(j, Norb))
             if bitget(j, Norb - 1 - i) == 0:  # if pos i in state j is empty
@@ -266,7 +266,7 @@ def init_creation_ops(Norb, sparse=False, verbose=False):
                     print(". . . . . . . . ko")
 
         c_dagger_dict[i] = sp.coo_matrix(
-            (data, (row_ind, col_ind)), shape=(2**Norb, 2**Norb)
+            (data, (row_ind, col_ind)), shape=(2 ** Norb, 2 ** Norb)
         )
         if not sparse:
             c_dagger_dict[i] = c_dagger_dict[i].A

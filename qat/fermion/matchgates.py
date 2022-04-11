@@ -125,7 +125,7 @@ def gaussian_state_prep_routine(nb_fermionic_modes, theta, slater=False):
     """
     M = nb_fermionic_modes
 
-    if len(theta) != (2 * M**2 - M if not slater else M**2):
+    if len(theta) != (2 * M ** 2 - M if not slater else M ** 2):
         raise Exception("Theta doesn" "t have the correct length!")
     lenm = 2 if slater else 4
 
@@ -174,7 +174,7 @@ def LDCA_cycle_routine(nb_fermionic_modes, theta_MG, theta_RZZ, slater=False):
     """
     M = nb_fermionic_modes
 
-    if len(theta_MG) != (2 * M**2 - 2 * M if not slater else M**2 - M):
+    if len(theta_MG) != (2 * M ** 2 - 2 * M if not slater else M ** 2 - M):
         raise Exception("theta_MG doesn" "t have the correct length!")
     if len(theta_RZZ) != M // 2 * (M - 1):
         raise Exception("theta_RZZ doesn" "t have the correct length!")
@@ -342,7 +342,7 @@ def prepare_R_matrix(nb_fermionic_modes, theta, slater=False):
         np.array: R, a 2Mx2M matrix
     """
     M = nb_fermionic_modes
-    if len(theta) != (2 * M**2 - M if not slater else M**2):
+    if len(theta) != (2 * M ** 2 - M if not slater else M ** 2):
         raise Exception("Theta doesn" "t have the correct length!")
 
     # r = exp(2*theta*G), with G generator
@@ -366,7 +366,7 @@ def prepare_R_matrix_gradient(nb_fermionic_modes, theta, slater=False):
         list<np.array>: list of :math:`2Mx2M` matrices
     """
     M = nb_fermionic_modes
-    if len(theta) != (2 * M**2 - M if not slater else M**2):
+    if len(theta) != (2 * M ** 2 - M if not slater else M ** 2):
         raise Exception("Theta doesn" "t have the correct length!")
 
     index_pair_list = _make_index_pair_list(M, slater)
@@ -434,7 +434,7 @@ def find_R_angles(
         return der_res
 
     if theta0 is None:
-        nparams = 2 * nqbits**2 - nqbits if not slater else nqbits**2
+        nparams = 2 * nqbits ** 2 - nqbits if not slater else nqbits ** 2
         theta0 = [0.0 for _ in range(nparams)]
 
     if verbose:
@@ -487,9 +487,9 @@ def get_nn_rotation_angles(
     r_majo = np.block([[r.real, r.imag], [-r.imag, r.real]])
 
     if slater:
-        theta0 = [0.1 for _ in range(nqbits**2)]
+        theta0 = [0.1 for _ in range(nqbits ** 2)]
     else:
-        theta0 = [0.1 for _ in range(2 * nqbits**2 - nqbits)]
+        theta0 = [0.1 for _ in range(2 * nqbits ** 2 - nqbits)]
 
     if verbose:
         print("theta0=", theta0)

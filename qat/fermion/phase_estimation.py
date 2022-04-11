@@ -216,7 +216,7 @@ def perform_phase_estimation(
     res = qpu.submit(circ.to_job(qubits=phase_reg, nbshots=n_shots))
 
     # Store the output probabilities in a vector
-    probs = np.zeros(2**n_phase_bits)
+    probs = np.zeros(2 ** n_phase_bits)
     list_states = []
     for sample in res:
         list_states.append((sample.probability, sample.state))
@@ -229,10 +229,10 @@ def perform_phase_estimation(
         ):
 
             if ind < 5:
-                print(state, state.value[0] / 2**n_phase_bits, prob)
+                print(state, state.value[0] / 2 ** n_phase_bits, prob)
 
     max_prob_state_int = np.argmax(probs)
-    theta = max_prob_state_int / 2**n_phase_bits
+    theta = max_prob_state_int / 2 ** n_phase_bits
     energy = (
         -2 * np.pi * theta / H_evolution_time + Emax
     )  # exp(-i*H*t + i*Emax*t) |psi> = exp(2*pi*i*theta) |psi>
@@ -294,7 +294,7 @@ def build_qpe_routine_for_hamiltonian(
     # Controlled unitaries along with a global phase application
     for j_ind in range(n_phase_bits):
         routine.apply(
-            PH(global_phase * 2**j_ind), phase_reg[j_ind]
+            PH(global_phase * 2 ** j_ind), phase_reg[j_ind]
         )  # happens before the trotterization
         for _ in range(n_trotter_steps):
             for term in hamiltonian.terms:
