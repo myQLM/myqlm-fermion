@@ -366,7 +366,7 @@ def select_active_orbitals(
     noons: List[float],
     n_electrons: int,
     threshold_1: Optional[float] = 2e-2,
-    threshold_2: Optional[float] = 2e-3,
+    threshold_2: Optional[float] = 1e-3,
 ) -> Tuple[List[int], List[int]]:
     r"""Selects the right active space and freezes core electrons
     according to their NOONs.
