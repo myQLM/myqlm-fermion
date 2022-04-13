@@ -1,9 +1,17 @@
+from typing import Callable, List, Optional, Tuple
+import numpy as np
 from qat.lang.AQASM import Program
+from .hamiltonians import Hamiltonian
 
 
 def VQE(
-    hamiltonian, optimizer, ansatz_routine, theta0, qpu, n_shots=[0, 0], display=False
-):
+    hamiltonian: Hamiltonian,
+    optimizer,
+    ansatz_routine: Callable,
+    theta0: np.ndarray,
+    qpu,
+    n_shots: Optional[List[int]] = [0, 0],
+) -> Tuple[float, list, int, List[float]]:
     r"""
     This function implements the Variational Quantum Eigen solver i.e.,
     it first prepares the variational ansatz and measures the energy using
@@ -11,30 +19,28 @@ def VQE(
     finds the parameters of the ansatz that minimize the energy of the Hamiltonian.
 
     Args:
-        hamiltonian (Hamiltonian): hamiltonian for which
-            the ground state is to be estimated
-        optimizer (Optimizer): with 2 attributes : the optimization algorithm
-            (a function) and its own parameters (either args or kwargs)
-        ansatz_routine (function): function of one list with all parameters to
-            optimize, must return a QRoutine which corresponds to a ket
-        theta0 (numpy.array): initial list of parameters to optimize
-        qpu (QPU): quantum process unit used. It can be get_qpu_server()
+        hamiltonian (Hamiltonian): Hamiltonian for which the ground state is to be estimated
+        optimizer (Optimizer): The optimization algorithm (a function) and its own parameters (either args or kwargs).
+        ansatz_routine (Callable): Function of one list with all parameters to optimize, must return a QRoutine which
+            corresponds to a ket.
+        theta0 (np.ndarray): Initial list of parameters to optimize.
+        qpu (QPU): Quantum process unit used. It can be get_qpu_server()
             (from qat.linalg import get_qpu_server) for ideal simulation or
-            get_noisy_qpu_server(parameters) for noisy simulation for instance
-        n_shots (list): two values which are either int or 0 (infinite number of shots).
+            get_noisy_qpu_server(parameters) for noisy simulation for instance.
+        n_shots (Optional[List[int]]): Two values which are either int or 0 (infinite number of shots).
             The first one determines the number of sample to measure one mean value
             for the optimisation. The second one is used to calculate the final energy.
             The bigger n_shots is, the more accurate the measurement of the mean value.
-        ancilla_qubit(int): number of ancilla qubits used in the preparation state (if needed)
 
     Returns:
-        float: minimum energy
-        list: optimized parameters
-        int: number evaluation function
-        list(float): successive values of energy
+        float: Minimum energy.
+        list: Optimized parameters.
+        int: Number evaluation function.
+        list(float): Successive values of energy.
 
     Note:
         This high-level function is there just to maintain backward compatibility.
+
     """
 
     def fun(theta, n_shots_internal):
@@ -47,18 +53,6 @@ def VQE(
         res = qpu.submit(job)
         return res.value
 
-    # optimized_params, nb_eval, energies = optimizer.make_calculation(lambda theta: fun(theta, n_shots[0]), theta0)
-    # minimum_energy = fun(optimized_params, n_shots[1])
+    theta, energy, _, _ = optimizer(lambda theta: fun(theta, n_shots[0]), theta0)
 
-    theta, energy, k, theta_energy_list = optimizer(
-        lambda theta: fun(theta, n_shots[0]), theta0
-    )
-
-    # if display:
-    # print("Energy =", minimum_energy, "Optimized parameters =", optimized_params,
-    #       "\n Number of function evaluations =", nb_eval)
-    # print("Res = ", res)
-    # print("Res = ", res)
-
-    # return minimum_energy, optimized_params, nb_eval, energies
     return energy, theta, None, None

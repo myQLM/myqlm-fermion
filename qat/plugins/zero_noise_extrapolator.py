@@ -4,29 +4,32 @@
 Zero Noise Extrapolation plugin. The extrapolation can be either linear or exponential.
 """
 
+from typing import List, Optional
 import numpy as np
 from scipy.stats import linregress
 import copy
 
-from qat.core import BatchResult
+from qat.core import BatchResult, Circuit, Batch
 from qat.core.plugins import AbstractPlugin
 from qat.lang.AQASM import CNOT
+from qat.lang.AQASM.gates import Gate
 from qat.comm.exceptions.ttypes import PluginException
 
 
-def insert_ids(circ, gates, n_ins):
+def insert_ids(circ: Circuit, gates: list, n_ins: int) -> Circuit:
     """
     Insert a number n_ins of GG^{\dagger} after each occurence of gate G in the circuit.
     In the absence of noise,  GG^{\dagger}=id is without effect.
 
     Args:
         circ (Circuit): a circuit
-        gates (list): the gates G to duplicate
-        n_ins (int): the number of decompositions GG^{\dagger} of the identity to insert after
+        gates (list): The gates G to duplicate
+        n_ins (int): The number of decompositions GG^{\dagger} of the identity to insert after
                      each occurence of G in circ
 
     Returns:
-        modified_circ (Circuit): the initial circuit, with GG^{\dagger} insertions
+        modified_circ (Circuit): The initial circuit, with GG^{\dagger} insertions.
+
     """
 
     modified_circ = copy.deepcopy(circ)
@@ -35,8 +38,11 @@ def insert_ids(circ, gates, n_ins):
     op_index = 0
 
     for op in circ.iterate_simple():
+
         for gate in gates:
+
             if op[0] == gate.name:
+
                 for _ in range(n_ins):
                     modified_circ.insert_gate(
                         gate=gate, position=op_index + n_gates_inserted + 1, qbits=op[2]
@@ -47,12 +53,15 @@ def insert_ids(circ, gates, n_ins):
                         qbits=op[2],
                     )
                 n_gates_inserted += 2 * n_ins
+
         op_index += 1
 
     return modified_circ
 
 
-def extract_values(batch_result, n_ins, n_jobs, job_number):
+def extract_values(
+    batch_result: BatchResult, n_ins: int, n_jobs: int, job_number: int
+) -> list:
     """
     Given a batch result corresponding to
 
@@ -63,14 +72,15 @@ def extract_values(batch_result, n_ins, n_jobs, job_number):
     the extrapolated value for the job job_number.
 
     Args:
-        batch_result (BatchResult): a batch result containing results for all jobs and points
-        n_ins (int): the maximal number of GG^{\dagger} inserted
-        n_jobs (int): the number of jobs that were initially sent to the stack
-        job_number (int): the index of the job we want to isolate the meaningful
-                          result values for
+        batch_result (BatchResult): A batch result containing results for all jobs and points.
+        n_ins (int): The maximal number of GG^{\dagger} inserted.
+        n_jobs (int): The number of jobs that were initially sent to the stack.
+        job_number (int): The index of the job we want to isolate the meaningful
+                          result values for.
 
     Returns:
-        values_for_fit (list): list of measured values to use to perform the extrapolation
+        values_for_fit (list): List of measured values to use to perform the extrapolation.
+
     """
 
     results = batch_result.results  # list of Result objects
@@ -79,8 +89,8 @@ def extract_values(batch_result, n_ins, n_jobs, job_number):
 
     # first append the result corresponding to
     values_for_fit.append(results[job_number].value)
-    # the circuit without id insertions
 
+    # the circuit without id insertions
     for i in range(n_ins):
         index = n_jobs + job_number * n_ins + i
         values_for_fit.append(results[index].value)
@@ -88,22 +98,30 @@ def extract_values(batch_result, n_ins, n_jobs, job_number):
     return values_for_fit
 
 
-def perform_extrapolation(values_for_fit, n_ins, extrap_method="linear", asymptot=0):
+def perform_extrapolation(
+    values_for_fit: list,
+    n_ins: int,
+    extrap_method: Optional[str] = "linear",
+    asymptot: Optional[float] = 0,
+) -> float:
     """
-    Perform an extrapolation to zero noise
+    Perform an extrapolation to zero noise.
 
     Args:
-        values_for_fit (list): values to carry the fit on
+        values_for_fit (list): Values to carry the fit on
         n_ins (int): the maximal number of GG^{\dagger} insertions
-        extrap_method (str, optional): which kind of extrapolation to make, defaults to 'linear'.
+        extrap_method (Optional[str]): Which kind of extrapolation to make, defaults to 'linear'.
                                        The other choice is 'exponential'.
-        asymptot (float, optional): asymptotic value of the observable as n_ins goes to infinity.
+        asymptot (Optional[float]): Asymptotic value of the observable as n_ins goes to infinity.
                                     Must be known for exponential extrapolation. Defaults to 0.
     Returns:
         value (float): the zero-noise extrapolated value
+
     """
+
     try:
         assert len(values_for_fit) == n_ins + 1
+
     except:
         raise PluginException(
             "Not enough jobs in the batch (%i) compared with the max number"
@@ -117,16 +135,19 @@ def perform_extrapolation(values_for_fit, n_ins, extrap_method="linear", asympto
         value = -0.5 * a + b
 
     elif extrap_method == "exponential":
+
         sign = np.sign(values_for_fit[0] - asymptot)
         log_values = [np.log(abs(val - asymptot)) for val in values_for_fit]
         a, b, _, _, _ = linregress(range(n_ins + 1), log_values)
         value = sign * np.exp(-0.5 * a + b) + asymptot
+
     else:
         raise PluginException(
             "Extrapolation method not implemented. You required the",
             extrap_method,
             "method whereas only " "linear" " and" " " "exponential" " options exist.",
         )
+
     return value, a, b
 
 
@@ -166,30 +187,36 @@ class ZeroNoiseExtrapolator(AbstractPlugin):
         mixes sampling and observable measurement jobs!
 
     Args:
-        n_ins (int, optional): maximum number of identity insertions to go to, defaults to 1
-        extrap_gates (list of gates, optional): gates :math:`G` to be followed by identity decompositions :math:`GG^{\dagger}`,
-                                                defaults to CNOT
-        extrap_method (str, optional): form of the ansatz fit, defaults to 'linear'. Can be also 'exponential'.
+        n_ins (Optional[int]): Maximum number of identity insertions to go to. Defaults to 1.
+        extrap_gates (Optional[List[Gate]]): Gates :math:`G` to be followed by identity decompositions :math:`GG^{\dagger}`.
+            Defaults to CNOT
+        extrap_method (Optional[str]): Form of the ansatz fit, defaults to 'linear'. Can be also 'exponential'.
     """
 
-    def __init__(self, n_ins=1, extrap_gates=[CNOT], extrap_method="linear"):
+    def __init__(
+        self,
+        n_ins: Optional[int] = 1,
+        extrap_gates: Optional[List[Gate]] = [CNOT],
+        extrap_method: Optional[str] = "linear",
+    ):
+
         super(ZeroNoiseExtrapolator, self).__init__()
         self.n_ins = n_ins
         self.extrap_gates = extrap_gates
         self.extrap_method = extrap_method
 
-    def compile(self, batch, specs):
+    def compile(self, batch: Batch):
         """
-        Compile the batch
+        Compile the batch.
 
         Args:
-            batch (:class:`~qat.core.Batch`): batch to optimize
+            batch (:class:`~qat.core.Batch`): Batch to optimize
+
         """
 
         # Initialize resulting batch
         resulting_batch = copy.deepcopy(batch)
 
-        # sampling mode, assume all of the batch jobs are so
         if batch.jobs and not hasattr(batch.jobs[0].observable, "constant_coeff"):
             self.is_sampling = True
             return resulting_batch
@@ -198,43 +225,33 @@ class ZeroNoiseExtrapolator(AbstractPlugin):
 
         if self.extrap_method == "exponential":
             self.asymptots = []
+
         elif self.extrap_method == "linear":
             self.asymptots = [0] * len(batch.jobs)
 
-        for idx, job in enumerate(batch.jobs):
+        for _, job in enumerate(batch.jobs):
 
-            for i in range(self.n_ins):  # duplicate each job, changing
-                # the circuit to a circuit with
-                # GG^{\dagger} insertions
+            for i in range(self.n_ins):
+
+                # Duplicate each job, changing the circuit to a circuit with GG^{\dagger} insertions
                 modified_job = copy.deepcopy(job)
                 circ = job.circuit
                 modified_circ = insert_ids(circ, self.extrap_gates, i + 1)
                 modified_job.circuit = modified_circ
                 resulting_batch.jobs.append(modified_job)
 
-            if (
-                self.extrap_method == "exponential"
-            ):  # fetch the expected asymptotic value
+            if self.extrap_method == "exponential":
+                # Fetch the expected asymptotic value
                 asymptot = job.observable.constant_coeff
                 self.asymptots.append(asymptot)
+
             else:
                 self.asymptots.append(0)
 
-        # Return batch to send to the qpu
+        # Return batch to send to the QPU
         return resulting_batch
 
-    def do_post_processing(self):
-        """
-        Checks if the plugin needs to post process
-        results.
-
-        Returns:
-            bool: the result is always true
-        """
-
-        return True
-
-    def post_process(self, batch_result):
+    def post_process(self, batch_result: BatchResult) -> BatchResult:
         """
         Perform post processing
 
@@ -245,19 +262,21 @@ class ZeroNoiseExtrapolator(AbstractPlugin):
         Returns:
             :class:`~qat.core.BatchResult`
         """
+
         if self.is_sampling:
             return batch_result
 
         number_of_jobs_involved = self.n_ins + 1
-
         n_jobs_init = len(batch_result) // (number_of_jobs_involved)
 
         extrapolated_results = BatchResult()
-
         for i in range(n_jobs_init):
-            result_to_fix = batch_result.results[i]  # copy Result object
+
+            result_to_fix = batch_result.results[i]
             extrapolated_results.results.append(result_to_fix)
+
             if result_to_fix.value is not None:
+
                 values_for_fit = extract_values(
                     batch_result, self.n_ins, n_jobs_init, i
                 )
@@ -268,6 +287,7 @@ class ZeroNoiseExtrapolator(AbstractPlugin):
                     extrap_method=self.extrap_method,
                     asymptot=self.asymptots[i],
                 )
+
                 result_to_fix.meta_data["ZNE_fit_parameters"] = {"a": a, "b": b}
 
         return extrapolated_results

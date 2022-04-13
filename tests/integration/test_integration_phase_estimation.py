@@ -293,7 +293,7 @@ def test_hubbard_molecule__from_notebook():
         qrout = QRoutine()
         qrout.new_wires(4)
         state_prep = AbstractGate("STATE_PREPARATION", [np.ndarray])
-        state_normalizing_factor = np.sqrt(sum(coeff ** 2 for coeff in eigen_state))
+        state_normalizing_factor = np.sqrt(sum(coeff**2 for coeff in eigen_state))
         qrout.apply(
             state_prep(np.array(eigen_state) / state_normalizing_factor),
             [0, 1, 2, 3],
@@ -350,7 +350,7 @@ def test_precise_estimate():
     # Define the QPE parameters
     nqbits_phase = 9
     n_trotter_steps = 11
-    delta = 1 / 2 ** nqbits_phase
+    delta = 1 / 2**nqbits_phase
 
     n_adiab_steps = 0
     E_target = 0

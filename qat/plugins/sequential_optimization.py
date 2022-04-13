@@ -1,3 +1,4 @@
+from typing import Optional
 import numpy as np
 import math
 import copy
@@ -6,7 +7,7 @@ from qat.plugins.optimizer import Optimizer
 from qat.comm.exceptions.ttypes import PluginException
 
 
-def rescale_params(params, coeff):
+def rescale_params(params: list, coeff: float):
     """
     Apply a multiplicative coefficient to all the numbers in a list;
 
@@ -76,7 +77,13 @@ class SeqOptim(Optimizer):
         verbose (bool): whether we want to print intermediary cost function values, defaults to False.
     """
 
-    def __init__(self, ncycles=10, coeff=1, x0=None, verbose=False):
+    def __init__(
+        self,
+        ncycles: Optional[int] = 10,
+        coeff: Optional[float] = 1,
+        x0=None,
+        verbose: Optional[bool] = False,
+    ):
         self.ncycles_roto = ncycles
         self.coeff = coeff
         self.x0 = x0
@@ -95,6 +102,7 @@ class SeqOptim(Optimizer):
 
         if self.x0 is not None:
             x0 = list(self.x0)
+
         else:
             x0 = list(np.random.random(n_params))
 

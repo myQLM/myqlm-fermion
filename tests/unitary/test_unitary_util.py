@@ -3,7 +3,7 @@ from qat.fermion.util import get_unitary_from_circuit
 from qat.lang.AQASM import QRoutine, X, Y, H, Z, CNOT
 
 
-H_matrix = np.array([[1, 1], [1, -1]]) / (2 ** 0.5)
+H_matrix = np.array([[1, 1], [1, -1]]) / (2**0.5)
 CNOT_matrix = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
 Id_matrix = np.eye(2, 2)
 Sz_matrix = np.array([[1, 0], [0, -1]])

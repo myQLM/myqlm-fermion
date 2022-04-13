@@ -1,3 +1,4 @@
+from typing import Optional
 import numpy as np
 import copy
 
@@ -20,54 +21,46 @@ class MultipleLaunchesAnalyzer(AbstractPlugin):
         verbose (bool, optional): print infos, defaults to False.
     """
 
-    def __init__(self, n_runs=5, verbose=False):
+    def __init__(self, n_runs: Optional[int] = 5, verbose: Optional[bool] = False):
         super(MultipleLaunchesAnalyzer, self).__init__()
         self.n_runs = n_runs
         self.verbose = verbose
 
-    def compile(self, batch, specs):
+    def compile(self, batch):
         """
         Compile the batch
 
         Args:
             batch (:class:`~qat.core.Batch`): batch to optimize
         """
+
         # Initialize resulting batch
         resulting_batch = copy.deepcopy(batch)
         resulting_batch.jobs = []  # empty job list
 
-        for idx, job in enumerate(batch.jobs):
+        for _, job in enumerate(batch.jobs):
 
-            for i in range(self.n_runs):  # duplicate each job, so that
-                # several random initializations
-                # are trialled
+            for _ in range(self.n_runs):
+
+                # Duplicate each job, so that several random initializations are trialled
                 job_copy = copy.deepcopy(job)
                 resulting_batch.jobs.append(job_copy)
 
         # Return batch to send to the qpu
         return resulting_batch
 
-    def do_post_processing(self):
-        """
-        Checks if the plugin needs to post process
-        results.
-
-        Returns:
-            bool: the result is always True
-        """
-        return True
-
-    def post_process(self, batch_result):
+    def post_process(self, batch_result: BatchResult) -> BatchResult:
         """
         Perform post processing
 
         Args:
-            batch_result (:class:`~qat.core.BatchResult`): result to post
-                process
+            batch_result (:class:`~qat.core.BatchResult`): Result to post process.
 
         Returns:
             :class:`~qat.core.BatchResult`
+
         """
+
         n_jobs_init = len(batch_result) // (self.n_runs)
 
         best_results = BatchResult()
@@ -75,18 +68,24 @@ class MultipleLaunchesAnalyzer(AbstractPlugin):
         vals = np.reshape(
             np.array([result.value for result in batch_result.results]),
             (n_jobs_init, self.n_runs),
-        )  # get all values
+        )
 
         for i in range(n_jobs_init):
-            vals_for_job = vals[i, :]  # select row corresponding to job
+
+            # Select row corresponding to job
+            vals_for_job = vals[i, :]
+
             if self.verbose:
                 print("Values found for job #%i" % (i + 1), vals_for_job)
                 best_val = np.min(vals_for_job)
                 print("Lowest value is thus", best_val)
+
             local_index = np.argmin(vals_for_job)
             pos_in_batch = i * self.n_runs + local_index
+
             if self.verbose:
                 print("Position in batch of job with lowest value:", pos_in_batch)
+
             var = np.var(vals_for_job)
             res_to_keep = batch_result[pos_in_batch]
             res_to_keep.meta_data["optimal_values_variance"] = var
