@@ -70,13 +70,11 @@ def make_fSim_fan_routine(nbqbits: int, theta: np.ndarray) -> QRoutine:
 
     for j in range(nbqbits // 2 - 1):
 
-        qrout.apply(
-            fSim(theta[ind_theta], theta[ind_theta + 1]), q1 - j - 1, q1 - j)
+        qrout.apply(fSim(theta[ind_theta], theta[ind_theta + 1]), q1 - j - 1, q1 - j)
 
         ind_theta += 2
 
-        qrout.apply(
-            fSim(theta[ind_theta], theta[ind_theta + 1]), q2 + j, q2 + j + 1)
+        qrout.apply(fSim(theta[ind_theta], theta[ind_theta + 1]), q2 + j, q2 + j + 1)
 
         ind_theta += 2
 

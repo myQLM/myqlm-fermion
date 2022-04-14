@@ -215,8 +215,7 @@ def guess_init_state(
     active_size = len(active_noons)
 
     (ket_hf_init, theta_init,) = _init_uccsd(
-        active_size, n_active_els, hpqrs, list(
-            range(active_size)), active_orb_energies
+        active_size, n_active_els, hpqrs, list(range(active_size)), active_orb_energies
     )
 
     actives_occupied_orbitals, actives_unoccupied_orbitals = construct_active_orbitals(
@@ -407,8 +406,7 @@ def get_cluster_ops_and_init_guess(
 
     # find theta_init (MP2)
     ket_hf_init, as_occ, as_unocc, theta_init = init_uccsd(
-        active_size, n_active_els, hpqrs, list(
-            range(active_size)), active_orb_energies
+        active_size, n_active_els, hpqrs, list(range(active_size)), active_orb_energies
     )
 
     exc_op_list = select_excitation_operators(active_noons, as_occ, as_unocc)

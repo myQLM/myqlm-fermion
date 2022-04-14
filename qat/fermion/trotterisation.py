@@ -22,7 +22,7 @@ def make_trotterisation_routine(
     .. math::
          e^{-i H t} \approx \prod_{k=1}^{n} \left( \prod_{pq} e^{-i \frac{t}{n} h_{pq} c_p^\dagger c_q} \prod_{pqrs} e^{-\frac{i}{2}\frac{t}{n} h_{pqrs} e^{-i c_p^\dagger c_q^\dagger c_r c_s} } \right)
 
-    This operator is then mapped to a product of Pauli operators via a Jordan-Wigner transformation and the resulting QRoutine is 
+    This operator is then mapped to a product of Pauli operators via a Jordan-Wigner transformation and the resulting QRoutine is
     returned.
 
     Args:
@@ -69,8 +69,8 @@ def make_trotterisation_routine(
 
     else:
         raise Exception(
-            "Hamiltonian must be of type ElectronicStructureHamiltonian or Hamiltonian, got %s instead" % type(
-                hamiltonian)
+            "Hamiltonian must be of type ElectronicStructureHamiltonian or Hamiltonian, got %s instead"
+            % type(hamiltonian)
         )
 
 
@@ -190,12 +190,10 @@ def make_trotter_slice_jw(
     Qrout.apply(_coulomb_exchange_operator_jw(hpqrs, delta_t), range(len(hpq)))
 
     if len(hpqrs) > 2:
-        Qrout.apply(_number_excitation_operator_jw(
-            hpqrs, delta_t), range(len(hpq)))
+        Qrout.apply(_number_excitation_operator_jw(hpqrs, delta_t), range(len(hpq)))
 
     if len(hpqrs) > 3:
-        Qrout.apply(_double_excitation_operator_jw(
-            hpqrs, delta_t), range(len(hpq)))
+        Qrout.apply(_double_excitation_operator_jw(hpqrs, delta_t), range(len(hpq)))
 
     return Qrout
 
@@ -316,8 +314,7 @@ def _coulomb_exchange_operator_jw(hpqrs: np.ndarray, t: float) -> QRoutine:
 
             if hpqqp != 0:
                 U = np.array(
-                    [[np.exp(-1j * t * hpqqp / 4), 0],
-                     [0, np.exp(-1j * t * hpqqp / 4)]]
+                    [[np.exp(-1j * t * hpqqp / 4), 0], [0, np.exp(-1j * t * hpqqp / 4)]]
                 )
 
                 G = CustomGate(U)

@@ -149,8 +149,7 @@ def perform_phase_estimation(
 
     # Initialize the program
     prog = Program()
-    phase_reg = prog.qalloc(
-        n_phase_bits, class_type=QInt, reverse_bit_order=False)
+    phase_reg = prog.qalloc(n_phase_bits, class_type=QInt, reverse_bit_order=False)
 
     data_reg = prog.qalloc(n_qubits_H)
 
@@ -270,9 +269,7 @@ def perform_phase_estimation(
     theta = max_prob_state_int / 2**n_phase_bits
 
     # exp(-i*H*t + i*Emax*t) |psi> = exp(2*pi*i*theta) |psi>
-    energy = (
-        -2 * np.pi * theta / H_evolution_time + Emax
-    )
+    energy = -2 * np.pi * theta / H_evolution_time + Emax
     energy += E_const
 
     return energy, np.max(probs)
@@ -350,8 +347,7 @@ def build_qpe_routine_for_hamiltonian(
                         " qubit basis. All the terms should be real, coming from a"
                         " hermitian H."
                     )
-                theta = np.real(term.coeff) * \
-                    2 ** (j_ind + 1) * t / n_trotter_steps
+                theta = np.real(term.coeff) * 2 ** (j_ind + 1) * t / n_trotter_steps
                 Rk_routine = construct_Rk_routine(term.op, term.qbits, theta)
                 routine.apply(
                     Rk_routine.ctrl(),

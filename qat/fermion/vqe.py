@@ -24,10 +24,10 @@ def VQE(
         ansatz_routine (Callable): Function of one list with all parameters to optimize, must return a QRoutine which
             corresponds to a ket.
         theta0 (np.ndarray): Initial list of parameters to optimize.
-        qpu (QPU): Quantum process unit used. It can be get_qpu_server() (from qat.linalg import get_qpu_server) for ideal 
+        qpu (QPU): Quantum process unit used. It can be get_qpu_server() (from qat.linalg import get_qpu_server) for ideal
             simulation or get_noisy_qpu_server(parameters) for noisy simulation for instance.
-        n_shots (Optional[List[int]]): Two values which are either int or 0 (infinite number of shots). The first one determines the 
-        number of sample to measure one mean value for the optimisation. The second one is used to calculate the final energy. The 
+        n_shots (Optional[List[int]]): Two values which are either int or 0 (infinite number of shots). The first one determines the
+        number of sample to measure one mean value for the optimisation. The second one is used to calculate the final energy. The
         bigger n_shots is, the more accurate the measurement of the mean value.
 
     Returns:
@@ -51,7 +51,6 @@ def VQE(
         res = qpu.submit(job)
         return res.value
 
-    theta, energy, _, _ = optimizer(
-        lambda theta: fun(theta, n_shots[0]), theta0)
+    theta, energy, _, _ = optimizer(lambda theta: fun(theta, n_shots[0]), theta0)
 
     return energy, theta, None, None

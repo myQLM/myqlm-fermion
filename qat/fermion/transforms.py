@@ -75,8 +75,7 @@ def make_PCU_sets(nqbits: int) -> List[Tuple]:
     ftree_nodes = make_fenwick_tree(nqbits)
     for qb in range(nqbits):
         set_list.append(
-            (_P_set(qb, ftree_nodes), _C_set(
-                qb, ftree_nodes), _U_set(qb, ftree_nodes))
+            (_P_set(qb, ftree_nodes), _C_set(qb, ftree_nodes), _U_set(qb, ftree_nodes))
         )
     return set_list
 
@@ -376,7 +375,7 @@ def recode_integer(integer: int, code: np.ndarray) -> int:
         p_i = \sum_{j} C_{ji} f_j \mathrm{mod.} 2
 
     Args:
-        integer (int): The integer (with binary repr. :math:`|f_0, f_1, \dots f_{n-1}\rangle`) to be converted to new 
+        integer (int): The integer (with binary repr. :math:`|f_0, f_1, \dots f_{n-1}\rangle`) to be converted to new
         representation.
         code (np.ndarray): C matrix to convert bits from one representation to the other.
 

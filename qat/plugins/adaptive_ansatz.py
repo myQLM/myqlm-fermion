@@ -95,9 +95,9 @@ class AdaptiveAnsatzPlugin(Junction):
     from a given pool of operators.
 
     Args:
-        operator_pool (list<Observable>): List of operators \tau_i to appear as gates exp(-i theta_i * \tau_i) in parametric 
+        operator_pool (list<Observable>): List of operators \tau_i to appear as gates exp(-i theta_i * \tau_i) in parametric
             circuit.
-        commutators (list<Observable>, optional): List of commutators [H, \tau_i], with H Hamiltonian to be minimized. Defaults to 
+        commutators (list<Observable>, optional): List of commutators [H, \tau_i], with H Hamiltonian to be minimized. Defaults to
         None, in which case the commutators are computed by the plugin.
         max_iter (int, optional): Maximum number of iterations or operators added to the ansatz.
 
@@ -174,8 +174,7 @@ class AdaptiveAnsatzPlugin(Junction):
 
         def fun(x):
 
-            circ = job.circuit(
-                **{"theta_" + str(j): elm for j, elm in enumerate(x)})
+            circ = job.circuit(**{"theta_" + str(j): elm for j, elm in enumerate(x)})
 
             _job = circ.to_job(observable=job.observable)
             energy = np.real(self.execute(_job).value)

@@ -207,17 +207,16 @@ def gaussian_state_prep_routine(
         for j in range(M // 2):
 
             offset = M + lenm * (M - 1) * k + lenm * j
-            angles = theta[offset: offset + lenm]
+            angles = theta[offset : offset + lenm]
 
             q_rout.apply(MG_chain_routine(angles, slater), 2 * j, 2 * j + 1)
 
         for j in range(M // 2 - 1):
 
             offset = M + lenm * (M - 1) * k + lenm * M // 2 + lenm * j
-            angles = theta[offset: offset + lenm]
+            angles = theta[offset : offset + lenm]
 
-            q_rout.apply(MG_chain_routine(
-                angles, slater), 2 * j + 1, 2 * j + 2)
+            q_rout.apply(MG_chain_routine(angles, slater), 2 * j + 1, 2 * j + 2)
 
     return q_rout
 
@@ -266,11 +265,10 @@ def LDCA_cycle_routine(
         for j in range(M // 2):  # even rotations
 
             offset = lenm * (M - 1) * k + lenm * j
-            angles_MG = theta_MG[offset: offset + lenm]
+            angles_MG = theta_MG[offset : offset + lenm]
 
             q_rout.apply(
-                MG_chain_routine(angles_MG, slater,
-                                 theta_RZZ[(M - 1) * k + j]),
+                MG_chain_routine(angles_MG, slater, theta_RZZ[(M - 1) * k + j]),
                 2 * j,
                 2 * j + 1,
             )
@@ -278,7 +276,7 @@ def LDCA_cycle_routine(
         for j in range(M // 2 - 1):  # odd rotations
 
             offset = lenm * (M - 1) * k + lenm * M // 2 + lenm * j
-            angles_MG = theta_MG[offset: offset + lenm]
+            angles_MG = theta_MG[offset : offset + lenm]
 
             q_rout.apply(
                 MG_chain_routine(
@@ -338,10 +336,10 @@ def LDCA_routine(
         q_rout.apply(RZ(-2 * theta[i]), i)
 
     # first M+l_theta_MG angles correspond to same params as U_Bog
-    theta_MG = theta[M: M + l_theta_MG]
+    theta_MG = theta[M : M + l_theta_MG]
 
     # remainder: RZZ angles
-    theta_RZZ = theta[M + l_theta_MG:]
+    theta_RZZ = theta[M + l_theta_MG :]
 
     pointeur_MG = 0
     pointeur_RZZ = 0
@@ -349,10 +347,10 @@ def LDCA_routine(
     for _ in range(ncycles):
 
         theta_MG_cycle = theta_MG[
-            pointeur_MG: pointeur_MG + nb_MG_cycles * lenm * (M - 1)
+            pointeur_MG : pointeur_MG + nb_MG_cycles * lenm * (M - 1)
         ]
         theta_RZZ_cycle = theta_RZZ[
-            pointeur_RZZ: pointeur_RZZ + nb_MG_cycles * (M - 1)
+            pointeur_RZZ : pointeur_RZZ + nb_MG_cycles * (M - 1)
         ]
         q_rout.apply(
             LDCA_cycle_routine(
@@ -553,8 +551,7 @@ def find_R_angles(
 
         for ind in range(len(grad_list)):
 
-            der_res[ind] = - \
-                np.trace(R_target.T.dot(grad_list[ind])) / (2 * nqbits)
+            der_res[ind] = -np.trace(R_target.T.dot(grad_list[ind])) / (2 * nqbits)
 
         return der_res
 
@@ -566,8 +563,7 @@ def find_R_angles(
         print("f(x0) = ", func(theta0))
 
     if not use_gradient:
-        res = scipy.optimize.minimize(
-            func, theta0, method=method, options=options)
+        res = scipy.optimize.minimize(func, theta0, method=method, options=options)
     else:
         res = scipy.optimize.minimize(
             func, theta0, method=method, options=options, jac=der

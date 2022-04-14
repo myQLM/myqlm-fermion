@@ -12,7 +12,7 @@ class Optimizer:
         **kwargs_algo: Valid dictionnary for the optimization algorithm used
 
     Note:
-        This class is there just to maintain backward compatibility.``qat.vsolve`` provides plugin framework to interface optimizers 
+        This class is there just to maintain backward compatibility.``qat.vsolve`` provides plugin framework to interface optimizers
         with quantum processors suitable for variational algorithms.
 
     """

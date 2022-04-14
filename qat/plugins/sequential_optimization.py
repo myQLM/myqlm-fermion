@@ -69,7 +69,7 @@ class SeqOptim(Optimizer):
         It belongs to the user to provide a circuit matching the requirements mentioned above.
 
     Args:
-        ncycles (int, optional): Number of times the plugin cycles through each angle, defaults to 10. The value to which it should 
+        ncycles (int, optional): Number of times the plugin cycles through each angle, defaults to 10. The value to which it should
             be set so that the cost function converges is however strongly problem-dependent.
         coeff (Optional[float]): Rescaling parameter :math:`c` for all the circuit's angles. Defaults to 1.
         x0 (Optional[np.ndarray]): Initial value of the parameters. Defaults to None, in which case we assume random initialization.
@@ -128,8 +128,7 @@ class SeqOptim(Optimizer):
                 params_new[key] = (
                     params[key]
                     - math.pi / 2
-                    - math.atan2(2 * cf - cf_plus - cf_minus,
-                                 cf_plus - cf_minus)
+                    - math.atan2(2 * cf - cf_plus - cf_minus, cf_plus - cf_minus)
                 )
                 cf_new = np.real(self.evaluate_aux(params_new))
 

@@ -162,8 +162,7 @@ class Hamiltonian(Observable):
     def dag(self):
         return Hamiltonian(
             self.nbqbits,
-            [Term(np.conj(term.coeff), term.op, term.qbits)
-             for term in self.terms],
+            [Term(np.conj(term.coeff), term.op, term.qbits) for term in self.terms],
             np.conj(self.constant_coeff),
         )
 
@@ -310,8 +309,7 @@ class Hamiltonian(Observable):
                     else condition_1
                 )
                 condition_2 = (
-                    ObservableType.FERMION if operator in {
-                        "C", "c"} else condition_2
+                    ObservableType.FERMION if operator in {"C", "c"} else condition_2
                 )
 
         if all((condition_1, condition_2)) is None:
@@ -409,8 +407,7 @@ class ElectronicStructureHamiltonian(Hamiltonian):
     ):
 
         if hpqrs is None:
-            hpqrs = np.zeros(
-                (hpq.shape[0], hpq.shape[0], hpq.shape[0], hpq.shape[0]))
+            hpqrs = np.zeros((hpq.shape[0], hpq.shape[0], hpq.shape[0], hpq.shape[0]))
 
         self.hpq = hpq
         self.hpqrs = hpqrs
@@ -430,11 +427,9 @@ class ElectronicStructureHamiltonian(Hamiltonian):
         ):
 
             if abs(hpqrs[i, j, k, l]) > ElectronicStructureHamiltonian.TOL:
-                terms.append(
-                    Term(0.5 * hpqrs[i, j, k, l], "CCcc", [i, j, k, l]))
+                terms.append(Term(0.5 * hpqrs[i, j, k, l], "CCcc", [i, j, k, l]))
 
-        super().__init__(hpq.shape[0], terms,
-                         constant_coeff, do_clean_up=do_clean_up)
+        super().__init__(hpq.shape[0], terms, constant_coeff, do_clean_up=do_clean_up)
 
     def __add__(self, other):
 
@@ -455,7 +450,7 @@ class ElectronicStructureHamiltonian(Hamiltonian):
             + \frac{1}{2} \sum_{pqrs} h_{pqrs}a_p^\dagger a_q^\dagger a_r a_s
 
         Returns:
-            (numpy.ndarray, numpy.ndarray): Eigenenergy, eigenvectors (as column vectors, i.e. for eigenenergy i of the array, the 
+            (numpy.ndarray, numpy.ndarray): Eigenenergy, eigenvectors (as column vectors, i.e. for eigenenergy i of the array, the
             corresponding vector will be [:, i]).
         """
         H = ElectronicStructureHamiltonian(self.hpq, self.hpqrs).get_matrix()
@@ -551,8 +546,7 @@ def make_anderson_model(
     fermop_number = 2 * n_b + 2
 
     h_pq = np.zeros((fermop_number, fermop_number))
-    h_pqrs = np.zeros((fermop_number, fermop_number,
-                      fermop_number, fermop_number))
+    h_pqrs = np.zeros((fermop_number, fermop_number, fermop_number, fermop_number))
 
     # single spin localized on the impurity
     h_pq[0, 0] = -mu
@@ -685,7 +679,7 @@ def make_embedded_model(
 
 def ind_clusters_ord(ind_spins_ord: int, M: int) -> int:
     """
-    Computes the indice with cluster-ordering (up, dn, ..., up, dn)_imp(up, dn, ..., up, dn)_bath of spin-orbital of index 
+    Computes the indice with cluster-ordering (up, dn, ..., up, dn)_imp(up, dn, ..., up, dn)_bath of spin-orbital of index
     ind_clusters_ord in spin-ordering  (up_imp1, up_imp2, ..., up_bath1, ..., up_bathM)(dn_imp1, dn_imp2, ..., dn_bath1, ..., dn_bathM)
 
     Args:
@@ -768,8 +762,7 @@ def make_hubbard_model(
 
         for sig in [0, 1]:
 
-            hpqrs[2 * i + sig, 2 * i + 1 - sig,
-                  2 * i + sig, 2 * i + 1 - sig] = -U
+            hpqrs[2 * i + sig, 2 * i + 1 - sig, 2 * i + sig, 2 * i + 1 - sig] = -U
 
     return ElectronicStructureHamiltonian(hpq=hpq, hpqrs=hpqrs)
 

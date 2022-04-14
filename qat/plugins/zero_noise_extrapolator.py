@@ -109,7 +109,7 @@ def perform_extrapolation(
         values_for_fit (list): Values to carry the fit on.
         n_ins (int): The maximal number of GG^{\dagger} insertions.
         extrap_method (Optional[str]): Which kind of extrapolation to make, defaults to 'linear'. The other choice is 'exponential'.
-        asymptot (Optional[float]): Asymptotic value of the observable as n_ins goes to infinity. Must be known for exponential 
+        asymptot (Optional[float]): Asymptotic value of the observable as n_ins goes to infinity. Must be known for exponential
             extrapolation. Defaults to 0.
 
     Returns:
@@ -123,8 +123,7 @@ def perform_extrapolation(
     except:
         raise PluginException(
             "Not enough jobs in the batch (%i) compared with the max number"
-            "of local CNOT insertions (%i) extrapolation" % (
-                len(values_for_fit), n_ins)
+            "of local CNOT insertions (%i) extrapolation" % (len(values_for_fit), n_ins)
         )
 
     if extrap_method == "linear" or not all(
@@ -288,7 +287,6 @@ class ZeroNoiseExtrapolator(AbstractPlugin):
                     asymptot=self.asymptots[i],
                 )
 
-                result_to_fix.meta_data["ZNE_fit_parameters"] = {
-                    "a": a, "b": b}
+                result_to_fix.meta_data["ZNE_fit_parameters"] = {"a": a, "b": b}
 
         return extrapolated_results
