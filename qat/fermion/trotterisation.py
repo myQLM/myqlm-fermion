@@ -45,7 +45,8 @@ def make_trotterisation_routine(
         for _ in range(n_trotter_steps):
 
             Qrout.apply(
-                make_spin_hamiltonian_trotter_slice(hamiltonian, final_time / n_trotter_steps),
+                make_spin_hamiltonian_trotter_slice(
+                    hamiltonian, final_time / n_trotter_steps),
                 list(range(hamiltonian.nbqbits)),
             )
 
@@ -57,7 +58,8 @@ def make_trotterisation_routine(
         for _ in range(n_trotter_steps):
 
             Qrout.apply(
-                make_trotter_slice_jw(hamiltonian.hpq, hamiltonian.hpqrs, final_time / n_trotter_steps),
+                make_trotter_slice_jw(
+                    hamiltonian.hpq, hamiltonian.hpqrs, final_time / n_trotter_steps),
                 list(range(len(hamiltonian.hpq))),
             )
 
@@ -65,7 +67,8 @@ def make_trotterisation_routine(
 
     else:
         raise Exception(
-            "Hamiltonian must be of type ElectronicStructureHamiltonian or Hamiltonian, got %s instead" % type(hamiltonian)
+            "Hamiltonian must be of type ElectronicStructureHamiltonian or Hamiltonian, got %s instead" % type(
+                hamiltonian)
         )
 
 
@@ -179,10 +182,12 @@ def make_trotter_slice_jw(hpq: np.ndarray, hpqrs: np.ndarray, delta_t: float) ->
     Qrout.apply(_coulomb_exchange_operator_jw(hpqrs, delta_t), range(len(hpq)))
 
     if len(hpqrs) > 2:
-        Qrout.apply(_number_excitation_operator_jw(hpqrs, delta_t), range(len(hpq)))
+        Qrout.apply(_number_excitation_operator_jw(
+            hpqrs, delta_t), range(len(hpq)))
 
     if len(hpqrs) > 3:
-        Qrout.apply(_double_excitation_operator_jw(hpqrs, delta_t), range(len(hpq)))
+        Qrout.apply(_double_excitation_operator_jw(
+            hpqrs, delta_t), range(len(hpq)))
 
     return Qrout
 
@@ -294,10 +299,12 @@ def _coulomb_exchange_operator_jw(hpqrs: np.ndarray, t: float) -> QRoutine:
         Qrout.apply(PH(0), p)
         for q in range(p):
 
-            hpqqp = hpqrs[p][q][q][p] - hpqrs[q][p][q][p] - hpqrs[p][q][p][q] + hpqrs[q][p][p][q]
+            hpqqp = hpqrs[p][q][q][p] - hpqrs[q][p][q][p] - \
+                hpqrs[p][q][p][q] + hpqrs[q][p][p][q]
 
             if hpqqp != 0:
-                U = np.array([[np.exp(-1j * t * hpqqp / 4), 0], [0, np.exp(-1j * t * hpqqp / 4)]])
+                U = np.array([[np.exp(-1j * t * hpqqp / 4), 0],
+                             [0, np.exp(-1j * t * hpqqp / 4)]])
 
                 G = CustomGate(U)
 
@@ -341,7 +348,8 @@ def _number_excitation_operator_jw(hpqrs: np.ndarray, t: float) -> QRoutine:
                 for r in range(p):
 
                     if r < q < p:
-                        hpqqr = hpqrs[p][q][q][r] - hpqrs[q][p][q][r] - hpqrs[p][q][r][q] + hpqrs[q][p][r][q]
+                        hpqqr = hpqrs[p][q][q][r] - hpqrs[q][p][q][r] - \
+                            hpqrs[p][q][r][q] + hpqrs[q][p][r][q]
 
                         if hpqqr.real != 0:
 
@@ -401,7 +409,8 @@ def _number_excitation_operator_jw(hpqrs: np.ndarray, t: float) -> QRoutine:
 
                     if (q < r) or (q > p):
 
-                        hpqqr = hpqrs[p][q][q][r] - hpqrs[q][p][q][r] - hpqrs[p][q][r][q] + hpqrs[q][p][r][q]
+                        hpqqr = hpqrs[p][q][q][r] - hpqrs[q][p][q][r] - \
+                            hpqrs[p][q][r][q] + hpqrs[q][p][r][q]
 
                         if hpqqr.real != 0:
 
@@ -473,7 +482,9 @@ def _double_excitation_operator_jw(hpqrs: np.ndarray, t: float) -> QRoutine:
             for r in range(q):
                 for s in range(r):
 
-                    hpqrs_number = -(hpqrs[p][q][r][s] - hpqrs[q][p][r][s] - hpqrs[p][q][s][r] + hpqrs[q][p][s][r])
+                    hpqrs_number = - \
+                        (hpqrs[p][q][r][s] - hpqrs[q][p][r][s] -
+                         hpqrs[p][q][s][r] + hpqrs[q][p][s][r])
                     if hpqrs_number.real != 0:
 
                         for k in range(p - q - 2):

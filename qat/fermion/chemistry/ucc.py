@@ -48,7 +48,8 @@ def transform_integrals_to_new_basis(
     U_matd = np.conj(U_mat.T)
 
     h_hat_ij = np.einsum("pi,pq,jq", U_mat, one_body_integrals, U_matd)
-    h_hat_ijkl = np.einsum("pi,qj,pqrs,kr,ls", U_mat, U_mat, two_body_integrals, U_matd, U_matd)
+    h_hat_ijkl = np.einsum("pi,qj,pqrs,kr,ls", U_mat,
+                           U_mat, two_body_integrals, U_matd, U_matd)
 
     return h_hat_ij, h_hat_ijkl
 
@@ -73,7 +74,8 @@ def compute_core_constant(
     for i in occupied_indices:
         core_constant += 2 * one_body_integrals[i, i]
         for j in occupied_indices:
-            core_constant += 2 * two_body_integrals[i, j, j, i] - two_body_integrals[i, j, i, j]
+            core_constant += 2 * \
+                two_body_integrals[i, j, j, i] - two_body_integrals[i, j, i, j]
 
     return core_constant
 
@@ -107,18 +109,21 @@ def compute_active_space_integrals(
             - core constant :math:`c^{(a)}`.
     """
     # Modified core constant
-    core_constant = compute_core_constant(one_body_integrals, two_body_integrals, occupied_indices)
+    core_constant = compute_core_constant(
+        one_body_integrals, two_body_integrals, occupied_indices)
 
     # Modified one electron integrals
     one_body_integrals_new = np.copy(one_body_integrals)
     for u, v, i in itertools.product(active_indices, active_indices, occupied_indices):
-        one_body_integrals_new[u, v] += 2 * two_body_integrals[i, u, v, i] - two_body_integrals[i, u, i, v]
+        one_body_integrals_new[u, v] += 2 * two_body_integrals[i,
+                                                               u, v, i] - two_body_integrals[i, u, i, v]
 
     # Restrict integral ranges
     return (
         core_constant,
         one_body_integrals_new[np.ix_(active_indices, active_indices)],
-        two_body_integrals[np.ix_(active_indices, active_indices, active_indices, active_indices)],
+        two_body_integrals[np.ix_(
+            active_indices, active_indices, active_indices, active_indices)],
     )
 
 
@@ -134,7 +139,8 @@ def _one_body_integrals_to_h(one_body_integrals: np.ndarray) -> np.ndarray:
 
     nb_qubits = 2 * one_body_integrals.shape[0]
 
-    one_body_coefficients = np.zeros((nb_qubits, nb_qubits), dtype=np.complex128)
+    one_body_coefficients = np.zeros(
+        (nb_qubits, nb_qubits), dtype=np.complex128)
 
     # Build the coefficients of the Hamiltonian:
     for p, q in itertools.product(range(nb_qubits // 2), repeat=2):
@@ -159,7 +165,8 @@ def _two_body_integrals_to_h(two_body_integrals: np.ndarray) -> np.ndarray:
 
     nb_qubits = 2 * two_body_integrals.shape[0]
 
-    two_body_coefficients = np.zeros((nb_qubits, nb_qubits, nb_qubits, nb_qubits), dtype=np.complex128)
+    two_body_coefficients = np.zeros(
+        (nb_qubits, nb_qubits, nb_qubits, nb_qubits), dtype=np.complex128)
 
     # Build the coefficients of the Hamiltonian:
     for p, q in itertools.product(range(nb_qubits // 2), repeat=2):
@@ -172,12 +179,14 @@ def _two_body_integrals_to_h(two_body_integrals: np.ndarray) -> np.ndarray:
 
             # Handle mixed spins.
             for sp in [0, 1]:
-                two_body_coefficients[2 * p + sp, 2 * q + (1 - sp), 2 * r + (1 - sp), 2 * s + sp] = x
+                two_body_coefficients[2 * p + sp, 2 * q +
+                                      (1 - sp), 2 * r + (1 - sp), 2 * s + sp] = x
 
             # Handle same spins.
             if p != q and r != s:
                 for sp in [0, 1]:
-                    two_body_coefficients[2 * p + sp, 2 * q + sp, 2 * r + sp, 2 * s + sp] = x
+                    two_body_coefficients[2 * p + sp, 2 *
+                                          q + sp, 2 * r + sp, 2 * s + sp] = x
 
     return two_body_coefficients
 
@@ -321,17 +330,20 @@ def construct_ucc_ansatz(
             prog.apply(X, reg[j])
 
     # Define the parameters to optimize
-    theta = [prog.new_var(float, "\\theta_{%s}" % i) for i in range(len(cluster_ops) * n_steps)]
+    theta = [prog.new_var(float, "\\theta_{%s}" % i)
+             for i in range(len(cluster_ops) * n_steps)]
 
     # Trotterize the Hamiltonian (with 1 trotter step)
     idx = 0
     for _ in range(n_steps):
 
         # Define the Hamiltonian for current Trotter step
-        hamiltonian = sum([th * T for th, T in zip(theta[idx : idx + len(cluster_ops)], cluster_ops)])
+        hamiltonian = sum(
+            [th * T for th, T in zip(theta[idx: idx + len(cluster_ops)], cluster_ops)])
 
         # Trotterize the Hamiltonian and apply QRoutine
-        qrout = make_spin_hamiltonian_trotter_slice(hamiltonian, coeff=1.0 / n_steps)
+        qrout = make_spin_hamiltonian_trotter_slice(
+            hamiltonian, coeff=1.0 / n_steps)
         prog.apply(qrout, reg)
 
         # Take the next set (of length len(cluster_ops)) of thetas
@@ -454,7 +466,8 @@ def _theta_ab_ij(
 
         if i != j and a != b:
             val_calc = (int2e[a, b, i, j] - int2e[a, b, j, i]) / (
-                orbital_energies[i] + orbital_energies[j] - orbital_energies[a] - orbital_energies[b]
+                orbital_energies[i] + orbital_energies[j] -
+                orbital_energies[a] - orbital_energies[b]
             )
 
             if abs(val_calc) >= threshold and abs(val_calc) != np.inf:
@@ -542,7 +555,8 @@ def _init_uccsd(
     # Convert to integer
     hf_init = BitArray("0b" + "".join([str(int(c)) for c in ket_hf_init])).uint
 
-    active_occupied_orbitals, active_unoccupied_orbitals = construct_active_orbitals(nb_e, l_ao)
+    active_occupied_orbitals, active_unoccupied_orbitals = construct_active_orbitals(
+        nb_e, l_ao)
 
     # Construction of theta_MP2 (to use it as a trial parametrization)
     theta_init = _theta_ab_ij(
@@ -652,12 +666,13 @@ def select_excitation_operators(
         var_noons_1e[(a + 1, i + 1)] = noons[a // 2] - noons[i // 2]
 
     for n_unocc, a in enumerate(active_unoccupied_orbitals[::1]):
-        for b in active_unoccupied_orbitals[n_unocc + 1 :]:
+        for b in active_unoccupied_orbitals[n_unocc + 1:]:
             for n_occ, i in enumerate(active_occupied_orbitals[::1]):
-                for j in active_occupied_orbitals[n_occ + 1 :]:
+                for j in active_occupied_orbitals[n_occ + 1:]:
 
                     if (a % 2 == i % 2 and b % 2 == j % 2) or (a % 2 == j % 2 and b % 2 == i % 2):
-                        var_noons_2e[(b, a, j, i)] = noons[a // 2] + noons[b // 2] - noons[i // 2] - noons[j // 2]
+                        var_noons_2e[(b, a, j, i)] = noons[a // 2] + \
+                            noons[b // 2] - noons[i // 2] - noons[j // 2]
 
         # Considering only *singlet* (spin-preserving) double excitation
         # var_noons_2e[(a + 1, a, i + 1, i)] = noons[a // 2] - noons[i // 2]
@@ -793,7 +808,8 @@ def get_active_space_hamiltonian(
 
     hpq, hpqrs = convert_to_h_integrals(one_body_as, two_body_as)
 
-    H_active = ElectronicStructureHamiltonian(hpq, hpqrs, constant_coeff=nuclear_repulsion + core_constant, do_clean_up=False)
+    H_active = ElectronicStructureHamiltonian(
+        hpq, hpqrs, constant_coeff=nuclear_repulsion + core_constant, do_clean_up=False)
 
     return H_active, active_indices, occupied_indices
 
@@ -849,10 +865,13 @@ def _compute_init_state(
         theta_init,
     ) = _init_uccsd(active_size, n_electrons, hpqrs, list(range(active_size)), orbital_energies)
 
-    actives_occupied_orbitals, actives_unoccupied_orbitals = construct_active_orbitals(n_electrons, list(range(active_size)))
+    actives_occupied_orbitals, actives_unoccupied_orbitals = construct_active_orbitals(
+        n_electrons, list(range(active_size)))
 
-    exc_op_list = select_excitation_operators(noons, actives_occupied_orbitals, actives_unoccupied_orbitals)
-    theta_list = [theta_init[op_index] if op_index in theta_init else 0 for op_index in exc_op_list]
+    exc_op_list = select_excitation_operators(
+        noons, actives_occupied_orbitals, actives_unoccupied_orbitals)
+    theta_list = [theta_init[op_index]
+                  if op_index in theta_init else 0 for op_index in exc_op_list]
 
     return (
         theta_list,
@@ -986,7 +1005,8 @@ def get_cluster_ops(n_electrons: int, noons: List[float]) -> List[Hamiltonian]:
 
     active_size = len(noons)
 
-    exc_op_list = select_excitation_operators(noons, actives_occupied_orbitals, actives_unoccupied_orbitals)
+    exc_op_list = select_excitation_operators(
+        noons, actives_occupied_orbitals, actives_unoccupied_orbitals)
 
     cluster_list = build_cluster_operator(exc_op_list, active_size)
 

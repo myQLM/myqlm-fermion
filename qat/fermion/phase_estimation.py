@@ -1,29 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-@file qat/fermion/phase_estimation.py
-@authors Thomas Ayral <thomas.ayral@atos.net>
-         Grigori Matein <grigori.matein@atos.net>
-@internal
-@copyright 2021 Bull S.A.S. - All rights reserved.
-           This is not Free or Open Source software.
-           Please contact Bull SAS for details about its license.
-           Bull - Rue Jean Jaurès - B.P. 68 - 78340 Les Clayes-sous-Bois
-@brief Phase estimation module
-"""
+
 import inspect
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple
 import numpy as np
-from constraint import Variable
-from qat.core.variables import ArithExpression
+
 import qat.comm.exceptions.ttypes as exceptions_types
-from qat.fermion.hamiltonians import ElectronicStructureHamiltonian
-from qat.fermion.transforms import (
+
+from .hamiltonians import ElectronicStructureHamiltonian
+from .util import construct_Rk_routine
+from .transforms import (
     transform_to_jw_basis,
     transform_to_bk_basis,
     transform_to_parity_basis,
 )
-from qat.lang.AQASM import Program, X, QRoutine, H, PH, CNOT, RZ, RX, QInt
+
+from qat.lang.AQASM import Program, X, QRoutine, H, PH, QInt
 from qat.lang.AQASM.qftarith import IQFT
 from qat.qpus import LinAlg
 from qat.core import Observable
@@ -97,13 +89,16 @@ def perform_phase_estimation(
     H_qbasis = None
 
     if basis_transform == "jordan-wigner":
-        H_qbasis = transform_to_jw_basis(H_el)  # _qbasis stands for qubit i.e. computational basis
+        # _qbasis stands for qubit i.e. computational basis
+        H_qbasis = transform_to_jw_basis(H_el)
 
     elif basis_transform == "bravyi-kitaev":
-        H_qbasis = transform_to_bk_basis(H_el)  # _qbasis stands for qubit i.e. computational basis
+        # _qbasis stands for qubit i.e. computational basis
+        H_qbasis = transform_to_bk_basis(H_el)
 
     elif basis_transform == "parity":
-        H_qbasis = transform_to_parity_basis(H_el)  # _qbasis stands for qubit i.e. computational basis
+        # _qbasis stands for qubit i.e. computational basis
+        H_qbasis = transform_to_parity_basis(H_el)
 
     else:
 
@@ -130,16 +125,19 @@ def perform_phase_estimation(
     global_phase = Emax * H_evolution_time
 
     # "_hopping" is for the part of the H which has only hpp terms (no hpq or hpqrs)
-    H_el_hopping_hpq = np.diag(np.diag(H_el.hpq))  # extract the diagonal and return an empty array but with this diagonal.
+    # extract the diagonal and return an empty array but with this diagonal.
+    H_el_hopping_hpq = np.diag(np.diag(H_el.hpq))
 
     # "_f" stands for fermionic basis
-    H_el_hopping_f = ElectronicStructureHamiltonian(H_el_hopping_hpq, hpqrs=None, constant_coeff=0.0)
+    H_el_hopping_f = ElectronicStructureHamiltonian(
+        H_el_hopping_hpq, hpqrs=None, constant_coeff=0.0)
 
     H_el_hopping_qbasis = transform_to_jw_basis(H_el_hopping_f)
 
     # Initialize the program
     prog = Program()
-    phase_reg = prog.qalloc(n_phase_bits, class_type=QInt, reverse_bit_order=False)
+    phase_reg = prog.qalloc(
+        n_phase_bits, class_type=QInt, reverse_bit_order=False)
 
     data_reg = prog.qalloc(n_qubits_H)
 
@@ -191,7 +189,8 @@ def perform_phase_estimation(
             raise exceptions_types.QPUException(
                 code=exceptions_types.ErrorType.INVALID_ARGS,
                 modulename="qat.fermion",
-                message=("The state preparation acts on %s qubits " "but the Hamiltonian works with %s qubits.")
+                message=(
+                    "The state preparation acts on %s qubits " "but the Hamiltonian works with %s qubits.")
                 % (init_vec.arity, n_qubits_H),
                 file=__file__,
                 line=current_line_no,
@@ -273,8 +272,10 @@ def apply_adiabatic_state_prep(
 
         H_current = (1 - t) * H_el_hopping_qbasis + t * H_qbasis
 
-        pea_routine = build_qpe_routine_for_hamiltonian(H_current, nqbits_adiab, global_phase=0, n_trotter_steps=n_trotter_steps)
-        prog.apply(pea_routine, phase_reg[:nqbits_adiab], data_reg)  # use only the first nqbits_adiab of all the n_phase_bits
+        pea_routine = build_qpe_routine_for_hamiltonian(
+            H_current, nqbits_adiab, global_phase=0, n_trotter_steps=n_trotter_steps)
+        # use only the first nqbits_adiab of all the n_phase_bits
+        prog.apply(pea_routine, phase_reg[:nqbits_adiab], data_reg)
 
         # Reset the qubits used for the adiabatic step to be ready for
         # the actual QPE afterwards
@@ -315,7 +316,8 @@ def build_qpe_routine_for_hamiltonian(
 
     # Controlled unitaries along with a global phase application
     for j_ind in range(n_phase_bits):
-        routine.apply(PH(global_phase * 2**j_ind), phase_reg[j_ind])  # happens before the trotterization
+        # happens before the trotterization
+        routine.apply(PH(global_phase * 2**j_ind), phase_reg[j_ind])
         for _ in range(n_trotter_steps):
             for term in hamiltonian.terms:
                 if np.imag(term.coeff) > 1e-10:
@@ -324,7 +326,8 @@ def build_qpe_routine_for_hamiltonian(
                         " qubit basis. All the terms should be real, coming from a"
                         " hermitian H."
                     )
-                theta = np.real(term.coeff) * 2 ** (j_ind + 1) * t / n_trotter_steps
+                theta = np.real(term.coeff) * \
+                    2 ** (j_ind + 1) * t / n_trotter_steps
                 Rk_routine = construct_Rk_routine(term.op, term.qbits, theta)
                 routine.apply(
                     Rk_routine.ctrl(),
@@ -336,53 +339,3 @@ def build_qpe_routine_for_hamiltonian(
     routine.apply(IQFT(n_phase_bits), phase_reg)
 
     return routine
-
-
-# TODO : construct_pauli_rotation ? make_pauli_rotation ?
-# TODO: A documenter
-def construct_Rk_routine(ops: str, qbits: List[int], theta: Variable) -> QRoutine:
-    r"""Implement
-
-    .. math::
-         R_k(\theta) = \exp\left(-i \frac{\theta}{2} P_k\right)
-
-    with P_k a Pauli string
-
-    Args:
-        ops (str): Pauli operators (e.g X, Y, ZZ, etc.)
-        qbits (list<int>): Qubits on which they act
-        theta (Variable): The abstract variable
-
-    Returns:
-        QRoutine
-
-    Notes:
-        The indices of the wires of the QRoutine are relative to the smallest index in qbits (i.e always start at qb=0).
-
-    """
-
-    if not isinstance(theta, ArithExpression):
-        theta = np.real(theta)
-
-    qrout = QRoutine()
-    qbits = qrout.new_wires(len(qbits))
-
-    with qrout.compute():
-
-        for op, qbit in zip(ops, qbits):
-
-            if op == "X":
-                qrout.apply(H, qbit)
-
-            if op == "Y":
-                qrout.apply(RX(np.pi / 2), qbit)
-
-        for ind_qb in range(len(qbits) - 1):
-            qrout.apply(CNOT, qbits[ind_qb], qbits[ind_qb + 1])
-
-    qrout.apply(RZ(theta), qbits[-1])
-
-    qrout.uncompute()  # uncompute() applies U^dagger,
-    # with U the unitary corresponding to the gates applied within the "with XX.compute()" context
-
-    return qrout

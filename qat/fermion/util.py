@@ -1,13 +1,14 @@
 import numpy as np
 import scipy.sparse as sp
 from itertools import product
-from typing import Callable, Optional
+from typing import Callable, Optional, List, Union
 
-import qat.linalg
+from qat.core.variables import ArithExpression, Variable
+from qat.core import default_gate_set
+from qat.lang.AQASM import Program, QRoutine, AbstractGate, X, RX, RY, RZ, PH, H, CNOT, QInt
 from qat.core.simutil import wavefunction
 
-from qat.lang.AQASM import Program, QRoutine, AbstractGate, X, RY, CNOT
-from qat.core import default_gate_set
+from qat.qpus import LinAlg
 
 
 def copy_doc(copy_func: Callable) -> Callable:
@@ -70,11 +71,13 @@ def make_fSim_fan_routine(nbqbits: int, theta: np.ndarray) -> QRoutine:
 
     for j in range(nbqbits // 2 - 1):
 
-        qrout.apply(fSim(theta[ind_theta], theta[ind_theta + 1]), q1 - j - 1, q1 - j)
+        qrout.apply(
+            fSim(theta[ind_theta], theta[ind_theta + 1]), q1 - j - 1, q1 - j)
 
         ind_theta += 2
 
-        qrout.apply(fSim(theta[ind_theta], theta[ind_theta + 1]), q2 + j, q2 + j + 1)
+        qrout.apply(
+            fSim(theta[ind_theta], theta[ind_theta + 1]), q2 + j, q2 + j + 1)
 
         ind_theta += 2
 
@@ -277,7 +280,8 @@ def init_creation_ops(Norb, sparse: Optional[bool] = False):
                 col_ind.append(j)
                 data.append(sign)
 
-        c_dagger_dict[i] = sp.coo_matrix((data, (row_ind, col_ind)), shape=(2**Norb, 2**Norb))
+        c_dagger_dict[i] = sp.coo_matrix(
+            (data, (row_ind, col_ind)), shape=(2**Norb, 2**Norb))
         if not sparse:
             c_dagger_dict[i] = c_dagger_dict[i].A
 
@@ -319,6 +323,55 @@ def get_unitary_from_circuit(Qrout: QRoutine, number_qubits: int) -> np.ndarray:
         circuit = p.to_circ()
 
         # pylint: disable=E1101
-        unitary_matrix[numero_colonne] = list(wavefunction(circuit, qat.linalg.LinAlg()))
+        unitary_matrix[numero_colonne] = list(
+            wavefunction(circuit, LinAlg()))
 
     return np.transpose(unitary_matrix)
+
+
+def construct_Rk_routine(ops: str, qbits: List[int], theta: Union[Variable, np.ndarray]) -> QRoutine:
+    r"""Implement
+
+    .. math::
+         R_k(\theta) = \exp\left(-i \frac{\theta}{2} P_k\right)
+
+    with P_k a Pauli string.
+
+    Args:
+        ops (str): Pauli operators (e.g X, Y, ZZ, etc.)
+        qbits (list<int>): Qubits on which they act
+        theta (Variable): The abstract variable
+
+    Returns:
+        QRoutine
+
+    Notes:
+        The indices of the wires of the QRoutine are relative to the smallest index in qbits (i.e always start at qb=0).
+
+    """
+
+    if not isinstance(theta, ArithExpression):
+        theta = np.real(theta)
+
+    qrout = QRoutine()
+    qbits = qrout.new_wires(len(qbits))
+
+    with qrout.compute():
+
+        for op, qbit in zip(ops, qbits):
+
+            if op == "X":
+                qrout.apply(H, qbit)
+
+            if op == "Y":
+                qrout.apply(RX(np.pi / 2), qbit)
+
+        for ind_qb in range(len(qbits) - 1):
+            qrout.apply(CNOT, qbits[ind_qb], qbits[ind_qb + 1])
+
+    qrout.apply(RZ(theta), qbits[-1])
+
+    qrout.uncompute()  # uncompute() applies U^dagger,
+    # with U the unitary corresponding to the gates applied within the "with XX.compute()" context
+
+    return qrout
