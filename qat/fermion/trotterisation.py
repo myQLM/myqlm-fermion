@@ -168,7 +168,6 @@ def make_trotter_slice_jw(
         QRoutine: gates to apply to add the time evolution oh the chemical Hamiltonian
 
     Warning:
-        - hpq and hpqrs may be divided by :math:`\hbar `
         - Has not been tested with imaginary hpq and hpqrs terms.
 
     Notes:
@@ -191,10 +190,12 @@ def make_trotter_slice_jw(
     Qrout.apply(_coulomb_exchange_operator_jw(hpqrs, delta_t), range(len(hpq)))
 
     if len(hpqrs) > 2:
-        Qrout.apply(_number_excitation_operator_jw(hpqrs, delta_t), range(len(hpq)))
+        Qrout.apply(_number_excitation_operator_jw(
+            hpqrs, delta_t), range(len(hpq)))
 
     if len(hpqrs) > 3:
-        Qrout.apply(_double_excitation_operator_jw(hpqrs, delta_t), range(len(hpq)))
+        Qrout.apply(_double_excitation_operator_jw(
+            hpqrs, delta_t), range(len(hpq)))
 
     return Qrout
 
@@ -214,9 +215,6 @@ def _number_operator_jw(hpq: np.ndarray, t: float) -> QRoutine:
 
     Returns:
         QRoutine: gates to apply to add the time evolution number operator.
-
-    Warning:
-        hpq may be divided by :math:`\hbar `.
 
     """
 
@@ -243,9 +241,6 @@ def _excitation_operator_jw(hpq: np.ndarray, t: float) -> QRoutine:
 
     Returns:
         QRoutine: gates to apply to add the time evolution excitation operator
-
-    Warning:
-        hpq may be divided by :math:`\hbar `
 
     """
 
@@ -304,9 +299,6 @@ def _coulomb_exchange_operator_jw(hpqrs: np.ndarray, t: float) -> QRoutine:
     Returns:
         QRoutine: Gates to apply to add the time evolution coulomb exchange operator.
 
-    Warning:
-        hpqrs may be divided by :math:`\hbar `.
-
     """
     Qrout = QRoutine()
     for p in range(len(hpqrs)):
@@ -321,7 +313,8 @@ def _coulomb_exchange_operator_jw(hpqrs: np.ndarray, t: float) -> QRoutine:
             )
             if hpqqp != 0:
                 U = np.array(
-                    [[np.exp(-1j * t * hpqqp / 4), 0], [0, np.exp(-1j * t * hpqqp / 4)]]
+                    [[np.exp(-1j * t * hpqqp / 4), 0],
+                     [0, np.exp(-1j * t * hpqqp / 4)]]
                 )
 
                 G = CustomGate(U)
@@ -349,9 +342,6 @@ def _number_excitation_operator_jw(hpqrs: np.ndarray, t: float) -> QRoutine:
 
     Returns:
         QRoutine: Gates to apply to add the time evolution number excitation operator.
-
-    Warning:
-        hpqrs may be divided by :math:`\hbar `.
 
     """
 
@@ -492,9 +482,6 @@ def _double_excitation_operator_jw(hpqrs: np.ndarray, t: float) -> QRoutine:
 
     Returns:
         QRoutine: Gates to apply to add the time evolution number  double excitation operator.
-
-    Warning:
-        hpqrs may be divided by :math:`\hbar `.
 
     """
 
