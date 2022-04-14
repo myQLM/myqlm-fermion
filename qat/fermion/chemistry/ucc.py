@@ -358,7 +358,7 @@ def construct_ucc_ansatz(
         prog.apply(qrout, reg)
 
         # Take the next set (of length len(cluster_ops)) of thetas
-        idx += 3
+        idx += len(cluster_ops)
 
         return prog
 
