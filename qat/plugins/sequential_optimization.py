@@ -9,18 +9,20 @@ from qat.comm.exceptions.ttypes import PluginException
 
 def rescale_params(params: list, coeff: float):
     """
-    Apply a multiplicative coefficient to all the numbers in a list;
+    Apply a multiplicative coefficient to all the numbers in a list.
 
     Args:
-        params (list): a list of parameters
-        coeff (float): the coefficient to multiply the parameters with
+        params (list): List of parameters.
+        coeff (float): The coefficient to multiply the parameters with.
+
     """
 
     rescaled_params = {}
-
     for key, value in params.items():
+
         try:
             rescaled_params[key] = value * coeff
+
         except:
             raise PluginException("Parameters must be real-valued!")
 
@@ -29,12 +31,11 @@ def rescale_params(params: list, coeff: float):
 
 class SeqOptimResult:
     """
-    Very simple class made so that sequential optimization results have the same API as
-    scipy optimization results.
+    Very simple class made so that sequential optimization results have the same API as SciPy optimization results.
 
     Args:
-        x (list): list of parameters
-        fun (float): associated cost function
+        x (list): List of parameters.
+        fun (float): Associated cost function.
     """
 
     def __init__(self, x, fun):
@@ -68,12 +69,10 @@ class SeqOptim(Optimizer):
         It belongs to the user to provide a circuit matching the requirements mentioned above.
 
     Args:
-        ncycles (int, optional): number of times the plugin cycles through each angle, defaults to 10.
-            The value to which it should be set
-            so that the cost function converges is however strongly problem-dependent.
-        coeff (float, optional): rescaling parameter :math:`c` for all the circuit's angles, defaults to 1.
-        x0 (np.array, optional): initial value of the parameters. Defaults to None,
-            in which case we assume random initialization.
+        ncycles (int, optional): Number of times the plugin cycles through each angle, defaults to 10. The value to which it should 
+            be set so that the cost function converges is however strongly problem-dependent.
+        coeff (Optional[float]): Rescaling parameter :math:`c` for all the circuit's angles. Defaults to 1.
+        x0 (Optional[np.ndarray]): Initial value of the parameters. Defaults to None, in which case we assume random initialization.
         verbose (bool): whether we want to print intermediary cost function values, defaults to False.
     """
 
@@ -81,7 +80,7 @@ class SeqOptim(Optimizer):
         self,
         ncycles: Optional[int] = 10,
         coeff: Optional[float] = 1,
-        x0=None,
+        x0: Optional[np.ndarray] = None,
         verbose: Optional[bool] = False,
     ):
         self.ncycles_roto = ncycles
@@ -129,7 +128,8 @@ class SeqOptim(Optimizer):
                 params_new[key] = (
                     params[key]
                     - math.pi / 2
-                    - math.atan2(2 * cf - cf_plus - cf_minus, cf_plus - cf_minus)
+                    - math.atan2(2 * cf - cf_plus - cf_minus,
+                                 cf_plus - cf_minus)
                 )
                 cf_new = np.real(self.evaluate_aux(params_new))
 

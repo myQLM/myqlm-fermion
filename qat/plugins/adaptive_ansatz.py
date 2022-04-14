@@ -15,11 +15,12 @@ def make_trotter_slice(op: Observable, iter_num: int) -> Program:
     Make Trotter slice corresponding to \exp(-i \theta_i O)
 
     Args:
-        op (Observable): operator O (Hermitian)
-        iter_num (int): index i of parameter theta_i
+        op (Observable): Operator O (Hermitian).
+        iter_num (int): Index i of parameter theta_i.
 
     Returns:
-        Program: the corresponding program
+        Program: The corresponding program.
+
     """
 
     prog = Program()
@@ -94,12 +95,11 @@ class AdaptiveAnsatzPlugin(Junction):
     from a given pool of operators.
 
     Args:
-        operator_pool (list<Observable>): list of operators \tau_i to appear as gates
-            exp(-i theta_i * \tau_i) in parametric circuit
-        commutators (list<Observable>, optional): list of commutators [H, \tau_i], with
-            H Hamiltonian to be minimized. Defaults to None, in which case the
-            commutators are computed by the plugin.
-        max_iter (int, optional): maximum number of iterations or operators added to the ansatz
+        operator_pool (list<Observable>): List of operators \tau_i to appear as gates exp(-i theta_i * \tau_i) in parametric 
+            circuit.
+        commutators (list<Observable>, optional): List of commutators [H, \tau_i], with H Hamiltonian to be minimized. Defaults to 
+        None, in which case the commutators are computed by the plugin.
+        max_iter (int, optional): Maximum number of iterations or operators added to the ansatz.
 
     Notes:
         See 1) https://www.nature.com/articles/s41467-019-10988-2.pdf
@@ -174,7 +174,8 @@ class AdaptiveAnsatzPlugin(Junction):
 
         def fun(x):
 
-            circ = job.circuit(**{"theta_" + str(j): elm for j, elm in enumerate(x)})
+            circ = job.circuit(
+                **{"theta_" + str(j): elm for j, elm in enumerate(x)})
 
             _job = circ.to_job(observable=job.observable)
             energy = np.real(self.execute(_job).value)

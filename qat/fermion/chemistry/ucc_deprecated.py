@@ -1,7 +1,7 @@
 from warnings import warn
 from bitstring import BitArray
 import numpy as np
-from typing import Callable, List, Optional, Tuple, Union
+from typing import Callable, List, Optional, Tuple, Dict
 
 from .ucc import (
     select_excitation_operators,
@@ -33,9 +33,9 @@ def build_ucc_ansatz(
             &= e^{T(\vec{\theta})} \vert \mathrm{HF}\rangle
 
     Args:
-        cluster_ops (List[Hamiltonian]): the cluster operators iT (note the i factor)
+        cluster_ops (List[Hamiltonian]): The cluster operators iT (note the i factor)
         ket_hf (int): The Hartree-Fock state in integer representation
-        n_steps(int): number of trotter steps
+        n_steps(int): Number of trotter steps
 
     Returns:
         Lambda (Callable): The parametric state preparation implementing the UCCSD method, theta -> QRoutine
@@ -120,7 +120,7 @@ def get_cluster_ops(
     active_noons: List[float],
     actives_occupied_orbitals: List[int],
     actives_unoccupied_orbitals: List[int],
-):
+) -> List[Hamiltonian]:
     r"""Build the cluster operator.
 
     The UCCSD cluster operator is defined (in normal-ordered form) as:
@@ -137,16 +137,15 @@ def get_cluster_ops(
     (resp. occupied) orbitals (doubled due to spin degeneracy)
 
     Args:
-        active_noons (list<float>): the natural-orbital occupation numbers.
+        active_noons (list<float>): The natural-orbital occupation numbers.
             :math:`n_i`, sorted in descending order (from high occupations
             to low occupations) (doubled due to spin degeneracy).
-        active_orb_energies (list<float>): the energies of the molecular orbitals
+        active_orb_energies (list<float>): The energies of the molecular orbitals
             :math:`\epsilon_i` (doubled due to spin degeneracy).
-        hpqrs (np.array): the 4D array of (active) two-body integrals :math:`h_{pqrs}`.
+        hpqrs (np.array): The 4D array of (active) two-body integrals :math:`h_{pqrs}`.
 
     Returns:
-        list<Hamiltonian>:
-            - the list of cluster operators :math:`\{T_{a}^{i}, a \in \mathcal{I}', i \in \mathcal{O}' \} \cup \{T_{ab}^{ij}, a>b, i>j, a,b \in \mathcal{I}', i,j \in \mathcal{O}'\}`
+        List[Hamiltonian]: The list of cluster operators :math:`\{T_{a}^{i}, a \in \mathcal{I}', i \in \mathcal{O}' \} \cup \{T_{ab}^{ij}, a>b, i>j, a,b \in \mathcal{I}', i,j \in \mathcal{O}'\}`
     """
 
     warn(
@@ -170,7 +169,7 @@ def guess_init_state(
     active_noons: List[float],
     active_orb_energies: List[float],
     hpqrs: np.ndarray,
-):
+) -> Tuple[List[float], int, List[int], List[int]]:
     r"""Find initial guess using Møller-Plesset perturbation theory.
 
     The trial parametrization is efficiently improved upon the
@@ -192,20 +191,20 @@ def guess_init_state(
     and :math:`\epsilon_i` is the orbital energy.
 
     Args:
-        n_active_els (int): the number of active electrons of the system
-        active_noons (list<float>): the natural-orbital occupation numbers
+        n_active_els (int): The number of active electrons of the system
+        active_noons (list<float>): The natural-orbital occupation numbers
             :math:`n_i`, sorted in descending order (from high occupations
             to low occupations) (doubled due to spin degeneracy)
-        active_orb_energies (list<float>): the energies of the molecular orbitals
+        active_orb_energies (List[float]): The energies of the molecular orbitals
             :math:`\epsilon_i` (doubled due to spin degeneracy)
-        hpqrs (np.array): the 4D array of (active) two-body integrals :math:`h_{pqrs}`
+        hpqrs (np.ndarray): The 4D array of (active) two-body integrals :math:`h_{pqrs}`
 
     Returns:
-        list<Hamiltonian>, list<float>, int:
-
-        - the list of cluster operators :math:`\{T_{a}^{i}, a \in \mathcal{I}', i \in \mathcal{O}' \} \cup \{T_{ab}^{ij}, a>b, i>j, a,b \in \mathcal{I}', i,j \in \mathcal{O}'\}`
-        - the list of initial coefficients :math:`\{\theta_{a}^{i}, a \in \mathcal{I}', i \in \mathcal{O}' \} \cup \{\theta_{ab}^{ij}, a>b, i>j, a,b \in \mathcal{I}', i,j \in \mathcal{O}'\}`
-        - the integer corresponding to the occupation of the Hartree-Fock solution
+        List[float], int, List[int], List[int]:
+        - the list of initial coefficients :math:`\{\theta_{a}^{i}, a \in \mathcal{I}', i \in \mathcal{O}' \} \cup \{\theta_{ab}^{ij}, a>b, i>j, a,b \in \mathcal{I}', i,j \in \mathcal{O}'\}`,
+        - the integer corresponding to the occupation of the Hartree-Fock solution,
+        - the actives occupied orbitals indices,
+        - the actives unoccupied orbitals indices.
 
     """
     warn(
@@ -216,7 +215,8 @@ def guess_init_state(
     active_size = len(active_noons)
 
     (ket_hf_init, theta_init,) = _init_uccsd(
-        active_size, n_active_els, hpqrs, list(range(active_size)), active_orb_energies
+        active_size, n_active_els, hpqrs, list(
+            range(active_size)), active_orb_energies
     )
 
     actives_occupied_orbitals, actives_unoccupied_orbitals = construct_active_orbitals(
@@ -245,7 +245,7 @@ def init_uccsd(
     int2e: np.ndarray,
     l_ao: List[int],
     orbital_energies: List[float],
-):
+) -> Tuple[np.ndarray, List[int], List[int], Dict[Tuple[int], float]]:
     r"""Executes the different (classical) methods whose results are
     needed to set up the state preparation and the Hamiltonian.
 
@@ -304,21 +304,26 @@ def init_uccsd(
 
     # Construction of the ket vector representing RHF state
     ket_hf_init = np.zeros(nb_o)
+
     for i in range(nb_e):
         ket_hf_init[i] = 1
-    # convert to integer
+
+    # Convert to integer
     hf_init = BitArray("0b" + "".join([str(int(c)) for c in ket_hf_init])).uint
 
     # Construction of the lists of active occupied and unoccupied orbitals
     active_occupied_orbitals = []
     active_unoccupied_orbitals = []
-    nb_oo = min(l_ao)
 
+    nb_oo = min(l_ao)
     nb_e_left = nb_e - nb_oo
+
     for i in l_ao:
+
         if nb_e_left > 0:
             active_occupied_orbitals.append(i)
             nb_e_left -= 1
+
         else:
             active_unoccupied_orbitals.append(i)
 
@@ -339,7 +344,7 @@ def get_cluster_ops_and_init_guess(
     active_noons: List[float],
     active_orb_energies: List[float],
     hpqrs: np.ndarray,
-):
+) -> Tuple[List[Hamiltonian], List[float], int]:
     r"""Build the cluster operator and find initial guess using Møller-Plesset
     perturbation theory.
 
@@ -384,7 +389,7 @@ def get_cluster_ops_and_init_guess(
         hpqrs (np.ndarray): the 4D array of (active) two-body integrals :math:`h_{pqrs}`.
 
     Returns:
-        cluster_list (List[Observable]): List of cluster operators :math:`\{T_{a}^{i}, a
+        cluster_list (List[Hamiltonian]): List of cluster operators :math:`\{T_{a}^{i}, a
             \in \mathcal{I}', i \in \mathcal{O}' \} \cup \{T_{ab}^{ij}, a>b, i>j, a,b \in
             \mathcal{I}', i,j \in \mathcal{O}'\}`.
         theta_list (List[float]): List of initial coefficients :math:`\{\theta_{a}^{i}, a
@@ -393,7 +398,6 @@ def get_cluster_ops_and_init_guess(
         ket_hf_init (int): Integer corresponding to the occupation of the Hartree-Fock solution.
 
     """
-
     warn(
         "This guess_init_state function is deprecated.",
         stacklevel=2,
@@ -403,7 +407,8 @@ def get_cluster_ops_and_init_guess(
 
     # find theta_init (MP2)
     ket_hf_init, as_occ, as_unocc, theta_init = init_uccsd(
-        active_size, n_active_els, hpqrs, list(range(active_size)), active_orb_energies
+        active_size, n_active_els, hpqrs, list(
+            range(active_size)), active_orb_energies
     )
 
     exc_op_list = select_excitation_operators(active_noons, as_occ, as_unocc)

@@ -70,11 +70,13 @@ def make_fSim_fan_routine(nbqbits: int, theta: np.ndarray) -> QRoutine:
 
     for j in range(nbqbits // 2 - 1):
 
-        qrout.apply(fSim(theta[ind_theta], theta[ind_theta + 1]), q1 - j - 1, q1 - j)
+        qrout.apply(
+            fSim(theta[ind_theta], theta[ind_theta + 1]), q1 - j - 1, q1 - j)
 
         ind_theta += 2
 
-        qrout.apply(fSim(theta[ind_theta], theta[ind_theta + 1]), q2 + j, q2 + j + 1)
+        qrout.apply(
+            fSim(theta[ind_theta], theta[ind_theta + 1]), q2 + j, q2 + j + 1)
 
         ind_theta += 2
 
@@ -95,6 +97,7 @@ def make_sugisaki_routine(theta: np.ndarray) -> QRoutine:
 
     Returns:
         QRoutine
+
     """
     qrout = QRoutine()
 
@@ -112,8 +115,8 @@ def binary_generation(high: int, low: int) -> list:
     all the different composition of 2**high, 2**high-1,...2**low (incl 0)
 
     Args:
-        high (int): maximal power to consider
-        low (int): minimal power to consider
+        high (int): Maximal power to consider.
+        low (int): Minimal power to consider.
 
     Returns:
         list
@@ -149,10 +152,10 @@ def inv_fractional_binary(binary_list: list) -> float:
             \sum_{i=0..n-1} b_i / 2^{i+1}
 
     Args:
-        binary_list (list): fractional binary expension of a number between 0 and 1
+        binary_list (list): Fractional binary expension of a number between 0 and 1.
 
     Returns:
-        float: number associated to the binary_list
+        float: Number associated to the binary_list.
 
     Example:
         inv_fractionnal_binary([1,0, 1])=0.625,
@@ -166,14 +169,14 @@ def inv_fractional_binary(binary_list: list) -> float:
 def fractional_binary(number: float, precision: float) -> list:
     r"""
     This function returns the fractional binary expension of a number between 0 and 1 ie
-    x=0.x_1x_2...x_L with x_1,...,x_L 0 or 1 and L the precision
+    x=0.x_1x_2...x_L with x_1,...,x_L 0 or 1 and L the precision.
 
     Args:
-        number (float): number between 0 and 1
-        precision (float): accuracy of the fractional binary at 2^{-precision}
+        number (float): Number between 0 and 1.
+        precision (float): Accuracy of the fractional binary at 2^{-precision}.
 
     Returns:
-        list: fractional binary of the number
+        list: Fractional binary of the number.
 
     Example:
         fractional_binary(0.625,3)=[1,0,1], fractional_binary(0.425,10)=[0, 1, 1, 0, 1, 1, 0, 0, 1, 1]
@@ -197,11 +200,13 @@ def fractional_binary(number: float, precision: float) -> list:
 def give_coordinate_list(list1: list, list2: list) -> list:
     """
     Return a list with elements from list1 with their position in that list if those elements are in list2.
+
     Args:
-        list1 (list): working list
-        list2 (list): reference list
+        list1 (list): Working list.
+        list2 (list): Reference list.
+
     Returns:
-        list: elements of list1 and their position in that list if they are in list2
+        list: Elements of list1 and their position in that list if they are in list2.
 
     """
 
@@ -218,6 +223,7 @@ def tobin(n, size):
     Example
     --------
     tobin(3,4) = '0011'
+
     """
 
     nbin = "{0:b}".format(n)
@@ -249,17 +255,17 @@ def init_creation_ops(Norb, sparse: Optional[bool] = False):
     r"""Initialize creation operators for a Fock space with Norb orbitals.
 
     Args:
-        Norb (int): number of spin-orbitals
-        sparse (bool, optional): whether to use a sparse representation.
-            Defaults to False
-        verbose (bool, optional): verbose output. Defaults to False.
+        Norb (int): Number of spin-orbitals
+        sparse (Optional[bool]): Whether to use a sparse representation.
+            Defaults to False.
 
     Returns:
-        list<np.array/coo_matrix>: list of the matrices of the creation operators
-        :math:`\lbrace c^\dagger_i\rbrace_{i=0\dots N_{orb}-1}` in the Fock basis
+        list<np.array/coo_matrix>: List of the matrices of the creation operators
+            :math:`\lbrace c^\dagger_i\rbrace_{i=0\dots N_{orb}-1}` in the Fock basis.
 
     Note:
         |10010> is c^dag_0 c^dag_3 |vac>
+
     """
 
     c_dagger_dict = {}

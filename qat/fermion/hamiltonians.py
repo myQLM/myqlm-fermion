@@ -299,6 +299,7 @@ class Hamiltonian(Observable):
         Returns:
             ObservableType: Type of the Hamiltonian.
         """
+
         condition_1, condition_2 = (None,) * 2
 
         for term in self.terms:
@@ -370,14 +371,14 @@ class ElectronicStructureHamiltonian(Hamiltonian):
             + c \mathbb{I}
 
     Args:
-        hpq (np.array): 2D array :math:`h_{pq}`
-        hpqrs (np.array): 4D array :math:`h_{pqrs}`
-        constant_coeff (float): constant coefficient :math:`c`
+        hpq (np.ndarray): Array :math:`h_{pq}`. Must be 2D.
+        hpqrs (np.ndarray): Array :math:`h_{pqrs}`. Must be 4D.
+        constant_coeff (float): Constant coefficient :math:`c.`
 
     Attributes:
-        hpq (np.array): 2D array :math:`h_{pq}`
-        hpqrs (np.array): 4D array :math:`h_{pqrs}`
-        constant_coeff (float): constant coefficient :math:`c`
+        hpq (np.ndarray): Array :math:`h_{pq}`.
+        hpqrs (np.ndarray): Array :math:`h_{pqrs}`.
+        constant_coeff (float): Constant coefficient :math:`c`.
 
     Example:
 
@@ -453,12 +454,9 @@ class ElectronicStructureHamiltonian(Hamiltonian):
             H = \sum_{pq} h_{pq}a_p^\dagger a_q
             + \frac{1}{2} \sum_{pqrs} h_{pqrs}a_p^\dagger a_q^\dagger a_r a_s
 
-        Args:
-            hpq (list): 2D list
-            hpqrs (list): 4D list
-
         Returns:
-            (numpy.ndarray, numpy.ndarray): eigenenergy, eigenvectors (as column vectors, i.e. for eigenenergy i of the array, the corresponding vector will be [:, i])
+            (numpy.ndarray, numpy.ndarray): Eigenenergy, eigenvectors (as column vectors, i.e. for eigenenergy i of the array, the 
+            corresponding vector will be [:, i]).
         """
         H = ElectronicStructureHamiltonian(self.hpq, self.hpqrs).get_matrix()
         E, eigvecs = np.linalg.eigh(H)
@@ -471,12 +469,9 @@ class ElectronicStructureHamiltonian(Hamiltonian):
         :math:`e^{-i h_{pq} a^\dagger_p a_q + h.c.}` or
         :math:`e^{-i h_{pqrs} a^\dagger_p a^\dagger_q a_r a_s +h.c.}`.
 
-        Args:
-            hpq (list): 2D list
-            hpqrs (list): 4D list
-
         Returns:
             numpy.ndarray
+
         """
 
         from scipy import linalg
@@ -544,6 +539,7 @@ def make_anderson_model(
         and so on.    
 
     """
+
     # number of bath modes
     n_b = len(V)
     if len(epsilon) != n_b:
@@ -626,6 +622,7 @@ def make_embedded_model(
 
     - **"clusters"**: the first :math:`M` orbitals SO are :math:`(\uparrow, \mathrm{imp}_0), (\downarrow, \mathrm{imp}_0),..., (\uparrow, \mathrm{imp}_{M-1}), (\downarrow, \mathrm{imp}_{M-1})` and the last :math:`M` orbitals are bath orbitals with similar ordering.
     - **"spins"**: the first :math:`M` orbitals are :math:`(\uparrow, \mathrm{imp}_0), (\uparrow, \mathrm{imp}_1), ..., (\uparrow, \mathrm{bath}_{M-2}), (\uparrow, \mathrm{bath}_{M-1})` and the last :math:`M` orbitals are down orbitals with similar ordering.
+
     """
 
     M = np.shape(lambda_c)[
@@ -688,12 +685,13 @@ def make_embedded_model(
 
 def ind_clusters_ord(ind_spins_ord: int, M: int) -> int:
     """
-    Computes the indice with cluster-ordering (up, dn, ..., up, dn)_imp(up, dn, ..., up, dn)_bath
-    of spin-orbital of index ind_clusters_ord in spin-ordering  (up_imp1, up_imp2, ..., up_bath1, ..., up_bathM)(dn_imp1, dn_imp2, ..., dn_bath1, ..., dn_bathM)
+    Computes the indice with cluster-ordering (up, dn, ..., up, dn)_imp(up, dn, ..., up, dn)_bath of spin-orbital of index 
+    ind_clusters_ord in spin-ordering  (up_imp1, up_imp2, ..., up_bath1, ..., up_bathM)(dn_imp1, dn_imp2, ..., dn_bath1, ..., dn_bathM)
 
     Args:
         ind_clusters_ord (int): Indice (with spin-ordering) of the spin-orbital we want to compute the indice in cluster-ordering of.
         M (int): Number of orbitals (imp+bath).
+
     """
 
     i = ind_spins_ord
@@ -787,6 +785,7 @@ def make_tot_density_op(n_sites: int) -> ElectronicStructureHamiltonian:
 
     Returns:
         ElectronicStructureHamiltonian: The total density operator N.
+
     """
     nqbit = 2 * n_sites
     tot_density = np.zeros((nqbit, nqbit))

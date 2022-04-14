@@ -17,8 +17,8 @@ class MultipleLaunchesAnalyzer(AbstractPlugin):
     VQE optimizer instantiated without any starting point.
 
     Args:
-        n_runs (int, optional): number of initializations investigated, default to 5.
-        verbose (bool, optional): print infos, defaults to False.
+        n_runs (Optional[int]): Number of initializations investigated. Defaults to 5.
+        verbose (Optional[bool]): Print infos. Defaults to False.
     """
 
     def __init__(self, n_runs: Optional[int] = 5, verbose: Optional[bool] = False):
@@ -28,10 +28,10 @@ class MultipleLaunchesAnalyzer(AbstractPlugin):
 
     def compile(self, batch):
         """
-        Compile the batch
+        Compile the batch.
 
         Args:
-            batch (:class:`~qat.core.Batch`): batch to optimize
+            batch (:class:`~qat.core.Batch`): Batch to optimize.
         """
 
         # Initialize resulting batch
@@ -51,7 +51,7 @@ class MultipleLaunchesAnalyzer(AbstractPlugin):
 
     def post_process(self, batch_result: BatchResult) -> BatchResult:
         """
-        Perform post processing
+        Perform post processing.
 
         Args:
             batch_result (:class:`~qat.core.BatchResult`): Result to post process.

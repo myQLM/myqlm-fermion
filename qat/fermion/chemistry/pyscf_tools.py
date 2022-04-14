@@ -15,15 +15,6 @@ from pyscf import ao2mo
 def compute_integrals(molecule: Union[np.ndarray, gto.Mole], mo_coeff, hcore):
     """
     For a given molecule, compute 1-body and 2-body integrals
-
-
-    Args:
-        molecule (): _description_
-        mo_coeff (_type_): _description_
-        hcore (_type_): _description_
-
-    Returns:
-        _type_: _description_
     """
     # no spin dof
     one_electron_compressed = reduce(np.dot, (mo_coeff.T, hcore, mo_coeff))

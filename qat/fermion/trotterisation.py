@@ -22,21 +22,20 @@ def make_trotterisation_routine(
     .. math::
          e^{-i H t} \approx \prod_{k=1}^{n} \left( \prod_{pq} e^{-i \frac{t}{n} h_{pq} c_p^\dagger c_q} \prod_{pqrs} e^{-\frac{i}{2}\frac{t}{n} h_{pqrs} e^{-i c_p^\dagger c_q^\dagger c_r c_s} } \right)
 
-    This operator is then mapped to a product of Pauli operators via a Jordan-Wigner transformation
-    and the resulting QRoutine is returned.
+    This operator is then mapped to a product of Pauli operators via a Jordan-Wigner transformation and the resulting QRoutine is 
+    returned.
 
     Args:
         hamiltonian (Union[Hamiltonian, ElectronicStructureHamiltonian]): Hamiltonian to trotterize.
-        n_trotter_steps (int): number :math:`n` of Trotter steps.
-        final_time (Optional[float]): time :math:`t` in the evolution operator
+        n_trotter_steps (int): Number :math:`n` of Trotter steps.
+        final_time (Optional[float]): Time :math:`t` in the evolution operator.
 
     Returns:
         QRoutine: gates to apply to perform the time evolution
         of the chemical Hamiltonian with trotterisation
 
     Notes:
-        Here the QRoutine implements a first order trotter approximation,
-        higher order approximations are possible.
+        Here the QRoutine implements a first order trotter approximation, higher order approximations are possible.
 
     """
 
@@ -70,8 +69,8 @@ def make_trotterisation_routine(
 
     else:
         raise Exception(
-            "Hamiltonian must be of type ElectronicStructureHamiltonian or "
-            "Hamiltonian, got %s instead" % type(hamiltonian)
+            "Hamiltonian must be of type ElectronicStructureHamiltonian or Hamiltonian, got %s instead" % type(
+                hamiltonian)
         )
 
 
@@ -103,7 +102,7 @@ def make_spin_hamiltonian_trotter_slice(
             qbits (List[int]): List of bits on which they are applied.
 
         Returns:
-            QRoutine, qb: the routine and the index of last qbit.
+            QRoutine, qb: The routine and the index of last qbit.
 
         """
 
@@ -165,7 +164,7 @@ def make_trotter_slice_jw(
         delta_t (float): Time in the evolution operator.
 
     Returns:
-        QRoutine: gates to apply to add the time evolution oh the chemical Hamiltonian
+        QRoutine: Gates to apply to add the time evolution oh the chemical Hamiltonian
 
     Warning:
         - Has not been tested with imaginary hpq and hpqrs terms.
@@ -174,6 +173,7 @@ def make_trotter_slice_jw(
         - We assume trotterisation because we developp the exponential of H as a product of exponentials.
         - We take the convention |0> is empty and |1> is occupied.
         - We used a custom gate to make a global phase to have the same expression given by the Jordan Wigner transformation.
+
     """
 
     Qrout = QRoutine()
@@ -214,7 +214,7 @@ def _number_operator_jw(hpq: np.ndarray, t: float) -> QRoutine:
         t (float): Time in the evolution operator.
 
     Returns:
-        QRoutine: gates to apply to add the time evolution number operator.
+        QRoutine: Gates to apply to add the time evolution number operator.
 
     """
 
@@ -240,7 +240,7 @@ def _excitation_operator_jw(hpq: np.ndarray, t: float) -> QRoutine:
         t (float): Time in the evolution operator.
 
     Returns:
-        QRoutine: gates to apply to add the time evolution excitation operator
+        QRoutine: Gates to apply to add the time evolution excitation operator
 
     """
 
@@ -300,17 +300,20 @@ def _coulomb_exchange_operator_jw(hpqrs: np.ndarray, t: float) -> QRoutine:
         QRoutine: Gates to apply to add the time evolution coulomb exchange operator.
 
     """
+
     Qrout = QRoutine()
     for p in range(len(hpqrs)):
 
         Qrout.apply(PH(0), p)
         for q in range(p):
+
             hpqqp = (
                 hpqrs[p][q][q][p]
                 - hpqrs[q][p][q][p]
                 - hpqrs[p][q][p][q]
                 + hpqrs[q][p][p][q]
             )
+
             if hpqqp != 0:
                 U = np.array(
                     [[np.exp(-1j * t * hpqqp / 4), 0],
@@ -318,12 +321,14 @@ def _coulomb_exchange_operator_jw(hpqrs: np.ndarray, t: float) -> QRoutine:
                 )
 
                 G = CustomGate(U)
+
                 Qrout.apply(G, q)
                 Qrout.apply(RZ(-t * hpqqp / 2), q)
                 Qrout.apply(RZ(-t * hpqqp / 2), p)
                 Qrout.apply(CNOT, [p, q])
                 Qrout.apply(RZ(t * hpqqp / 2), q)
                 Qrout.apply(CNOT, [p, q])
+
     return Qrout
 
 

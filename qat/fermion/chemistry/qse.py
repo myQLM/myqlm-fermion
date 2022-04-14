@@ -54,11 +54,11 @@ def apply_quantum_subspace_expansion(
 
     Args:
 
-        hamiltonian (Hamiltonian): the Hamiltonian in its spin representation.
-        state_prep_circ (Circuit): the state prep circuit.
+        hamiltonian (Hamiltonian): The Hamiltonian in its spin representation.
+        state_prep_circ (Circuit): The state prep circuit.
         expansion_operators (list<Hamiltonian>): The set of operators :math:`{O_i}_i`
             generating the subspace of interest.
-        qpu (QPUHandler): the QPU.
+        qpu (QPUHandler): The QPU.
         nbshots (int, optional): The number of shots. Defaults to 0:
             infinite number of shots.
         threshold (float, optional): The numerical threshold.
@@ -178,10 +178,10 @@ def _build_quantum_subspace_expansion(
 
     Args:
 
-        hamiltonian (Hamiltonian): the Hamiltonian.
-        state_prep_circ (Circuit): the state prep circuit.
-        qpu (QPUHandler): the qpu.
-        expansion_operators (list(Observable)): the list of operators.
+        hamiltonian (Hamiltonian): The Hamiltonian.
+        state_prep_circ (Circuit): The state prep circuit.
+        qpu (QPUHandler): The qpu.
+        expansion_operators (list(Observable)): The list of operators.
             generating the subspace of interest.
         nbshots (int, optional): The number of shots.
         threshold (float, optional): The numerical threshold.

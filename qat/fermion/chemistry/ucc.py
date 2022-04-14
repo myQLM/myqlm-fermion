@@ -35,13 +35,14 @@ def transform_integrals_to_new_basis(
         \hat{I}_{ijkl}=\sum_{pqrs}U_{pi}U_{qj}I_{pqrs}U_{kr}^{\dagger}U_{ls}^{\dagger}
 
     Args:
-        one_body_integrals (np.ndarray): one-body integrals :math:`I_{pq}`.
-        two_body_integrals (np.ndarray): two-body integrals :math:`I_{pqrs}`.
-        U_mat (np.ndarray): transformation matrix :math:`U`.
+        one_body_integrals (np.ndarray): One-body integrals :math:`I_{pq}`.
+        two_body_integrals (np.ndarray): Two-body integrals :math:`I_{pqrs}`.
+        U_mat (np.ndarray): Transformation matrix :math:`U`.
 
     Returns:
-        h_hat_ij (np.ndarray): one-body integrals :math:`\hat{I}_{ij}`.
-        h_hat_ijkl (np.ndarray): two-body integrals :math:`\hat{I}_{ijkl}`.
+        h_hat_ij (np.ndarray): One-body integrals :math:`\hat{I}_{ij}`.
+        h_hat_ijkl (np.ndarray): Two-body integrals :math:`\hat{I}_{ijkl}`.
+
     """
 
     U_matd = np.conj(U_mat.T)
@@ -75,7 +76,8 @@ def compute_core_constant(
         core_constant += 2 * one_body_integrals[i, i]
         for j in occupied_indices:
             core_constant += (
-                2 * two_body_integrals[i, j, j, i] - two_body_integrals[i, j, i, j]
+                2 * two_body_integrals[i, j, j, i] -
+                two_body_integrals[i, j, i, j]
             )
 
     return core_constant
@@ -98,15 +100,15 @@ def compute_active_space_integrals(
         c^{(a)} = c + \sum_{i\in\mathcal{O}) I_{ii} + \sum_{ij\in\mathcal{O} 2I_{ijji} - I_{ijij}
 
     Args:
-        one_body_integrals (np.ndarray): 2D array of one-body integrals :math:`I_{uv}`.
-        two_body_integrals (np.ndarray): 4D array of two-body integrals :math:`I_{uvwx}`.
+        one_body_integrals (np.ndarray): Array of one-body integrals :math:`I_{uv}`. Must be 2D.
+        two_body_integrals (np.ndarray): Array of two-body integrals :math:`I_{uvwx}`. Must be 4D.
         active_indices (List[int]): Active indices.
         occupied_indices (List[int]): Occupied indices.
 
     Returns:
         Tuple[np.ndarray, np.ndarray, float]:
-            - 2D array of one-body integrals :math:`I_{uv}^{(a)}`.
-            - 4D array of two-body integrals :math:`I_{uvwx}^{(a)}`.
+            - 2D array of one-body integrals :math:`I_{uv}^{(a)}`,
+            - 4D array of two-body integrals :math:`I_{uvwx}^{(a)}`,
             - core constant :math:`c^{(a)}`.
     """
     # Modified core constant
@@ -126,7 +128,8 @@ def compute_active_space_integrals(
         core_constant,
         one_body_integrals_new[np.ix_(active_indices, active_indices)],
         two_body_integrals[
-            np.ix_(active_indices, active_indices, active_indices, active_indices)
+            np.ix_(active_indices, active_indices,
+                   active_indices, active_indices)
         ],
     )
 
@@ -143,7 +146,8 @@ def _one_body_integrals_to_h(one_body_integrals: np.ndarray) -> np.ndarray:
 
     nb_qubits = 2 * one_body_integrals.shape[0]
 
-    one_body_coefficients = np.zeros((nb_qubits, nb_qubits), dtype=np.complex128)
+    one_body_coefficients = np.zeros(
+        (nb_qubits, nb_qubits), dtype=np.complex128)
 
     # Build the coefficients of the Hamiltonian:
     for p, q in itertools.product(range(nb_qubits // 2), repeat=2):
@@ -160,7 +164,7 @@ def _two_body_integrals_to_h(two_body_integrals: np.ndarray) -> np.ndarray:
     """Converts two-body integrals to two-body (spin-resolved) coefficient.
 
     Args:
-        two_body_integrals (np.ndarray): Two body integrals.
+        two_body_integrals (np.ndarray): Two-body integrals.
 
     Returns:
         np.ndarray: Two-body coefficient.
@@ -225,12 +229,12 @@ def convert_to_h_integrals(
     ElectronicStructureHamiltonian type
 
     Args:
-        one_body_integrals (np.ndarray): 2D array of one-body integrals :math:`I_{uv}`.
-        two_body_integrals (np.ndarray): 4D array of two-body integrals :math:`I_{uvwx}`.
+        one_body_integrals (np.ndarray): Array of one-body integrals :math:`I_{uv}`. Must be 2D.
+        two_body_integrals (np.ndarray): Array of two-body integrals :math:`I_{uvwx}`. Must be 4D.
 
     Returns:
         Tuple[np.ndarray, np.ndarray]:
-            - the :math:`h_{pq}` integrals.
+            - the :math:`h_{pq}` integrals,
             - the :math:`h_{pqrs}` integrals.
     """
 
@@ -263,18 +267,18 @@ def build_cluster_operator(l_ex_op: List[Tuple[int]], nqbits: int) -> List[Hamil
     parameters.
 
     Args:
-        l_ex_op (List[Tuple[int]]): The list of of (a, b, i, j) and (a,
-            i) tuples describing the excitation operators (without
-            Hermitan conjugate, i.e. only excitation from unoccupied to
-            occupied orbitals) to consider among the set associated to
-            the active orbitals.
+        l_ex_op (List[Tuple[int]]): The list of of (a, b, i, j) and (a, i) tuples describing the 
+            excitation operators (without Hermitan conjugate, i.e. only excitation from unoccupied 
+            to  occupied orbitals) to consider among the set associated to the active orbitals.
         nqbits (int): The total number of qubits.
 
     Returns:
         t_opti (List[Hamiltonian]): The cluster operator (times i) "iT"
             as a dictionary corresponding to each group of fermionic
             excitation operators parametrized identically.
+
     """
+
     t_opti = []
 
     for op_index in l_ex_op:
@@ -319,9 +323,9 @@ def construct_ucc_ansatz(
             &= e^{T(\vec{\theta})} \vert \mathrm{HF}\rangle
 
     Args:
-        cluster_ops (List[Hamiltonian]): the cluster operators iT (note the i factor).
+        cluster_ops (List[Hamiltonian]): The cluster operators iT (note the i factor).
         ket_hf (int): The Hartree-Fock state in integer representation.
-        n_steps(int): number of trotter steps.
+        n_steps(int): Number of trotter steps.
 
     Returns:
         Program: The parametric program implementing the UCCSD method.
@@ -349,11 +353,13 @@ def construct_ucc_ansatz(
 
         # Define the Hamiltonian for current Trotter step
         hamiltonian = sum(
-            [th * T for th, T in zip(theta[idx : idx + len(cluster_ops)], cluster_ops)]
+            [th * T for th,
+                T in zip(theta[idx: idx + len(cluster_ops)], cluster_ops)]
         )
 
         # Trotterize the Hamiltonian and apply QRoutine
-        qrout = make_spin_hamiltonian_trotter_slice(hamiltonian, coeff=1.0 / n_steps)
+        qrout = make_spin_hamiltonian_trotter_slice(
+            hamiltonian, coeff=1.0 / n_steps)
         prog.apply(qrout, reg)
 
         # Take the next set (of length len(cluster_ops)) of thetas
@@ -683,9 +689,9 @@ def select_excitation_operators(
         var_noons_1e[(a + 1, i + 1)] = noons[a // 2] - noons[i // 2]
 
     for n_unocc, a in enumerate(active_unoccupied_orbitals[::1]):
-        for b in active_unoccupied_orbitals[n_unocc + 1 :]:
+        for b in active_unoccupied_orbitals[n_unocc + 1:]:
             for n_occ, i in enumerate(active_occupied_orbitals[::1]):
-                for j in active_occupied_orbitals[n_occ + 1 :]:
+                for j in active_occupied_orbitals[n_occ + 1:]:
 
                     if (a % 2 == i % 2 and b % 2 == j % 2) or (
                         a % 2 == j % 2 and b % 2 == i % 2
@@ -885,7 +891,8 @@ def _compute_init_state(
     active_size = len(noons)
 
     (ket_hf_init, theta_init,) = _init_uccsd(
-        active_size, n_electrons, hpqrs, list(range(active_size)), orbital_energies
+        active_size, n_electrons, hpqrs, list(
+            range(active_size)), orbital_energies
     )
 
     actives_occupied_orbitals, actives_unoccupied_orbitals = construct_active_orbitals(

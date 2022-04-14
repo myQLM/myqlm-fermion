@@ -149,7 +149,8 @@ def perform_phase_estimation(
 
     # Initialize the program
     prog = Program()
-    phase_reg = prog.qalloc(n_phase_bits, class_type=QInt, reverse_bit_order=False)
+    phase_reg = prog.qalloc(
+        n_phase_bits, class_type=QInt, reverse_bit_order=False)
 
     data_reg = prog.qalloc(n_qubits_H)
 
@@ -267,9 +268,11 @@ def perform_phase_estimation(
 
     max_prob_state_int = np.argmax(probs)
     theta = max_prob_state_int / 2**n_phase_bits
+
+    # exp(-i*H*t + i*Emax*t) |psi> = exp(2*pi*i*theta) |psi>
     energy = (
         -2 * np.pi * theta / H_evolution_time + Emax
-    )  # exp(-i*H*t + i*Emax*t) |psi> = exp(2*pi*i*theta) |psi>
+    )
     energy += E_const
 
     return energy, np.max(probs)
@@ -324,6 +327,7 @@ def build_qpe_routine_for_hamiltonian(
 
     Returns:
         QRoutine: Quantum routine.
+
     """
     routine = QRoutine()
     phase_reg = routine.new_wires(n_phase_bits)
@@ -346,7 +350,8 @@ def build_qpe_routine_for_hamiltonian(
                         " qubit basis. All the terms should be real, coming from a"
                         " hermitian H."
                     )
-                theta = np.real(term.coeff) * 2 ** (j_ind + 1) * t / n_trotter_steps
+                theta = np.real(term.coeff) * \
+                    2 ** (j_ind + 1) * t / n_trotter_steps
                 Rk_routine = construct_Rk_routine(term.op, term.qbits, theta)
                 routine.apply(
                     Rk_routine.ctrl(),
@@ -360,6 +365,8 @@ def build_qpe_routine_for_hamiltonian(
     return routine
 
 
+# TODO : construct_pauli_rotation ? make_pauli_rotation ?
+# TODO: A documenter
 def construct_Rk_routine(ops: str, qbits: List[int], theta: Variable) -> QRoutine:
     r"""Implement
 
@@ -370,15 +377,15 @@ def construct_Rk_routine(ops: str, qbits: List[int], theta: Variable) -> QRoutin
 
     Args:
         ops (str): Pauli operators (e.g X, Y, ZZ, etc.)
-        qbits (list<int>): qubits on which they act
-        theta (Variable): the abstract variable
+        qbits (list<int>): Qubits on which they act
+        theta (Variable): The abstract variable
 
     Returns:
         QRoutine
 
     Notes:
-        the indices of the wires of the QRoutine are relative
-        to the smallest index in qbits (i.e always start at qb=0)
+        The indices of the wires of the QRoutine are relative to the smallest index in qbits (i.e always start at qb=0).
+
     """
 
     if not isinstance(theta, ArithExpression):

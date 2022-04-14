@@ -66,16 +66,17 @@ def _P_set(j, ftree_nodes):
 def make_PCU_sets(nqbits: int) -> List[Tuple]:
     """
     Args:
-        nqbits (int): total number of qubits
+        nqbits (int): Total number of qubits.
 
     Returns:
-        list(set, set, set): the three sets P, C, and U
+        list(set, set, set): The three sets P, C, and U.
     """
     set_list = []
     ftree_nodes = make_fenwick_tree(nqbits)
     for qb in range(nqbits):
         set_list.append(
-            (_P_set(qb, ftree_nodes), _C_set(qb, ftree_nodes), _U_set(qb, ftree_nodes))
+            (_P_set(qb, ftree_nodes), _C_set(
+                qb, ftree_nodes), _U_set(qb, ftree_nodes))
         )
     return set_list
 
@@ -86,8 +87,7 @@ def transform_to_jw_basis(
     """Transform to Jordan-Wigner (JW) basis.
 
     Args:
-        fermion_hamiltonian (Union[Hamiltonian, ElectronicStructureHamiltonian]): The
-            fermionic hamiltonian.
+        fermion_hamiltonian (Union[Hamiltonian, ElectronicStructureHamiltonian]): The fermionic hamiltonian.
 
     Returns:
         Hamiltonian: Hamiltonian in spin representation.
@@ -146,8 +146,7 @@ def transform_to_parity_basis(
     """Transform to parity basis.
 
     Args:
-        fermion_hamiltonian (Union[Hamiltonian, ElectronicStructureHamiltonian]): The
-            fermionic hamiltonian
+        fermion_hamiltonian (Union[Hamiltonian, ElectronicStructureHamiltonian]): The fermionic hamiltonian.
 
     Returns:
         Hamiltonian: Hamiltonian in parity spin representation.
@@ -166,6 +165,7 @@ def transform_to_parity_basis(
         from qat.fermion.transforms import transform_to_parity_basis
         spin_hamiltonian = transform_to_parity_basis(hamiltonian)
         print("H(spin) = ", spin_hamiltonian)
+
     """
 
     nqbits = fermion_hamiltonian.nbqbits
@@ -206,8 +206,7 @@ def transform_to_bk_basis(
     """Transform to Bravyi-Kitaev (BK) basis.
 
     Args:
-        fermion_hamiltonian (Union[Hamiltonian, ElectronicStructureHamiltonian]): The
-            fermionic hamiltonian.
+        fermion_hamiltonian (Union[Hamiltonian, ElectronicStructureHamiltonian]): The fermionic hamiltonian.
 
     Returns:
         Hamiltonian: Hamiltonian in BK spin representation.
@@ -226,6 +225,7 @@ def transform_to_bk_basis(
         from qat.fermion.transforms import transform_to_bk_basis
         spin_hamiltonian = transform_to_bk_basis(hamiltonian)
         print("H(spin) = ", spin_hamiltonian)
+
     """
 
     nqbits = fermion_hamiltonian.nbqbits
@@ -289,11 +289,11 @@ def get_jw_code(nbits: int) -> np.ndarray:
 
 
     Args:
-        nqbits (int): total number of qubits
+        nqbits (int): Total number of qubits.
 
     Returns:
-        np.ndarray: the C matrix (here, the identity because JW also uses occupation
-        number basis)
+        np.ndarray: The C matrix. This is the identity because JW also uses occupation number basis.
+
     """
 
     return np.identity(nbits, dtype=int)
@@ -302,18 +302,18 @@ def get_jw_code(nbits: int) -> np.ndarray:
 def get_parity_code(nbits: int) -> np.ndarray:
     """Construct parity code matrix :math:`C`.
 
-    i.e matrix :math:`C` to get new bit value :math:`p_i` from bit values :math:`f_j`
-    in occupation number basis:
+    i.e matrix :math:`C` to get new bit value :math:`p_i` from bit values :math:`f_j` in occupation number basis:
 
     .. math::
             p_i = \sum_{j} C_{ji} f_j
 
 
     Args:
-        nqbits (int): total number of qubits
+        nqbits (int): Total number of qubits.
 
     Returns:
-        np.array: the C matrix
+        np.array: The C matrix.
+
     """
 
     c_mat = np.zeros((nbits, nbits), dtype=int)
@@ -329,8 +329,7 @@ def get_parity_code(nbits: int) -> np.ndarray:
 def get_bk_code(nqbits: int) -> np.ndarray:
     """Construct Bravyi-Kitaev code matrix :math:`C`.
 
-    i.e matrix :math:`C` to get new bit value :math:`p_i` from bit values :math:`f_j`
-    in occupation number basis:
+    i.e matrix :math:`C` to get new bit value :math:`p_i` from bit values :math:`f_j` in occupation number basis:
 
     .. math::
             p_i = \sum_{j} C_{ji} f_j
@@ -340,6 +339,7 @@ def get_bk_code(nqbits: int) -> np.ndarray:
 
     Returns:
         np.array: The C matrix.
+
     """
 
     ftree_nodes = make_fenwick_tree(nqbits)
@@ -376,13 +376,13 @@ def recode_integer(integer: int, code: np.ndarray) -> int:
         p_i = \sum_{j} C_{ji} f_j \mathrm{mod.} 2
 
     Args:
-        integer (int): The integer (with binary repr. :math:`|f_0, f_1, \dots f_{n-1}\rangle`)
-            to be converted to new representation.
-        code (np.ndarray): C matrix to convert bits from one representation
-            to the other.
+        integer (int): The integer (with binary repr. :math:`|f_0, f_1, \dots f_{n-1}\rangle`) to be converted to new 
+        representation.
+        code (np.ndarray): C matrix to convert bits from one representation to the other.
 
     Returns:
-        int: the integer with binary representation :math:`|p_0, p_1, \dots, p_{n-1}\rangle`.
+        int: The integer with binary representation :math:`|p_0, p_1, \dots, p_{n-1}\rangle`.
+
     """
 
     nbits = code.shape[0]

@@ -22,10 +22,9 @@ def insert_ids(circ: Circuit, gates: list, n_ins: int) -> Circuit:
     In the absence of noise,  GG^{\dagger}=id is without effect.
 
     Args:
-        circ (Circuit): a circuit
-        gates (list): The gates G to duplicate
-        n_ins (int): The number of decompositions GG^{\dagger} of the identity to insert after
-                     each occurence of G in circ
+        circ (Circuit): Circuit.
+        gates (list): The gates G to duplicate.
+        n_ins (int): The number of decompositions GG^{\dagger} of the identity to insert after each occurence of G in circ.
 
     Returns:
         modified_circ (Circuit): The initial circuit, with GG^{\dagger} insertions.
@@ -75,8 +74,7 @@ def extract_values(
         batch_result (BatchResult): A batch result containing results for all jobs and points.
         n_ins (int): The maximal number of GG^{\dagger} inserted.
         n_jobs (int): The number of jobs that were initially sent to the stack.
-        job_number (int): The index of the job we want to isolate the meaningful
-                          result values for.
+        job_number (int): The index of the job we want to isolate the meaningful result values for.
 
     Returns:
         values_for_fit (list): List of measured values to use to perform the extrapolation.
@@ -108,14 +106,14 @@ def perform_extrapolation(
     Perform an extrapolation to zero noise.
 
     Args:
-        values_for_fit (list): Values to carry the fit on
-        n_ins (int): the maximal number of GG^{\dagger} insertions
-        extrap_method (Optional[str]): Which kind of extrapolation to make, defaults to 'linear'.
-                                       The other choice is 'exponential'.
-        asymptot (Optional[float]): Asymptotic value of the observable as n_ins goes to infinity.
-                                    Must be known for exponential extrapolation. Defaults to 0.
+        values_for_fit (list): Values to carry the fit on.
+        n_ins (int): The maximal number of GG^{\dagger} insertions.
+        extrap_method (Optional[str]): Which kind of extrapolation to make, defaults to 'linear'. The other choice is 'exponential'.
+        asymptot (Optional[float]): Asymptotic value of the observable as n_ins goes to infinity. Must be known for exponential 
+            extrapolation. Defaults to 0.
+
     Returns:
-        value (float): the zero-noise extrapolated value
+        value (float): The zero-noise extrapolated value
 
     """
 
@@ -125,7 +123,8 @@ def perform_extrapolation(
     except:
         raise PluginException(
             "Not enough jobs in the batch (%i) compared with the max number"
-            "of local CNOT insertions (%i) extrapolation" % (len(values_for_fit), n_ins)
+            "of local CNOT insertions (%i) extrapolation" % (
+                len(values_for_fit), n_ins)
         )
 
     if extrap_method == "linear" or not all(
@@ -191,6 +190,7 @@ class ZeroNoiseExtrapolator(AbstractPlugin):
         extrap_gates (Optional[List[Gate]]): Gates :math:`G` to be followed by identity decompositions :math:`GG^{\dagger}`.
             Defaults to CNOT
         extrap_method (Optional[str]): Form of the ansatz fit, defaults to 'linear'. Can be also 'exponential'.
+
     """
 
     def __init__(
@@ -253,14 +253,14 @@ class ZeroNoiseExtrapolator(AbstractPlugin):
 
     def post_process(self, batch_result: BatchResult) -> BatchResult:
         """
-        Perform post processing
+        Perform post processing.
 
         Args:
-            batch_result (:class:`~qat.core.BatchResult`): result to post
-                process
+            batch_result (:class:`~qat.core.BatchResult`): Result to post process.
 
         Returns:
             :class:`~qat.core.BatchResult`
+
         """
 
         if self.is_sampling:
@@ -288,6 +288,7 @@ class ZeroNoiseExtrapolator(AbstractPlugin):
                     asymptot=self.asymptots[i],
                 )
 
-                result_to_fix.meta_data["ZNE_fit_parameters"] = {"a": a, "b": b}
+                result_to_fix.meta_data["ZNE_fit_parameters"] = {
+                    "a": a, "b": b}
 
         return extrapolated_results
