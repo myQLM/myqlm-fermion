@@ -18,4 +18,7 @@ from pkgutil import extend_path
 
 __path__ = extend_path(__path__, __name__)
 
-from .ucc import transform_integrals_to_new_basis
+from .wrapper import MolecularHamiltonian, MoleculeInfo
+from .ucc import guess_init_params, get_cluster_ops, get_hf_ket, get_active_space_hamiltonian, select_active_orbitals
+from .qse import apply_quantum_subspace_expansion
+from .pyscf_tools import perform_pyscf_computation

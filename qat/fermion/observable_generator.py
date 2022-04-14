@@ -85,24 +85,20 @@ class ObservableGenerator(AbstractPlugin, AbstractGenerator):
 
         # Check arguments
         if observable is None and name is None:
-            raise ValueError(
-                "An observable should be passed in argument (either argument " "'observable' or 'name' should be set)")
+            raise ValueError("An observable should be passed in argument (either argument " "'observable' or 'name' should be set)")
 
         if observable is not None and name is not None:
-            raise ValueError(
-                "Could not build the observable (argument 'observable' and " "'name' are mutually exclusive)")
+            raise ValueError("Could not build the observable (argument 'observable' and " "'name' are mutually exclusive)")
 
         # Build observable
         self.observable = observable
 
         if name:
             try:
-                self.observable = ObservableGenerator.hamiltonians[name](
-                    *args, **kwargs)
+                self.observable = ObservableGenerator.hamiltonians[name](*args, **kwargs)
 
             except KeyError as excpt:
-                raise ValueError(
-                    f"Unknown hamiltonian generator {name!r}") from excpt
+                raise ValueError(f"Unknown hamiltonian generator {name!r}") from excpt
 
     def compile(self, batch, specs):
         """
