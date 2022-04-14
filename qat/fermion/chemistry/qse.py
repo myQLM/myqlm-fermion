@@ -207,12 +207,8 @@ def _build_quantum_subspace_expansion(
             overlap = op_l.dag() * op_r
 
             # Measurement of the expectation value:
-            scalar_h = qpu.submit(
-                state_prep_circ.to_job(observable=h_expanded, nbshots=nbshots)
-            ).value
-            scalar_s = qpu.submit(
-                state_prep_circ.to_job(observable=overlap, nbshots=nbshots)
-            ).value
+            scalar_h = qpu.submit(state_prep_circ.to_job(observable=h_expanded, nbshots=nbshots)).value
+            scalar_s = qpu.submit(state_prep_circ.to_job(observable=overlap, nbshots=nbshots)).value
 
             matrix_h[i, j] = scalar_h.real if abs(scalar_h) > threshold else 0
             matrix_s[i, j] = scalar_s.real if abs(scalar_s) > threshold else 0
@@ -220,9 +216,7 @@ def _build_quantum_subspace_expansion(
     return matrix_h, matrix_s
 
 
-def build_linear_pauli_expansion(
-    pauli_gates: List[str], nb_qubits: int
-) -> List[Observable]:
+def build_linear_pauli_expansion(pauli_gates: List[str], nb_qubits: int) -> List[Observable]:
     r"""Builds first-order all-qubit expansion from the listed Pauli
     gates.
 

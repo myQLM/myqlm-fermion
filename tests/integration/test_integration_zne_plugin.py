@@ -12,9 +12,7 @@ from qat.qpus import NoisyQProc
 np.random.seed(0)
 eps1 = 0.0016
 eps2 = 0.006
-hw_model = make_depolarizing_hardware_model(
-    eps1=eps1, eps2=eps2, depol_type="randomizing", correl_type="multi_qubit"
-)
+hw_model = make_depolarizing_hardware_model(eps1=eps1, eps2=eps2, depol_type="randomizing", correl_type="multi_qubit")
 noisy_qpu = NoisyQProc(hardware_model=hw_model, sim_method="deterministic-vectorized")
 
 circ = make_shallow_circ()

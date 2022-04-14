@@ -56,9 +56,7 @@ class MolecularHamiltonian(object):
 
         return s
 
-    def transform_basis(
-        self, transformation_matrix: np.ndarray
-    ) -> "MolecularHamiltonian":
+    def transform_basis(self, transformation_matrix: np.ndarray) -> "MolecularHamiltonian":
         """
         Change one and two body integrals (indices p, q...) to new basis (indices i, j...)
         using transformation U such that
@@ -80,9 +78,7 @@ class MolecularHamiltonian(object):
             molecular_hamiltonian (MolecularHamiltonian): MolecularHamiltonian updated to the new basis.
         """
 
-        integrals = transform_integrals_to_new_basis(
-            self.one_body_integrals, self.two_body_integrals, transformation_matrix
-        )
+        integrals = transform_integrals_to_new_basis(self.one_body_integrals, self.two_body_integrals, transformation_matrix)
 
         return MolecularHamiltonian(integrals[0], integrals[1], self.constant_coeff)
 
@@ -178,9 +174,7 @@ class MolecularHamiltonian(object):
             :py:class:`~qat.fermion.ElectronicStructureHamiltonian`: Electronic structure hamiltonian
         """
 
-        hpq, hpqrs = convert_to_h_integrals(
-            self.one_body_integrals, self.two_body_integrals
-        )
+        hpq, hpqrs = convert_to_h_integrals(self.one_body_integrals, self.two_body_integrals)
 
         H_electronic = ElectronicStructureHamiltonian(
             hpq,
@@ -317,15 +311,11 @@ class MoleculeInfo(object):
             self.hamiltonian,
             active_indices,
             occupied_indices,
-        ) = self.hamiltonian.select_active_space(
-            self.noons, self.n_electrons, threshold_1, threshold_2
-        )
+        ) = self.hamiltonian.select_active_space(self.noons, self.n_electrons, threshold_1, threshold_2)
 
         self._update_molecule_active(active_indices, occupied_indices)
 
-    def _update_molecule_active(
-        self, active_indices: List[int], occupied_indices: List[int]
-    ):
+    def _update_molecule_active(self, active_indices: List[int], occupied_indices: List[int]):
         """Update MoleculeInfo attributes depending on the input active space indices and occupied indices.
 
         Args:

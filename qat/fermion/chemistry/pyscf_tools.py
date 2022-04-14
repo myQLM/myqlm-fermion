@@ -16,24 +16,19 @@ def compute_integrals(molecule: Union[np.ndarray, gto.Mole], mo_coeff, hcore):
     """
     For a given molecule, compute 1-body and 2-body integrals
     """
+
     # no spin dof
     one_electron_compressed = reduce(np.dot, (mo_coeff.T, hcore, mo_coeff))
     n_orbs = mo_coeff.shape[1]
-    one_electron_integrals = one_electron_compressed.reshape(n_orbs, n_orbs).astype(
-        float
-    )
+    one_electron_integrals = one_electron_compressed.reshape(n_orbs, n_orbs).astype(float)
     two_electron_compressed = ao2mo.kernel(molecule, mo_coeff)
     # 1: no permutation symmetry
     two_electron_integrals = ao2mo.restore(1, two_electron_compressed, n_orbs)
-    two_electron_integrals = np.asarray(
-        two_electron_integrals.transpose(0, 2, 3, 1), order="C"
-    )
+    two_electron_integrals = np.asarray(two_electron_integrals.transpose(0, 2, 3, 1), order="C")
     return one_electron_integrals, two_electron_integrals
 
 
-def perform_pyscf_computation(
-    geometry, basis, spin, charge, verbose=False, run_FCI=True
-):
+def perform_pyscf_computation(geometry, basis, spin, charge, verbose=False, run_FCI=True):
     # define molecule in pySCF format
     molecule = gto.Mole()
     molecule.atom = geometry
@@ -52,9 +47,7 @@ def perform_pyscf_computation(
     if verbose:
         print("HF energy=", hf_energy)
 
-    one_body_integrals, two_body_integrals = compute_integrals(
-        molecule, scf_worker.mo_coeff, scf_worker.get_hcore()
-    )
+    one_body_integrals, two_body_integrals = compute_integrals(molecule, scf_worker.mo_coeff, scf_worker.get_hcore())
 
     # overlap_integrals = pyscf_scf.get_ovlp()
     # n_orbitals = int(molecule.nao_nr())

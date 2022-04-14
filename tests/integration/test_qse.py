@@ -39,10 +39,7 @@ stack = optimizer | qpu
 # we submit the job and print the optimized variational energy (the exact GS energy is -3)
 result = stack.submit(job)
 E_min = -3
-print(
-    "E(VQE) = %s (err = %s %%)"
-    % (result.value, 100 * abs((result.value - E_min) / E_min))
-)
+print("E(VQE) = %s (err = %s %%)" % (result.value, 100 * abs((result.value - E_min) / E_min)))
 e_vqe = result.value
 
 # we use the optimal parameters found by VQE
@@ -56,9 +53,7 @@ expansion_operators = [
 
 def test_apply_quantum_subspace_expansion():
 
-    e_qse = apply_quantum_subspace_expansion(
-        hamiltonian, opt_circ, expansion_operators, qpu, return_matrices=False
-    )
+    e_qse = apply_quantum_subspace_expansion(hamiltonian, opt_circ, expansion_operators, qpu, return_matrices=False)
 
     np.testing.assert_equal(e_qse, -2.979211358273586)
 

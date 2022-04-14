@@ -126,9 +126,7 @@ def check_basic(t_hopping):
     U = 1.62
     H_hubbard = make_hubbard_dimer(U, t_hopping)
 
-    H_el_structure_2 = ElectronicStructureHamiltonian(
-        H_hubbard.hpq * 2.18, H_hubbard.hpqrs * 3.27, -4.2
-    )
+    H_el_structure_2 = ElectronicStructureHamiltonian(H_hubbard.hpq * 2.18, H_hubbard.hpqrs * 3.27, -4.2)
     # Define the QPE parameters
     nqbits_phase = 4  # 4
     n_trotter_steps = 7  # 7
@@ -176,9 +174,7 @@ H_el_structure = ElectronicStructureHamiltonian(hpq, hpqrs, nuclear_repulsion)
 hpq_off = -3.01
 hpqrs_factor = 3.64
 constant_E = -14.8
-H_el_structure_modified = ElectronicStructureHamiltonian(
-    hpq + hpq_off, hpqrs * hpqrs_factor, nuclear_repulsion + constant_E
-)
+H_el_structure_modified = ElectronicStructureHamiltonian(hpq + hpq_off, hpqrs * hpqrs_factor, nuclear_repulsion + constant_E)
 lowest_E = -27.003  # this is the result from diagonalising the above H
 
 
@@ -196,9 +192,7 @@ def test_adiabatic_state_prep():
     # extract the diagonal and return an empty array but with this diagonal.
     H_el_hopping_hpq = np.diag(np.diag(H_el_structure.hpq))
     # "_f" stands for fermionic basis
-    H_el_hopping_f = ElectronicStructureHamiltonian(
-        H_el_hopping_hpq, hpqrs=None, constant_coeff=0.0
-    )
+    H_el_hopping_f = ElectronicStructureHamiltonian(H_el_hopping_hpq, hpqrs=None, constant_coeff=0.0)
     H_el_hopping_qbasis = transform_to_jw_basis(H_el_hopping_f)
 
     # Rarely more than one of the 16 states is not returned (second for-loop).

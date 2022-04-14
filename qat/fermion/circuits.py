@@ -160,9 +160,7 @@ def make_mr_circ() -> Circuit:
     return circ
 
 
-def make_mrep_circ(
-    n_fSim_cycles: Optional[int] = 4, set_phi_to_0: Optional[bool] = False
-) -> Circuit:
+def make_mrep_circ(n_fSim_cycles: Optional[int] = 4, set_phi_to_0: Optional[bool] = False) -> Circuit:
     """
     Constructs the 8-qubit Multi-Reference Excitation Preserving (MREP) ansatz that combines
     the multi-reference routine of Sugisaki et al., 10.1021/acscentsci.8b00788 [2019] with some fSim nearest-neighbour cycles.
@@ -179,9 +177,7 @@ def make_mrep_circ(
 
     prog = Program()
     reg = prog.qalloc(nbqbits)
-    theta = [
-        prog.new_var(float, "\\theta_{%i}" % i) for i in range(2 + 14 * n_fSim_cycles)
-    ]
+    theta = [prog.new_var(float, "\\theta_{%i}" % i) for i in range(2 + 14 * n_fSim_cycles)]
 
     for i in range(nbqbits // 2, nbqbits):
         prog.apply(X, reg[i])
@@ -261,10 +257,7 @@ def make_general_hwe_circ(
 
     prog = Program()
     reg = prog.qalloc(nqbits)
-    theta = [
-        prog.new_var(float, r"\theta_{%i}" % i)
-        for i in range(n_rotations * (nqbits + 2 * (nqbits - 1) * n_cycles))
-    ]
+    theta = [prog.new_var(float, r"\theta_{%i}" % i) for i in range(n_rotations * (nqbits + 2 * (nqbits - 1) * n_cycles))]
     ind_theta = 0
 
     for i in range(nqbits):
@@ -323,9 +316,7 @@ def make_compressed_ldca_circ(
        :class:`~qat.core.Circuit`
     """
 
-    circ = make_ldca_circ(
-        nb_fermionic_modes, ncycles, eigstate_ind=eigstate_ind, slater=slater
-    )
+    circ = make_ldca_circ(nb_fermionic_modes, ncycles, eigstate_ind=eigstate_ind, slater=slater)
 
     graph = GraphCircuit()
     graph.load_circuit(circ)

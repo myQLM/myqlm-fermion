@@ -22,9 +22,7 @@ TOL2 = 10
 def check_trotterisation(hpq, hpqrs, tol):
     hamiltonian = ElectronicStructureHamiltonian(hpq, hpqrs)
     U_exact = hamiltonian.exponential()
-    U_trotter = get_unitary_from_circuit(
-        make_trotter_slice_jw(hpq, hpqrs, 1), hpq.shape[0]
-    )
+    U_trotter = get_unitary_from_circuit(make_trotter_slice_jw(hpq, hpqrs, 1), hpq.shape[0])
 
     np.testing.assert_almost_equal(np.linalg.norm(U_exact - U_trotter), 0, decimal=tol)
 
@@ -113,9 +111,7 @@ def test_hpqqp_coulomb_operator():
     hpqrs = np.zeros((number_qubits, number_qubits, number_qubits, number_qubits))
     hpqrs[0][2][2][0] = -1.5
 
-    c = get_unitary_from_circuit(
-        _coulomb_exchange_operator_jw(hpqrs / 2, 1), number_qubits
-    )
+    c = get_unitary_from_circuit(_coulomb_exchange_operator_jw(hpqrs / 2, 1), number_qubits)
     a = checks_trotter_slice(hpq, hpqrs)
     assert np.linalg.norm(c - a) < TOL1
 
@@ -124,9 +120,7 @@ def test_hpqqp_coulomb_operator():
     hpqrs = np.zeros((number_qubits, number_qubits, number_qubits, number_qubits))
     hpqrs[3][0][0][3] = 6.5489
 
-    c = get_unitary_from_circuit(
-        _coulomb_exchange_operator_jw(hpqrs / 2, 1), number_qubits
-    )
+    c = get_unitary_from_circuit(_coulomb_exchange_operator_jw(hpqrs / 2, 1), number_qubits)
     a = checks_trotter_slice(hpq, hpqrs)
     assert np.linalg.norm(c - a) < TOL1
 
@@ -138,9 +132,7 @@ def test_hpqqr_numberexcitation_operator():
     hpqrs = np.zeros((number_qubits, number_qubits, number_qubits, number_qubits))
     hpqrs[2][1][1][0] = -1.5
     hpqrs[0][1][1][2] = -1.5
-    c = get_unitary_from_circuit(
-        _number_excitation_operator_jw(hpqrs / 2, 1), number_qubits
-    )
+    c = get_unitary_from_circuit(_number_excitation_operator_jw(hpqrs / 2, 1), number_qubits)
     a = checks_trotter_slice(hpq, hpqrs)
     assert np.linalg.norm(c - a) < TOL1
 
@@ -150,9 +142,7 @@ def test_hpqqr_numberexcitation_operator():
     hpqrs = np.zeros((number_qubits, number_qubits, number_qubits, number_qubits))
     hpqrs[4][0][0][1] = -1.5
     hpqrs[1][0][0][4] = -1.5
-    c = get_unitary_from_circuit(
-        _number_excitation_operator_jw(hpqrs / 2, 1), number_qubits
-    )
+    c = get_unitary_from_circuit(_number_excitation_operator_jw(hpqrs / 2, 1), number_qubits)
     a = checks_trotter_slice(hpq, hpqrs)
     assert np.linalg.norm(c - a) < TOL1
 
@@ -162,9 +152,7 @@ def test_hpqqr_numberexcitation_operator():
     hpqrs = np.zeros((number_qubits, number_qubits, number_qubits, number_qubits))
     hpqrs[2][4][4][0] = -1.5
     hpqrs[0][4][4][2] = -1.5
-    c = get_unitary_from_circuit(
-        _number_excitation_operator_jw(hpqrs / 2, 1), number_qubits
-    )
+    c = get_unitary_from_circuit(_number_excitation_operator_jw(hpqrs / 2, 1), number_qubits)
     a = checks_trotter_slice(hpq, hpqrs)
     assert np.linalg.norm(c - a) < TOL1
 
@@ -177,9 +165,7 @@ def test_hpqrs_doubleexcitation_operator():
     hpqrs[3][2][1][0] = -2
     hpqrs[0][1][2][3] = -2
 
-    c = get_unitary_from_circuit(
-        _double_excitation_operator_jw(hpqrs / 2, 1), number_qubits
-    )
+    c = get_unitary_from_circuit(_double_excitation_operator_jw(hpqrs / 2, 1), number_qubits)
     a = checks_trotter_slice(hpq, hpqrs)
     assert np.linalg.norm(c - a) < TOL1
 
@@ -190,9 +176,7 @@ def test_hpqrs_doubleexcitation_operator():
     hpqrs[5][3][2][0] = 2.25
     hpqrs[0][2][3][5] = 2.25
 
-    c = get_unitary_from_circuit(
-        _double_excitation_operator_jw(hpqrs / 2, 1), number_qubits
-    )
+    c = get_unitary_from_circuit(_double_excitation_operator_jw(hpqrs / 2, 1), number_qubits)
     a = checks_trotter_slice(hpq, hpqrs)
     assert np.linalg.norm(c - a) < TOL1
 
@@ -203,9 +187,7 @@ def test_hpqrs_doubleexcitation_operator():
     hpqrs[5][3][1][0] = 4.587
     hpqrs[0][1][3][5] = 4.587
 
-    c = get_unitary_from_circuit(
-        _double_excitation_operator_jw(hpqrs / 2, 1), number_qubits
-    )
+    c = get_unitary_from_circuit(_double_excitation_operator_jw(hpqrs / 2, 1), number_qubits)
     a = checks_trotter_slice(hpq, hpqrs)
     assert np.linalg.norm(c - a) < TOL1
 
@@ -245,10 +227,7 @@ def test_n_terms():
     terms = list(set(terms))
     n_terms = len(terms)
     coeffs = np.random.randn(n_terms)
-    U_mats = [
-        sp.linalg.expm(-1j * coeff * np.kron(pauli_dict[key[0]], pauli_dict[key[1]]))
-        for coeff, key in zip(coeffs, terms)
-    ]
+    U_mats = [sp.linalg.expm(-1j * coeff * np.kron(pauli_dict[key[0]], pauli_dict[key[1]])) for coeff, key in zip(coeffs, terms)]
     U_mat = np.linalg.multi_dot(U_mats[::-1])
     terms = [Term(coeff, term, [0, 1]) for coeff, term in zip(coeffs, terms)]
     qrout2 = make_spin_hamiltonian_trotter_slice(Observable(2, pauli_terms=terms))

@@ -34,9 +34,7 @@ def test_spin_hamiltonian():
 
 def test_to_spin_transform():
 
-    hamiltonian = Hamiltonian(
-        2, [Term(0.3, "Cc", [0, 1]), Term(1.4, "CcCc", [0, 1, 1, 0])]
-    )
+    hamiltonian = Hamiltonian(2, [Term(0.3, "Cc", [0, 1]), Term(1.4, "CcCc", [0, 1, 1, 0])])
     h_matrix = hamiltonian.get_matrix()
 
     spin_h = hamiltonian.to_spin()

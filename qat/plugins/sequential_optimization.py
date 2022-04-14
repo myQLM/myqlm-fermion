@@ -125,11 +125,7 @@ class SeqOptim(Optimizer):
                 cf_minus = np.real(self.evaluate_aux(params_minus))
 
                 params_new = copy.deepcopy(params)
-                params_new[key] = (
-                    params[key]
-                    - math.pi / 2
-                    - math.atan2(2 * cf - cf_plus - cf_minus, cf_plus - cf_minus)
-                )
+                params_new[key] = params[key] - math.pi / 2 - math.atan2(2 * cf - cf_plus - cf_minus, cf_plus - cf_minus)
                 cf_new = np.real(self.evaluate_aux(params_new))
 
                 # update

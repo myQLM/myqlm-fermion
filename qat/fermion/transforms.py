@@ -74,15 +74,11 @@ def make_PCU_sets(nqbits: int) -> List[Tuple]:
     set_list = []
     ftree_nodes = make_fenwick_tree(nqbits)
     for qb in range(nqbits):
-        set_list.append(
-            (_P_set(qb, ftree_nodes), _C_set(qb, ftree_nodes), _U_set(qb, ftree_nodes))
-        )
+        set_list.append((_P_set(qb, ftree_nodes), _C_set(qb, ftree_nodes), _U_set(qb, ftree_nodes)))
     return set_list
 
 
-def transform_to_jw_basis(
-    fermion_hamiltonian: Union[Hamiltonian, ElectronicStructureHamiltonian]
-) -> Hamiltonian:
+def transform_to_jw_basis(fermion_hamiltonian: Union[Hamiltonian, ElectronicStructureHamiltonian]) -> Hamiltonian:
     """Transform to Jordan-Wigner (JW) basis.
 
     Args:
@@ -110,9 +106,7 @@ def transform_to_jw_basis(
 
     nqbits = fermion_hamiltonian.nbqbits
 
-    spin_hamiltonian = Hamiltonian(
-        nqbits, [], constant_coeff=fermion_hamiltonian.constant_coeff, do_clean_up=False
-    )
+    spin_hamiltonian = Hamiltonian(nqbits, [], constant_coeff=fermion_hamiltonian.constant_coeff, do_clean_up=False)
 
     for term in fermion_hamiltonian.terms:
 
@@ -139,9 +133,7 @@ def transform_to_jw_basis(
     return spin_hamiltonian
 
 
-def transform_to_parity_basis(
-    fermion_hamiltonian: Union[Hamiltonian, ElectronicStructureHamiltonian]
-) -> Hamiltonian:
+def transform_to_parity_basis(fermion_hamiltonian: Union[Hamiltonian, ElectronicStructureHamiltonian]) -> Hamiltonian:
     """Transform to parity basis.
 
     Args:
@@ -168,15 +160,11 @@ def transform_to_parity_basis(
     """
 
     nqbits = fermion_hamiltonian.nbqbits
-    spin_hamiltonian = Hamiltonian(
-        nqbits, [], constant_coeff=fermion_hamiltonian.constant_coeff, do_clean_up=False
-    )
+    spin_hamiltonian = Hamiltonian(nqbits, [], constant_coeff=fermion_hamiltonian.constant_coeff, do_clean_up=False)
 
     for term in fermion_hamiltonian.terms:
 
-        cur_ham = Hamiltonian(
-            nqbits, [Term(term.coeff, "I" * nqbits, list(range(nqbits)))]
-        )
+        cur_ham = Hamiltonian(nqbits, [Term(term.coeff, "I" * nqbits, list(range(nqbits)))])
 
         for op, qb in zip(term.op, term.qbits):
 
@@ -199,9 +187,7 @@ def transform_to_parity_basis(
     return spin_hamiltonian
 
 
-def transform_to_bk_basis(
-    fermion_hamiltonian: Union[Hamiltonian, ElectronicStructureHamiltonian]
-) -> Hamiltonian:
+def transform_to_bk_basis(fermion_hamiltonian: Union[Hamiltonian, ElectronicStructureHamiltonian]) -> Hamiltonian:
     """Transform to Bravyi-Kitaev (BK) basis.
 
     Args:
@@ -230,9 +216,7 @@ def transform_to_bk_basis(
     nqbits = fermion_hamiltonian.nbqbits
     pcu_sets = make_PCU_sets(nqbits)
 
-    spin_hamiltonian = Hamiltonian(
-        nqbits, [], constant_coeff=fermion_hamiltonian.constant_coeff, do_clean_up=False
-    )
+    spin_hamiltonian = Hamiltonian(nqbits, [], constant_coeff=fermion_hamiltonian.constant_coeff, do_clean_up=False)
 
     for term in fermion_hamiltonian.terms:
 

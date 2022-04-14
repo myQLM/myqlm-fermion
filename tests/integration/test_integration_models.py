@@ -14,9 +14,7 @@ def test_anderson():
     U = 1
     mu = U / 2
     anderson_hamilt = make_anderson_model(U, mu, [0.4], [0.04])
-    embedding_hamilt = make_embedded_model(
-        U, mu, np.diag([0.4, 0.4]), -0.04 * np.eye(2), grouping="clusters"
-    )
+    embedding_hamilt = make_embedded_model(U, mu, np.diag([0.4, 0.4]), -0.04 * np.eye(2), grouping="clusters")
     embedding_hamilt.constant_coeff = 0
     anderson_mat = np.real(anderson_hamilt.get_matrix(sparse=True))
     embedding_mat = np.real(embedding_hamilt.get_matrix(sparse=True))
@@ -63,9 +61,7 @@ def test_risb_embedding():
 
     int_kernel_fermion += int_kernel_sym_fermion
     extended_int_kernel_fermion = np.zeros((2 * M, 2 * M, 2 * M, 2 * M))
-    extended_int_kernel_fermion[
-        : (2 * Nc), : (2 * Nc), : (2 * Nc), : (2 * Nc)
-    ] = int_kernel_fermion
+    extended_int_kernel_fermion[: (2 * Nc), : (2 * Nc), : (2 * Nc), : (2 * Nc)] = int_kernel_fermion
 
     int_term = (
         U
@@ -79,25 +75,14 @@ def test_risb_embedding():
     )
 
     non_int_term = (
-        sum(
+        sum([lambda_c[i, j] * dot(d[M + j], d_dag[M + i]) for i, j in itertools.product(list(range(M)), list(range(M)))])
+        + sum(
             [
-                lambda_c[i, j] * dot(d[M + j], d_dag[M + i])
+                D[i, j] * dot(d_dag[i], d[M + j]) + conj(D[i, j]) * dot(d_dag[M + j], d[i])
                 for i, j in itertools.product(list(range(M)), list(range(M)))
             ]
         )
-        + sum(
-            [
-                D[i, j] * dot(d_dag[i], d[M + j])
-                + conj(D[i, j]) * dot(d_dag[M + j], d[i])
-                for i, j in itertools.product(list(range(M)), list(range(M)))
-            ]
-        )
-        + sum(
-            [
-                t_pm[i, j] * dot(d_dag[i], d[j])
-                for i, j in itertools.product(range(M), repeat=2)
-            ]
-        )
+        + sum([t_pm[i, j] * dot(d_dag[i], d[j]) for i, j in itertools.product(range(M), repeat=2)])
         - mu * sum([d_dag[i].dot(d[i]) for i in range(M)])
     )
 

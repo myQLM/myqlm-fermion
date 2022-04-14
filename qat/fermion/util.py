@@ -223,14 +223,7 @@ def tobin(n, size):
     tobin(3,4) = '0011'
 
     """
-
-    nbin = "{0:b}".format(n)
-    l = len(nbin)
-
-    for _ in range(size - l):
-        nbin = "0" + nbin
-
-    return nbin
+    return format(n, "0" + str(size) + "b")
 
 
 def count_bits(n, cutoff, size):
@@ -284,9 +277,7 @@ def init_creation_ops(Norb, sparse: Optional[bool] = False):
                 col_ind.append(j)
                 data.append(sign)
 
-        c_dagger_dict[i] = sp.coo_matrix(
-            (data, (row_ind, col_ind)), shape=(2**Norb, 2**Norb)
-        )
+        c_dagger_dict[i] = sp.coo_matrix((data, (row_ind, col_ind)), shape=(2**Norb, 2**Norb))
         if not sparse:
             c_dagger_dict[i] = c_dagger_dict[i].A
 
@@ -328,8 +319,6 @@ def get_unitary_from_circuit(Qrout: QRoutine, number_qubits: int) -> np.ndarray:
         circuit = p.to_circ()
 
         # pylint: disable=E1101
-        unitary_matrix[numero_colonne] = list(
-            wavefunction(circuit, qat.linalg.LinAlg())
-        )
+        unitary_matrix[numero_colonne] = list(wavefunction(circuit, qat.linalg.LinAlg()))
 
     return np.transpose(unitary_matrix)

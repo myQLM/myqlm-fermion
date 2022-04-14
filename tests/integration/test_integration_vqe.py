@@ -26,9 +26,7 @@ def simple_circuit_twoparameters(x):
 class TestVQE(unittest.TestCase):
     def test_VQE_SPSA_JW_1qb(self):
         def spsa_optimizer(fun, theta0):
-            return spsa_minimize(
-                fun, theta0, precision=1e-6, maxiter=500, c=0.05, a=1, A=0
-            )
+            return spsa_minimize(fun, theta0, precision=1e-6, maxiter=500, c=0.05, a=1, A=0)
 
         hpq = np.zeros((1, 1))
         hpq[0, 0] = 1
@@ -47,9 +45,7 @@ class TestVQE(unittest.TestCase):
 
     def test_VQE_SPSA_JW_2qb(self):
         def spsa_optimizer(fun, theta0):
-            return spsa_minimize(
-                fun, theta0, precision=1e-6, maxiter=500, c=0.05, a=1, A=0
-            )
+            return spsa_minimize(fun, theta0, precision=1e-6, maxiter=500, c=0.05, a=1, A=0)
 
         nqbit = 2
         hpq = np.zeros((nqbit, nqbit))

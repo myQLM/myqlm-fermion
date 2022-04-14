@@ -126,25 +126,15 @@ def RZZ_gen(theta):
     return custom_gate
 
 
-RXX = AbstractGate(
-    "RXX", [float], 2, matrix_generator=lambda theta, mat_gen=RXX_gen: mat_gen(theta)
-)
+RXX = AbstractGate("RXX", [float], 2, matrix_generator=lambda theta, mat_gen=RXX_gen: mat_gen(theta))
 
-RXY = AbstractGate(
-    "RXY", [float], 2, matrix_generator=lambda theta, mat_gen=RXY_gen: mat_gen(theta)
-)
+RXY = AbstractGate("RXY", [float], 2, matrix_generator=lambda theta, mat_gen=RXY_gen: mat_gen(theta))
 
-RYY = AbstractGate(
-    "RYY", [float], 2, matrix_generator=lambda theta, mat_gen=RYY_gen: mat_gen(theta)
-)
+RYY = AbstractGate("RYY", [float], 2, matrix_generator=lambda theta, mat_gen=RYY_gen: mat_gen(theta))
 
-RYX = AbstractGate(
-    "RYX", [float], 2, matrix_generator=lambda theta, mat_gen=RYX_gen: mat_gen(theta)
-)
+RYX = AbstractGate("RYX", [float], 2, matrix_generator=lambda theta, mat_gen=RYX_gen: mat_gen(theta))
 
-RZZ = AbstractGate(
-    "RZZ", [float], 2, matrix_generator=lambda theta, mat_gen=RZZ_gen: mat_gen(theta)
-)
+RZZ = AbstractGate("RZZ", [float], 2, matrix_generator=lambda theta, mat_gen=RZZ_gen: mat_gen(theta))
 
 MG_gate_set = default_gate_set()
 
@@ -155,9 +145,7 @@ MG_gate_set.add_signature(RYY)
 MG_gate_set.add_signature(RZZ)
 
 
-def MG_chain_routine(
-    angles, slater: Optional[bool] = False, ZZ_angle: Optional[bool] = None
-) -> QRoutine:
+def MG_chain_routine(angles, slater: Optional[bool] = False, ZZ_angle: Optional[bool] = None) -> QRoutine:
     """
     Routine made of the 4 (resp.2) successive NN MG defining the building
     block of the gaussian state (resp. slater determinant) preparation circuit.
@@ -179,9 +167,7 @@ def MG_chain_routine(
     return q_rout
 
 
-def gaussian_state_prep_routine(
-    nb_fermionic_modes, theta, slater: Optional[bool] = False
-) -> QRoutine:
+def gaussian_state_prep_routine(nb_fermionic_modes, theta, slater: Optional[bool] = False) -> QRoutine:
     """
     Routine to prepare a gaussian state associated with an even number of fermionic modes.
     Corresponds to U_Bog in DD.
@@ -221,9 +207,7 @@ def gaussian_state_prep_routine(
     return q_rout
 
 
-def LDCA_cycle_routine(
-    nb_fermionic_modes, theta_MG, theta_RZZ, slater: Optional[bool] = False
-) -> QRoutine:
+def LDCA_cycle_routine(nb_fermionic_modes, theta_MG, theta_RZZ, slater: Optional[bool] = False) -> QRoutine:
     """
     Low Depth Circuit Ansatz building block.
 
@@ -279,9 +263,7 @@ def LDCA_cycle_routine(
             angles_MG = theta_MG[offset : offset + lenm]
 
             q_rout.apply(
-                MG_chain_routine(
-                    angles_MG, slater, theta_RZZ[(M - 1) * k + M // 2 + j]
-                ),
+                MG_chain_routine(angles_MG, slater, theta_RZZ[(M - 1) * k + M // 2 + j]),
                 2 * j + 1,
                 2 * j + 2,
             )
@@ -346,16 +328,10 @@ def LDCA_routine(
 
     for _ in range(ncycles):
 
-        theta_MG_cycle = theta_MG[
-            pointeur_MG : pointeur_MG + nb_MG_cycles * lenm * (M - 1)
-        ]
-        theta_RZZ_cycle = theta_RZZ[
-            pointeur_RZZ : pointeur_RZZ + nb_MG_cycles * (M - 1)
-        ]
+        theta_MG_cycle = theta_MG[pointeur_MG : pointeur_MG + nb_MG_cycles * lenm * (M - 1)]
+        theta_RZZ_cycle = theta_RZZ[pointeur_RZZ : pointeur_RZZ + nb_MG_cycles * (M - 1)]
         q_rout.apply(
-            LDCA_cycle_routine(
-                nb_fermionic_modes, theta_MG_cycle, theta_RZZ_cycle, slater
-            ),
+            LDCA_cycle_routine(nb_fermionic_modes, theta_MG_cycle, theta_RZZ_cycle, slater),
             list(range(M)),
         )
         pointeur_MG += nb_MG_cycles * lenm * (M - 1)
@@ -426,9 +402,7 @@ def _make_index_pair_list(M, slater: Optional[bool] = False):
     return index_pair_list
 
 
-def prepare_R_matrix(
-    nb_fermionic_modes: int, theta: np.ndarray, slater: Optional[bool] = False
-) -> np.ndarray:
+def prepare_R_matrix(nb_fermionic_modes: int, theta: np.ndarray, slater: Optional[bool] = False) -> np.ndarray:
     r"""
     Routine to prepare a gaussian state associated with an even number of fermionic modes.
 
@@ -463,9 +437,7 @@ def prepare_R_matrix(
     return mat
 
 
-def prepare_R_matrix_gradient(
-    nb_fermionic_modes: int, theta: np.ndarray, slater: Optional[bool] = False
-) -> List[np.ndarray]:
+def prepare_R_matrix_gradient(nb_fermionic_modes: int, theta: np.ndarray, slater: Optional[bool] = False) -> List[np.ndarray]:
     """
     Routine to compute gradient of product :math:`R = prod_i r_i(\\theta_i)`
 
@@ -565,9 +537,7 @@ def find_R_angles(
     if not use_gradient:
         res = scipy.optimize.minimize(func, theta0, method=method, options=options)
     else:
-        res = scipy.optimize.minimize(
-            func, theta0, method=method, options=options, jac=der
-        )
+        res = scipy.optimize.minimize(func, theta0, method=method, options=options, jac=der)
 
     if verbose:
         print(res)
@@ -631,9 +601,7 @@ def get_nn_rotation_angles(
     return theta, cost_res
 
 
-def nb_params_LDCA(
-    nb_fermionic_modes: int, ncycles: int, slater: Optional[bool] = False
-):
+def nb_params_LDCA(nb_fermionic_modes: int, ncycles: int, slater: Optional[bool] = False):
     """
     Computes the number of variational parameters carried by the LDCA circuit.
 

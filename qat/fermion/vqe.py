@@ -13,10 +13,9 @@ def VQE(
     n_shots: Optional[List[int]] = [0, 0],
 ) -> Tuple[float, list, int, List[float]]:
     r"""
-    This function implements the Variational Quantum Eigen solver i.e.,
-    it first prepares the variational ansatz and measures the energy using
-    a quantum processing unit (QPU), and then using a classical optimizer,
-    finds the parameters of the ansatz that minimize the energy of the Hamiltonian.
+    This function implements the Variational Quantum Eigen solver i.e., it first prepares the variational ansatz and measures the
+    energy using a quantum processing unit (QPU), and then using a classical optimizer, finds the parameters of the ansatz that
+    minimize the energy of the Hamiltonian.
 
     Args:
         hamiltonian (Hamiltonian): Hamiltonian for which the ground state is to be estimated
@@ -45,9 +44,7 @@ def VQE(
         prog = Program()
         reg = prog.qalloc(hamiltonian.nbqbits)
         prog.apply(ansatz_routine(theta), reg)
-        job = prog.to_circ().to_job(
-            job_type="OBS", observable=hamiltonian, nbshots=n_shots_internal
-        )
+        job = prog.to_circ().to_job(job_type="OBS", observable=hamiltonian, nbshots=n_shots_internal)
         res = qpu.submit(job)
         return res.value
 

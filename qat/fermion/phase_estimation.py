@@ -97,19 +97,13 @@ def perform_phase_estimation(
     H_qbasis = None
 
     if basis_transform == "jordan-wigner":
-        H_qbasis = transform_to_jw_basis(
-            H_el
-        )  # _qbasis stands for qubit i.e. computational basis
+        H_qbasis = transform_to_jw_basis(H_el)  # _qbasis stands for qubit i.e. computational basis
 
     elif basis_transform == "bravyi-kitaev":
-        H_qbasis = transform_to_bk_basis(
-            H_el
-        )  # _qbasis stands for qubit i.e. computational basis
+        H_qbasis = transform_to_bk_basis(H_el)  # _qbasis stands for qubit i.e. computational basis
 
     elif basis_transform == "parity":
-        H_qbasis = transform_to_parity_basis(
-            H_el
-        )  # _qbasis stands for qubit i.e. computational basis
+        H_qbasis = transform_to_parity_basis(H_el)  # _qbasis stands for qubit i.e. computational basis
 
     else:
 
@@ -136,14 +130,10 @@ def perform_phase_estimation(
     global_phase = Emax * H_evolution_time
 
     # "_hopping" is for the part of the H which has only hpp terms (no hpq or hpqrs)
-    H_el_hopping_hpq = np.diag(
-        np.diag(H_el.hpq)
-    )  # extract the diagonal and return an empty array but with this diagonal.
+    H_el_hopping_hpq = np.diag(np.diag(H_el.hpq))  # extract the diagonal and return an empty array but with this diagonal.
 
     # "_f" stands for fermionic basis
-    H_el_hopping_f = ElectronicStructureHamiltonian(
-        H_el_hopping_hpq, hpqrs=None, constant_coeff=0.0
-    )
+    H_el_hopping_f = ElectronicStructureHamiltonian(H_el_hopping_hpq, hpqrs=None, constant_coeff=0.0)
 
     H_el_hopping_qbasis = transform_to_jw_basis(H_el_hopping_f)
 
@@ -180,9 +170,7 @@ def perform_phase_estimation(
 
         else:
             if any(c not in "01" for c in init_vec):
-                error_message = (
-                    "Please specify the inital string vector with 0s and 1s only."
-                )
+                error_message = "Please specify the inital string vector with 0s and 1s only."
 
         if error_message:
             current_line_no = inspect.stack()[0][2]
@@ -203,10 +191,7 @@ def perform_phase_estimation(
             raise exceptions_types.QPUException(
                 code=exceptions_types.ErrorType.INVALID_ARGS,
                 modulename="qat.fermion",
-                message=(
-                    "The state preparation acts on %s qubits "
-                    "but the Hamiltonian works with %s qubits."
-                )
+                message=("The state preparation acts on %s qubits " "but the Hamiltonian works with %s qubits.")
                 % (init_vec.arity, n_qubits_H),
                 file=__file__,
                 line=current_line_no,
@@ -258,9 +243,7 @@ def perform_phase_estimation(
     if verbose:
         # Print the first 5 states (sorted by decreasing probabilities)
 
-        for ind, (prob, state) in enumerate(
-            reversed(sorted(list_states, key=lambda x: x[0]))
-        ):
+        for ind, (prob, state) in enumerate(reversed(sorted(list_states, key=lambda x: x[0]))):
 
             if ind < 5:
                 print(state, state.value[0] / 2**n_phase_bits, prob)
@@ -290,12 +273,8 @@ def apply_adiabatic_state_prep(
 
         H_current = (1 - t) * H_el_hopping_qbasis + t * H_qbasis
 
-        pea_routine = build_qpe_routine_for_hamiltonian(
-            H_current, nqbits_adiab, global_phase=0, n_trotter_steps=n_trotter_steps
-        )
-        prog.apply(
-            pea_routine, phase_reg[:nqbits_adiab], data_reg
-        )  # use only the first nqbits_adiab of all the n_phase_bits
+        pea_routine = build_qpe_routine_for_hamiltonian(H_current, nqbits_adiab, global_phase=0, n_trotter_steps=n_trotter_steps)
+        prog.apply(pea_routine, phase_reg[:nqbits_adiab], data_reg)  # use only the first nqbits_adiab of all the n_phase_bits
 
         # Reset the qubits used for the adiabatic step to be ready for
         # the actual QPE afterwards
@@ -336,9 +315,7 @@ def build_qpe_routine_for_hamiltonian(
 
     # Controlled unitaries along with a global phase application
     for j_ind in range(n_phase_bits):
-        routine.apply(
-            PH(global_phase * 2**j_ind), phase_reg[j_ind]
-        )  # happens before the trotterization
+        routine.apply(PH(global_phase * 2**j_ind), phase_reg[j_ind])  # happens before the trotterization
         for _ in range(n_trotter_steps):
             for term in hamiltonian.terms:
                 if np.imag(term.coeff) > 1e-10:

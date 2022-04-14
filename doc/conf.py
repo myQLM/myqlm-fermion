@@ -392,9 +392,7 @@ latex_logo = "logo-myqlm-fermion.svg"
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    ("index", "myqlm-fermion", "MyQLM fermion Documentation", ["Atos Quantum Lab"], 1)
-]
+man_pages = [("index", "myqlm-fermion", "MyQLM fermion Documentation", ["Atos Quantum Lab"], 1)]
 
 # If true, show URL addresses after external links.
 # man_show_urls = False

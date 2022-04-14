@@ -265,9 +265,7 @@ class AdaptiveAnsatzPlugin(Junction):
             job = self.parametric_circuit.to_job(observable=job.observable)
 
             if self.use_external_optimizer:
-                result = self.execute(
-                    self.parametric_circuit.to_job(observable=job.observable)
-                )
+                result = self.execute(self.parametric_circuit.to_job(observable=job.observable))
                 theta = eval(result.meta_data["parameters"])
                 energy_trace += eval(result.meta_data["optimization_trace"])
 
@@ -275,9 +273,7 @@ class AdaptiveAnsatzPlugin(Junction):
                 result.value, theta, trace = self.find_angles(job, theta)
                 energy_trace += trace
 
-            self.circuit = self.parametric_circuit(
-                **{"theta_" + str(j): elm for j, elm in enumerate(theta)}
-            )
+            self.circuit = self.parametric_circuit(**{"theta_" + str(j): elm for j, elm in enumerate(theta)})
 
             if self.verbose:
                 print("Current energy {0}".format(result.value))

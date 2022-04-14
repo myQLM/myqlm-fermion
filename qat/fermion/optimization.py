@@ -31,6 +31,4 @@ class Optimizer:
             initial_parameters(numpy.array): Initial parameters for the function to minimize
 
         """
-        return self.algo(
-            minimized_function, initial_parameters, *self.args_algo, **self.kwargs_algo
-        )
+        return self.algo(minimized_function, initial_parameters, *self.args_algo, **self.kwargs_algo)

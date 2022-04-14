@@ -30,9 +30,7 @@ test_list = [
 
 H_f1 = Hamiltonian(nqbits, [Term(1.0, "C", [0])])
 H_f2 = Hamiltonian(nqbits, [Term(1.0, "C", [1])])
-H_f3 = Hamiltonian(
-    nqbits, [Term(1.0, "CCcc", [0, 1, 1, 0]), Term(1.0, "CCcc", [1, 0, 0, 1])]
-)
+H_f3 = Hamiltonian(nqbits, [Term(1.0, "CCcc", [0, 1, 1, 0]), Term(1.0, "CCcc", [1, 0, 0, 1])])
 H_f4 = Hamiltonian(
     nqbits,
     [

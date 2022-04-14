@@ -34,9 +34,7 @@ def prepare_h2(use_pyscf=False, verbose=False):
             nels,
             one_body_integrals,
             two_body_integrals,
-        ) = perform_pyscf_computation(
-            geometry=geometry, basis=basis, spin=0, charge=0, verbose=True
-        )
+        ) = perform_pyscf_computation(geometry=geometry, basis=basis, spin=0, charge=0, verbose=True)
 
         # get NOONs from 1-RDM (computed in CISD)
         noons = list(reversed(sorted(np.linalg.eigvalsh(rdm1))))
@@ -100,9 +98,7 @@ def test_basic(use_pyscf=False, verbose=False):
         active_orb_energies.extend([orbital_energies[ind], orbital_energies[ind]])
     nb_active_els = nels - 2 * len(occ_inds)
 
-    cluster_ops, theta_0, hf_init = get_cluster_ops_and_init_guess(
-        nb_active_els, active_noons, active_orb_energies, H_active.hpqrs
-    )
+    cluster_ops, theta_0, hf_init = get_cluster_ops_and_init_guess(nb_active_els, active_noons, active_orb_energies, H_active.hpqrs)
 
     # transform, code = transform_to_parity_basis, get_parity_code
     # transform, code = transform_to_bk_basis, get_bk_code
@@ -157,9 +153,7 @@ def test_more_basic(use_pyscf=False, verbose=False):
         noons_full.extend([noons[ind], noons[ind]])
         orb_energies_full.extend([orbital_energies[ind], orbital_energies[ind]])
 
-    cluster_ops, theta_0, hf_init = get_cluster_ops_and_init_guess(
-        nels, noons_full, orb_energies_full, H.hpqrs
-    )
+    cluster_ops, theta_0, hf_init = get_cluster_ops_and_init_guess(nels, noons_full, orb_energies_full, H.hpqrs)
 
     transform, code = transform_to_jw_basis, get_jw_code
 

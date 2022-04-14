@@ -103,57 +103,39 @@ class Hamiltonian(Observable):
 
     def __add__(self, other):
         res = super().__add__(other)
-        return Hamiltonian(
-            res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up
-        )
+        return Hamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
 
     def __radd__(self, other):
         res = super().__radd__(other)
-        return Hamiltonian(
-            res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up
-        )
+        return Hamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
 
     def __iadd__(self, other):
         res = super().__iadd__(other)
-        return Hamiltonian(
-            res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up
-        )
+        return Hamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
 
     def __sub__(self, other):
         res = super().__sub__(other)
-        return Hamiltonian(
-            res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up
-        )
+        return Hamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
 
     def __neg__(self, other):
         res = super().__neg__(other)
-        return Hamiltonian(
-            res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up
-        )
+        return Hamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
 
     def __mul__(self, other):
         res = super().__mul__(other)
-        return Hamiltonian(
-            res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up
-        )
+        return Hamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
 
     def __rmul__(self, other):
         res = super().__rmul__(other)
-        return Hamiltonian(
-            res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up
-        )
+        return Hamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
 
     def __truediv__(self, other):
         res = super().__truediv__(other)
-        return Hamiltonian(
-            res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up
-        )
+        return Hamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
 
     def __itruediv__(self, other):
         res = super().__itruediv__(other)
-        return Hamiltonian(
-            res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up
-        )
+        return Hamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
 
     @property
     def htype(self) -> bool:
@@ -189,9 +171,7 @@ class Hamiltonian(Observable):
         Get the matrix representation of the Hamiltonian of type SPIN.
         """
 
-        def _make_spin_op(
-            op: str, qb: int, nqbits: int, sparse: bool
-        ) -> Union[np.ndarray, sp.bsr.bsr_matrix]:
+        def _make_spin_op(op: str, qb: int, nqbits: int, sparse: bool) -> Union[np.ndarray, sp.bsr.bsr_matrix]:
 
             id_type = sp.identity if sparse else np.identity
             m_type = sp.csr_matrix if sparse else np.array
@@ -233,9 +213,7 @@ class Hamiltonian(Observable):
 
                     if op != "I":
                         try:
-                            op_list[(op, qb)] = _make_spin_op(
-                                op, qb, self.nbqbits, sparse
-                            )
+                            op_list[(op, qb)] = _make_spin_op(op, qb, self.nbqbits, sparse)
 
                         except:
                             print(op, qb, self.nbqbits)
@@ -258,9 +236,7 @@ class Hamiltonian(Observable):
 
         return final_matrix
 
-    def _get_fermion_op_matrix(
-        self, sparse: bool = False
-    ) -> Union[np.ndarray, sp.bsr.bsr_matrix]:
+    def _get_fermion_op_matrix(self, sparse: bool = False) -> Union[np.ndarray, sp.bsr.bsr_matrix]:
         """
         Get the matrix representation of the Hamiltonian of type FERMION.
         """
@@ -303,24 +279,14 @@ class Hamiltonian(Observable):
 
         for term in self.terms:
             for operator in term.op:
-                condition_1 = (
-                    ObservableType.SPIN
-                    if operator in PAULI_MATS.keys()
-                    else condition_1
-                )
-                condition_2 = (
-                    ObservableType.FERMION if operator in {"C", "c"} else condition_2
-                )
+                condition_1 = ObservableType.SPIN if operator in PAULI_MATS.keys() else condition_1
+                condition_2 = ObservableType.FERMION if operator in {"C", "c"} else condition_2
 
         if all((condition_1, condition_2)) is None:
             return ObservableType.UNDEFINED
 
-        if isinstance(condition_1, ObservableType) and isinstance(
-            condition_2, ObservableType
-        ):
-            raise NotImplementedError(
-                "Hamiltonian with mixed spin-fermion operators are not implemented."
-            )
+        if isinstance(condition_1, ObservableType) and isinstance(condition_2, ObservableType):
+            raise NotImplementedError("Hamiltonian with mixed spin-fermion operators are not implemented.")
 
         else:
             return condition_1 or condition_2
@@ -500,9 +466,7 @@ class FermionHamiltonian(Hamiltonian):
         return super().__init__(*args, **kwargs)
 
 
-def make_anderson_model(
-    U: float, mu: float, V: np.ndarray, epsilon: np.ndarray
-) -> ElectronicStructureHamiltonian:
+def make_anderson_model(U: float, mu: float, V: np.ndarray, epsilon: np.ndarray) -> ElectronicStructureHamiltonian:
     r"""
     Returns the canonical second quantized form 
 
@@ -538,9 +502,7 @@ def make_anderson_model(
     # number of bath modes
     n_b = len(V)
     if len(epsilon) != n_b:
-        raise Exception(
-            "Error : The bath modes energies vector must be the same size as the tunneling energies vector."
-        )
+        raise Exception("Error : The bath modes energies vector must be the same size as the tunneling energies vector.")
 
     # number of fermionic (annihilation) operators f
     fermop_number = 2 * n_b + 2
@@ -619,9 +581,7 @@ def make_embedded_model(
 
     """
 
-    M = np.shape(lambda_c)[
-        0
-    ]  # number of SO in each cluster (imp and bath) = 2*cluster size
+    M = np.shape(lambda_c)[0]  # number of SO in each cluster (imp and bath) = 2*cluster size
 
     h_pq = np.zeros((2 * M, 2 * M), dtype=np.complex_)
 
@@ -647,9 +607,7 @@ def make_embedded_model(
         const_coeff += lambda_c[i, i]
 
     if grouping == "spins":
-        perm_mat = np.zeros(
-            (2 * M, 2 * M)
-        )  # permutation matrix, beware: goes from spin ord to cluster ord!
+        perm_mat = np.zeros((2 * M, 2 * M))  # permutation matrix, beware: goes from spin ord to cluster ord!
 
         for i in range(M):
             perm_mat[2 * i, i] = 1
@@ -667,9 +625,7 @@ def make_embedded_model(
     elif grouping == "clusters":
         if int_kernel is None and U != 0:
             for i in range(M // 2):
-                h_pqrs[
-                    2 * i, 2 * i + 1, 2 * i, 2 * i + 1
-                ] = -U  # minus sign comes from the def. of hpqrs: term c_dag c_dag c c
+                h_pqrs[2 * i, 2 * i + 1, 2 * i, 2 * i + 1] = -U  # minus sign comes from the def. of hpqrs: term c_dag c_dag c c
                 h_pqrs[2 * i + 1, 2 * i, 2 * i + 1, 2 * i] = -U
     else:
         print("Grouping must be either " "clusters" " or " "spins" ".")
@@ -721,9 +677,7 @@ def ind_spins_ord(ind_clusters_ord: int, M: int) -> int:
     return ind_spins_ord
 
 
-def make_hubbard_model(
-    t_mat: np.ndarray, U: float, mu: float
-) -> ElectronicStructureHamiltonian:
+def make_hubbard_model(t_mat: np.ndarray, U: float, mu: float) -> ElectronicStructureHamiltonian:
     r"""Construct Hubbard model
 
     .. math::

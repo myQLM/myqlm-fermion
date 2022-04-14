@@ -17,9 +17,7 @@ from qat.core import Term
 from qat.lang.AQASM import QRoutine, X
 
 
-def build_ucc_ansatz(
-    cluster_ops: List[Hamiltonian], ket_hf: int, n_steps: Optional[int] = 1
-) -> Callable:
+def build_ucc_ansatz(cluster_ops: List[Hamiltonian], ket_hf: int, n_steps: Optional[int] = 1) -> Callable:
     r"""Builds the parametric state preparation circuit implementing the
     provided cluster operator.
 
@@ -78,11 +76,7 @@ def build_ucc_ansatz(
         qrout_uccsd = QRoutine(arity=nqbits)
         qubit_range = list(range(nqbits))
 
-        assert n_ops == len(
-            theta
-        ), "received {0} cluster operators and {1} variational parameters".format(
-            n_ops, len(theta)
-        )
+        assert n_ops == len(theta), "received {0} cluster operators and {1} variational parameters".format(n_ops, len(theta))
 
         # Application of qrout_hf
         qrout_uccsd.apply(qrout_hf, qubit_range)
@@ -155,9 +149,7 @@ def get_cluster_ops(
 
     active_size = len(active_noons)
 
-    exc_op_list = select_excitation_operators(
-        active_noons, actives_occupied_orbitals, actives_unoccupied_orbitals
-    )
+    exc_op_list = select_excitation_operators(active_noons, actives_occupied_orbitals, actives_unoccupied_orbitals)
 
     cluster_list = build_cluster_operator(exc_op_list, active_size)
 
@@ -214,21 +206,15 @@ def guess_init_state(
 
     active_size = len(active_noons)
 
-    (ket_hf_init, theta_init,) = _init_uccsd(
-        active_size, n_active_els, hpqrs, list(range(active_size)), active_orb_energies
-    )
+    (
+        ket_hf_init,
+        theta_init,
+    ) = _init_uccsd(active_size, n_active_els, hpqrs, list(range(active_size)), active_orb_energies)
 
-    actives_occupied_orbitals, actives_unoccupied_orbitals = construct_active_orbitals(
-        n_active_els, list(range(active_size))
-    )
+    actives_occupied_orbitals, actives_unoccupied_orbitals = construct_active_orbitals(n_active_els, list(range(active_size)))
 
-    exc_op_list = select_excitation_operators(
-        active_noons, actives_occupied_orbitals, actives_unoccupied_orbitals
-    )
-    theta_list = [
-        theta_init[op_index] if op_index in theta_init else 0
-        for op_index in exc_op_list
-    ]
+    exc_op_list = select_excitation_operators(active_noons, actives_occupied_orbitals, actives_unoccupied_orbitals)
+    theta_list = [theta_init[op_index] if op_index in theta_init else 0 for op_index in exc_op_list]
 
     return (
         theta_list,
@@ -411,9 +397,6 @@ def get_cluster_ops_and_init_guess(
 
     exc_op_list = select_excitation_operators(active_noons, as_occ, as_unocc)
     cluster_list = build_cluster_operator(exc_op_list, active_size)
-    theta_list = [
-        theta_init[op_index] if op_index in theta_init else 0
-        for op_index in exc_op_list
-    ]
+    theta_list = [theta_init[op_index] if op_index in theta_init else 0 for op_index in exc_op_list]
 
     return cluster_list, theta_list, ket_hf_init

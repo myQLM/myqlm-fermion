@@ -43,9 +43,7 @@ def insert_ids(circ: Circuit, gates: list, n_ins: int) -> Circuit:
             if op[0] == gate.name:
 
                 for _ in range(n_ins):
-                    modified_circ.insert_gate(
-                        gate=gate, position=op_index + n_gates_inserted + 1, qbits=op[2]
-                    )
+                    modified_circ.insert_gate(gate=gate, position=op_index + n_gates_inserted + 1, qbits=op[2])
                     modified_circ.insert_gate(
                         gate=gate.dag(),
                         position=op_index + n_gates_inserted + 2,
@@ -58,9 +56,7 @@ def insert_ids(circ: Circuit, gates: list, n_ins: int) -> Circuit:
     return modified_circ
 
 
-def extract_values(
-    batch_result: BatchResult, n_ins: int, n_jobs: int, job_number: int
-) -> list:
+def extract_values(batch_result: BatchResult, n_ins: int, n_jobs: int, job_number: int) -> list:
     """
     Given a batch result corresponding to
 
@@ -126,9 +122,7 @@ def perform_extrapolation(
             "of local CNOT insertions (%i) extrapolation" % (len(values_for_fit), n_ins)
         )
 
-    if extrap_method == "linear" or not all(
-        [val - asymptot != 0 for val in values_for_fit]
-    ):
+    if extrap_method == "linear" or not all([val - asymptot != 0 for val in values_for_fit]):
         a, b, _, _, _ = linregress(range(n_ins + 1), values_for_fit)
         value = -0.5 * a + b
 
@@ -276,9 +270,7 @@ class ZeroNoiseExtrapolator(AbstractPlugin):
 
             if result_to_fix.value is not None:
 
-                values_for_fit = extract_values(
-                    batch_result, self.n_ins, n_jobs_init, i
-                )
+                values_for_fit = extract_values(batch_result, self.n_ins, n_jobs_init, i)
                 result_to_fix.meta_data["values_for_ZNE"] = values_for_fit
                 extrapolated_results.results[i].value, a, b = perform_extrapolation(
                     values_for_fit,
