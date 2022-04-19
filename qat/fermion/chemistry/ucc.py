@@ -841,9 +841,9 @@ def get_active_space_hamiltonian(
 
 def _compute_init_state(
     n_electrons: int,
-    noons: List[float],
     orbital_energies: List[float],
     hpqrs: np.ndarray,
+    noons: List[float] = None,
 ) -> Tuple[List[Hamiltonian], int, List[int], List[int]]:
     r"""Find initial guess using Møller-Plesset perturbation theory.
 
@@ -867,12 +867,12 @@ def _compute_init_state(
 
     Args:
         n_electrons (int): the number of active electrons of the system.
-        noons (List[float]): the natural-orbital occupation numbers
-            :math:`n_i`, sorted in descending order (from high occupations
-            to low occupations) (doubled due to spin degeneracy).
         orbital_energies (List[float]): the energies of the molecular orbitals
             :math:`\epsilon_i` (doubled due to spin degeneracy).
         hpqrs (np.ndarray): the 4D array of (active) two-body integrals :math:`h_{pqrs}`.
+        noons (List[float]): the natural-orbital occupation numbers
+            :math:`n_i`, sorted in descending order (from high occupations
+            to low occupations) (doubled due to spin degeneracy).
 
     Returns:
         Tuple[List[int], int, List[int], List[int]]:
@@ -883,12 +883,13 @@ def _compute_init_state(
 
     """
 
-    active_size = len(noons)
-
+    active_size = len(noons) if noons is not None else hpqrs.shape[0]
+    active_range = list(range(active_size))
+    
     (
         ket_hf_init,
         theta_init,
-    ) = _init_uccsd(active_size, n_electrons, hpqrs, list(range(active_size)), orbital_energies)
+    ) = _init_uccsd(active_size, n_electrons, hpqrs, active_range, orbital_energies)
 
     actives_occupied_orbitals, actives_unoccupied_orbitals = construct_active_orbitals(
         n_electrons, list(range(active_size)))
@@ -958,7 +959,7 @@ def guess_init_params(
         _,
         _,
         _,
-    ) = _compute_init_state(n_electrons, noons, orbital_energies, hpqrs)
+    ) = _compute_init_state(n_electrons, orbital_energies, hpqrs, noons)
 
     return theta_list
 
