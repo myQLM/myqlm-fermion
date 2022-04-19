@@ -18,7 +18,11 @@ from qat.lang.AQASM import QRoutine, X
 
 
 def select_excitation_operators(
-    noons: List[float], active_occupied_orbitals: List[int], active_unoccupied_orbitals: List[int], max_nb_single_ex: Optional[int] = None, max_nb_double_ex: Optional[int] = None
+    noons: List[float],
+    active_occupied_orbitals: List[int],
+    active_unoccupied_orbitals: List[int],
+    max_nb_single_ex: Optional[int] = None,
+    max_nb_double_ex: Optional[int] = None,
 ) -> List[Tuple[int]]:
     r"""Selects the excitation operators to will be used to build the
     cluster operator.
@@ -90,14 +94,13 @@ def select_excitation_operators(
     sorted_ex_op_1e = sorted(var_noons_1e, key=var_noons_1e.get)[::-1]
     sorted_ex_op_2e = sorted(var_noons_2e, key=var_noons_2e.get)[::-1]
 
-
     # Selection of dominant one-electron excitation operators
     if max_nb_single_ex is None:
         l_ex_op += sorted_ex_op_1e
 
     else:
         for i in range(max_nb_single_ex):
-            
+
             if i < len(sorted_ex_op_1e):
                 l_ex_op.append(sorted_ex_op_1e[i])
 

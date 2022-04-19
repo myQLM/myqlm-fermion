@@ -358,7 +358,7 @@ def select_active_orbitals(
     Args:
         noons (np.ndarray): The natural orbital occupation numbers
             in descending order (from high occupations to low occupations)
-        nb_e (int): The number of electrons.
+        n_electrons (int): The number of electrons.
         threshold_1 (Optional[float]): The upper threshold :math:`\varepsilon_1` on
             the NOON of an active orbital. Defaults to 0.02.
         threshold_2 (Optional[float]): The lower threshold :math:`\varepsilon_2` on
@@ -699,6 +699,7 @@ def select_excitation_operators(
 
         for a, i in itertools.product(active_unoccupied_orbitals[::2], active_occupied_orbitals[::2]):
             var_noons_1e.append((a, i))
+            var_noons_1e.append((a + 1, i + 1))
 
         for n_unocc, a in enumerate(active_unoccupied_orbitals[::1]):
             for b in active_unoccupied_orbitals[n_unocc + 1 :]:
