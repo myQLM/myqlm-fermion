@@ -71,13 +71,11 @@ def make_fSim_fan_routine(nbqbits: int, theta: np.ndarray) -> QRoutine:
 
     for j in range(nbqbits // 2 - 1):
 
-        qrout.apply(
-            fSim(theta[ind_theta], theta[ind_theta + 1]), q1 - j - 1, q1 - j)
+        qrout.apply(fSim(theta[ind_theta], theta[ind_theta + 1]), q1 - j - 1, q1 - j)
 
         ind_theta += 2
 
-        qrout.apply(
-            fSim(theta[ind_theta], theta[ind_theta + 1]), q2 + j, q2 + j + 1)
+        qrout.apply(fSim(theta[ind_theta], theta[ind_theta + 1]), q2 + j, q2 + j + 1)
 
         ind_theta += 2
 
@@ -280,8 +278,7 @@ def init_creation_ops(Norb, sparse: Optional[bool] = False):
                 col_ind.append(j)
                 data.append(sign)
 
-        c_dagger_dict[i] = sp.coo_matrix(
-            (data, (row_ind, col_ind)), shape=(2**Norb, 2**Norb))
+        c_dagger_dict[i] = sp.coo_matrix((data, (row_ind, col_ind)), shape=(2**Norb, 2**Norb))
         if not sparse:
             c_dagger_dict[i] = c_dagger_dict[i].A
 
@@ -323,8 +320,7 @@ def get_unitary_from_circuit(Qrout: QRoutine, number_qubits: int) -> np.ndarray:
         circuit = p.to_circ()
 
         # pylint: disable=E1101
-        unitary_matrix[numero_colonne] = list(
-            wavefunction(circuit, LinAlg()))
+        unitary_matrix[numero_colonne] = list(wavefunction(circuit, LinAlg()))
 
     return np.transpose(unitary_matrix)
 

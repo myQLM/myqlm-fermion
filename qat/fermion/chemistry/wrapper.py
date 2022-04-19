@@ -56,6 +56,11 @@ class MolecularHamiltonian(object):
 
         return s
 
+    @property
+    def nqbits(self):
+        "Compute number of qubits from the one body integral."
+        return self.one_body_integrals.shape[0]
+
     def transform_basis(self, transformation_matrix: np.ndarray) -> "MolecularHamiltonian":
         """
         Change one and two body integrals (indices p, q...) to new basis (indices i, j...)
@@ -254,6 +259,13 @@ class MoleculeInfo(object):
         """
         return self.hamiltonian.constant_coeff
 
+    @property
+    def nqbits(self):
+        """
+        Compute number of qubits from the one body integral.
+        """
+        return self.hamiltonian.nqbits
+
     def copy(self) -> "MolecularHamiltonian":
         """
         Copy the MoleculeInfo class.
@@ -345,40 +357,40 @@ class MoleculeInfo(object):
 
         return d
 
-    def apply(self, func: Callable) -> Any:
-        """Unpack the corresponding MoleculeInfo attributes and apply the function onto them.
+    # def apply(self, func: Callable) -> Any:
+    #     """Unpack the corresponding MoleculeInfo attributes and apply the function onto them.
 
-        This method will automatically select the right attributes depending on the arguments
-        names in the input function.It will ignore function arguments with an assigned
-        default value.
+    #     This method will automatically select the right attributes depending on the arguments
+    #     names in the input function.It will ignore function arguments with an assigned
+    #     default value.
 
-        Args:
-            func (Callable): Function to apply on the MoleculeInfo attributes
+    #     Args:
+    #         func (Callable): Function to apply on the MoleculeInfo attributes
 
-        Returns:
-            output (Any): Output of input function.
-        """
+    #     Returns:
+    #         output (Any): Output of input function.
+    #     """
 
-        # Get function signature
-        signature = inspect.signature(func)
+    #     # Get function signature
+    #     signature = inspect.signature(func)
 
-        # Get function arguments names
-        args_name = list(signature.parameters)
+    #     # Get function arguments names
+    #     args_name = list(signature.parameters)
 
-        # Remove default values from args_name list
-        for name in args_name.copy():
-            if signature.parameters[name].default is not inspect._empty:
-                args_name.remove(name)
+    #     # Remove default values from args_name list
+    #     for name in args_name.copy():
+    #         if signature.parameters[name].default is not inspect._empty:
+    #             args_name.remove(name)
 
-        # Define the dictionary with available attributes
-        attr_dict = self._get_attr_dict()
+    #     # Define the dictionary with available attributes
+    #     attr_dict = self._get_attr_dict()
 
-        # Check that this dict contains all the necessary function arguments
-        for arg in args_name:
-            if arg not in attr_dict.keys():
-                raise AttributeError(f"Attribute {arg} not found.")
+    #     # Check that this dict contains all the necessary function arguments
+    #     for arg in args_name:
+    #         if arg not in attr_dict.keys():
+    #             raise AttributeError(f"Attribute {arg} not found.")
 
-        # Get the arguments in the correct order
-        args = [attr_dict[arg] for arg in args_name]
+    #     # Get the arguments in the correct order
+    #     args = [attr_dict[arg] for arg in args_name]
 
-        return func(*args)
+    #     return func(*args)

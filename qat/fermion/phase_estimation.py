@@ -129,15 +129,13 @@ def perform_phase_estimation(
     H_el_hopping_hpq = np.diag(np.diag(H_el.hpq))
 
     # "_f" stands for fermionic basis
-    H_el_hopping_f = ElectronicStructureHamiltonian(
-        H_el_hopping_hpq, hpqrs=None, constant_coeff=0.0)
+    H_el_hopping_f = ElectronicStructureHamiltonian(H_el_hopping_hpq, hpqrs=None, constant_coeff=0.0)
 
     H_el_hopping_qbasis = transform_to_jw_basis(H_el_hopping_f)
 
     # Initialize the program
     prog = Program()
-    phase_reg = prog.qalloc(
-        n_phase_bits, class_type=QInt, reverse_bit_order=False)
+    phase_reg = prog.qalloc(n_phase_bits, class_type=QInt, reverse_bit_order=False)
 
     data_reg = prog.qalloc(n_qubits_H)
 
@@ -189,8 +187,7 @@ def perform_phase_estimation(
             raise exceptions_types.QPUException(
                 code=exceptions_types.ErrorType.INVALID_ARGS,
                 modulename="qat.fermion",
-                message=(
-                    "The state preparation acts on %s qubits " "but the Hamiltonian works with %s qubits.")
+                message=("The state preparation acts on %s qubits " "but the Hamiltonian works with %s qubits.")
                 % (init_vec.arity, n_qubits_H),
                 file=__file__,
                 line=current_line_no,
@@ -272,8 +269,7 @@ def apply_adiabatic_state_prep(
 
         H_current = (1 - t) * H_el_hopping_qbasis + t * H_qbasis
 
-        pea_routine = build_qpe_routine_for_hamiltonian(
-            H_current, nqbits_adiab, global_phase=0, n_trotter_steps=n_trotter_steps)
+        pea_routine = build_qpe_routine_for_hamiltonian(H_current, nqbits_adiab, global_phase=0, n_trotter_steps=n_trotter_steps)
         # use only the first nqbits_adiab of all the n_phase_bits
         prog.apply(pea_routine, phase_reg[:nqbits_adiab], data_reg)
 
@@ -326,8 +322,7 @@ def build_qpe_routine_for_hamiltonian(
                         " qubit basis. All the terms should be real, coming from a"
                         " hermitian H."
                     )
-                theta = np.real(term.coeff) * \
-                    2 ** (j_ind + 1) * t / n_trotter_steps
+                theta = np.real(term.coeff) * 2 ** (j_ind + 1) * t / n_trotter_steps
                 Rk_routine = construct_Rk_routine(term.op, term.qbits, theta)
                 routine.apply(
                     Rk_routine.ctrl(),
