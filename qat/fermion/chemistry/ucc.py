@@ -870,7 +870,7 @@ def _compute_init_state(
         orbital_energies (List[float]): the energies of the molecular orbitals
             :math:`\epsilon_i` (doubled due to spin degeneracy).
         hpqrs (np.ndarray): the 4D array of (active) two-body integrals :math:`h_{pqrs}`.
-        noons (List[float]): the natural-orbital occupation numbers
+        noons (Optional[List[float]]): the natural-orbital occupation numbers
             :math:`n_i`, sorted in descending order (from high occupations
             to low occupations) (doubled due to spin degeneracy).
 
@@ -882,6 +882,10 @@ def _compute_init_state(
             - the active unoccupied orbitals indices.
 
     """
+    if noons is not None:
+        noons = _extend_list(noons)
+        
+    orbital_energies = _extend_list(orbital_energies)
 
     active_size = len(noons) if noons is not None else hpqrs.shape[0]
     active_range = list(range(active_size))
@@ -910,8 +914,8 @@ def _compute_init_state(
 def guess_init_params(
     two_body_integrals: np.ndarray,
     n_electrons: int,
-    noons: List[float],
     orbital_energies: List[float],
+    noons: List[float] = None,
 ) -> List[float]:
     """Find initial parameters using Møller-Plesset perturbation theory.
 
@@ -949,9 +953,6 @@ def guess_init_params(
             i \in \mathcal{O}' \} \cup \{\theta_{ab}^{ij}, a>b, i>j, a,b \in \mathcal{I}',
             i,j \in \mathcal{O}'\}`,
     """
-
-    noons = _extend_list(noons)
-    orbital_energies = _extend_list(orbital_energies)
 
     hpqrs = _two_body_integrals_to_h(two_body_integrals)
     (
