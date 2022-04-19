@@ -599,9 +599,9 @@ def construct_active_orbitals(nb_e: int, l_ao: List[int]) -> Tuple[List[int], Li
 
 
 def select_excitation_operators(
-    noons: List[float],
     active_occupied_orbitals: List[int],
     active_unoccupied_orbitals: List[int],
+    noons: List[float] = None,
     max_nb_single_ex: Optional[int] = None,
     max_nb_double_ex: Optional[int] = None,
 ) -> List[Tuple[int]]:
@@ -628,12 +628,12 @@ def select_excitation_operators(
     and ``max_nb_double_ex``.)
 
     Args:
-        noons (np.ndarray): The natural orbital occupation numbers
-            in an array of size nb_so (number of spatial orbitals.)
         active_occupied_orbitals (List[int]): The list of the active
             occupied orbitals.
         active_unoccupied_orbitals (List[int]): The list of the active
             unoccupied orbitals.
+        noons (Optional[np.ndarray]): The natural orbital occupation numbers
+            in an array of size nb_so (number of spatial orbitals).
         max_nb_single_ex (Optional[int]): Limit the number of single
             excitation to consider. The number of parameter is the sum
             of this argument and the one below. The default value, 0,
@@ -655,37 +655,45 @@ def select_excitation_operators(
         max_nb_double_ex are not None
     """
 
+    limit_operators = False
+
+    if max_nb_single_ex is not None and max_nb_double_ex is not None:
+        
+        if noons is None:
+            raise TypeError("Noons are needed when limiting the number of single and double excitation operators.")
+
+        else:
+            limit_operators = True
+
     l_ex_op = []
 
-    # Determination of NOON variation induced by excitation between 2 orbitals
-    var_noons_1e, var_noons_2e = {}, {}
+    if limit_operators:
 
-    for a, i in itertools.product(active_unoccupied_orbitals[::2], active_occupied_orbitals[::2]):
-        # Considering only *singlet* (spin-preserving) single excitation
-        var_noons_1e[(a, i)] = noons[a // 2] - noons[i // 2]
-        var_noons_1e[(a + 1, i + 1)] = noons[a // 2] - noons[i // 2]
+        # Determination of NOON variation induced by excitation between 2 orbitals
+        var_noons_1e, var_noons_2e = {}, {}
 
-    for n_unocc, a in enumerate(active_unoccupied_orbitals[::1]):
-        for b in active_unoccupied_orbitals[n_unocc + 1:]:
-            for n_occ, i in enumerate(active_occupied_orbitals[::1]):
-                for j in active_occupied_orbitals[n_occ + 1:]:
+        for a, i in itertools.product(active_unoccupied_orbitals[::2], active_occupied_orbitals[::2]):
+            # Considering only *singlet* (spin-preserving) single excitation
+            var_noons_1e[(a, i)] = noons[a // 2] - noons[i // 2]
+            var_noons_1e[(a + 1, i + 1)] = noons[a // 2] - noons[i // 2]
 
-                    if (a % 2 == i % 2 and b % 2 == j % 2) or (a % 2 == j % 2 and b % 2 == i % 2):
-                        var_noons_2e[(b, a, j, i)] = noons[a // 2] + \
-                            noons[b // 2] - noons[i // 2] - noons[j // 2]
+        for n_unocc, a in enumerate(active_unoccupied_orbitals[::1]):
+            for b in active_unoccupied_orbitals[n_unocc + 1:]:
+                for n_occ, i in enumerate(active_occupied_orbitals[::1]):
+                    for j in active_occupied_orbitals[n_occ + 1:]:
 
-        # Considering only *singlet* (spin-preserving) double excitation
-        # var_noons_2e[(a + 1, a, i + 1, i)] = noons[a // 2] - noons[i // 2]
+                        if (a % 2 == i % 2 and b % 2 == j % 2) or (a % 2 == j % 2 and b % 2 == i % 2):
+                            var_noons_2e[(b, a, j, i)] = noons[a // 2] + \
+                                noons[b // 2] - noons[i // 2] - noons[j // 2]
 
-    sorted_ex_op_1e = sorted(var_noons_1e, key=var_noons_1e.get)[::-1]
-    sorted_ex_op_2e = sorted(var_noons_2e, key=var_noons_2e.get)[::-1]
-    # Normal-ordered excitation operators ordered by induced NOON variation.
+            # Considering only *singlet* (spin-preserving) double excitation
+            # var_noons_2e[(a + 1, a, i + 1, i)] = noons[a // 2] - noons[i // 2]
 
-    # Selection of dominant one-electron excitation operators
-    if max_nb_single_ex is None:
-        l_ex_op += sorted_ex_op_1e
+        sorted_ex_op_1e = sorted(var_noons_1e, key=var_noons_1e.get)[::-1]
+        sorted_ex_op_2e = sorted(var_noons_2e, key=var_noons_2e.get)[::-1]
+        # Normal-ordered excitation operators ordered by induced NOON variation.
 
-    else:
+        # Selection of dominant one-electron excitation operators
         for i in range(max_nb_single_ex):
 
             if i < len(sorted_ex_op_1e):
@@ -694,11 +702,7 @@ def select_excitation_operators(
             else:
                 break
 
-    # Selection of dominant two-electron excitation operators
-    if max_nb_double_ex is None:
-        l_ex_op += sorted_ex_op_2e
-
-    else:
+        # Selection of dominant two-electron excitation operators
         for i in range(max_nb_double_ex):
 
             if i < len(sorted_ex_op_2e):
@@ -706,6 +710,27 @@ def select_excitation_operators(
 
             else:
                 break
+
+    else:
+
+        var_noons_1e, var_noons_2e = [], []
+
+        for a, i in itertools.product(active_unoccupied_orbitals[::2], active_occupied_orbitals[::2]):
+            var_noons_1e.append((a, i))
+
+        for n_unocc, a in enumerate(active_unoccupied_orbitals[::1]):
+            for b in active_unoccupied_orbitals[n_unocc + 1:]:
+                for n_occ, i in enumerate(active_occupied_orbitals[::1]):
+                    for j in active_occupied_orbitals[n_occ + 1:]:
+
+                        if (a % 2 == i % 2 and b % 2 == j % 2) or (a % 2 == j % 2 and b % 2 == i % 2):
+                            var_noons_2e.append((b, a, j, i))
+
+        sorted_ex_op_1e = sorted(var_noons_1e)[::-1]
+        sorted_ex_op_2e = sorted(var_noons_2e)[::-1]
+
+        l_ex_op += sorted_ex_op_1e
+        l_ex_op += sorted_ex_op_2e
 
     return l_ex_op
 
@@ -869,7 +894,7 @@ def _compute_init_state(
         n_electrons, list(range(active_size)))
 
     exc_op_list = select_excitation_operators(
-        noons, actives_occupied_orbitals, actives_unoccupied_orbitals)
+        actives_occupied_orbitals, actives_unoccupied_orbitals, noons)
     theta_list = [theta_init[op_index]
                   if op_index in theta_init else 0 for op_index in exc_op_list]
 
@@ -1006,7 +1031,7 @@ def get_cluster_ops(n_electrons: int, noons: List[float]) -> List[Hamiltonian]:
     active_size = len(noons)
 
     exc_op_list = select_excitation_operators(
-        noons, actives_occupied_orbitals, actives_unoccupied_orbitals)
+        actives_occupied_orbitals, actives_unoccupied_orbitals, noons)
 
     cluster_list = build_cluster_operator(exc_op_list, active_size)
 

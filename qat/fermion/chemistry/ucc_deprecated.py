@@ -2,9 +2,9 @@ from warnings import warn
 from bitstring import BitArray
 import numpy as np
 from typing import Callable, List, Optional, Tuple, Dict
+import itertools
 
 from .ucc import (
-    select_excitation_operators,
     build_cluster_operator,
     construct_active_orbitals,
     _init_uccsd,
@@ -16,6 +16,106 @@ from ..trotterisation import make_spin_hamiltonian_trotter_slice
 from qat.core import Term
 from qat.lang.AQASM import QRoutine, X
 
+
+def select_excitation_operators(noons, active_occupied_orbitals,
+                                active_unoccupied_orbitals,
+                                max_nb_single_ex=None, max_nb_double_ex=None):
+    r"""Selects the excitation operators to will be used to build the
+    cluster operator.
+
+    The UCCSD cluster operator is defined (in normal-ordered form) as:
+
+    .. math::
+
+        T(\theta) = \sum_{a, i} \theta_a^i (a^\dagger_a a_i -
+        a^\dagger_i a_a) + \sum_{a > b, i > j} \theta_{a, b}^{i, j}
+        (a^\dagger_a a^\dagger_b a_i a_j - a^\dagger_i a^\dagger_j a_a
+        a_b)
+
+    where :math:`i, j` (resp. :math:`a, b`) indices occupied (resp.
+    unoccupied) spin-orbitals.
+
+    In order to alleviate the computational cost of selecting all the
+    excitation operators :math:`a^\dagger_a a_i` and :math:`a^\dagger_a
+    a^\dagger_b a_i a_j` (and thus, the full set of parameters), this
+    function order the excitation by estimated contribution and selects
+    only the best (in accordance with the arguments ``max_nb_single_ex``
+    and ``max_nb_double_ex``.)
+
+    Args:
+        l_ao (list(int)): The list of active spin-orbitals.
+        noons (np.array(float)): The natural orbital occupation numbers
+            in an array of size nb_so (number of spatial orbitals.)
+        active_occupied_orbitals (list(int)): The list of the active
+            occupied orbitals.
+        active_unoccupied_orbitals (list(int)): The list of the active
+            unoccupied orbitals.
+        max_nb_single_ex (int, optional): Limit the number of single
+            excitation to consider. The number of parameter is the sum
+            of this argument and the one below. The default value, 0,
+            implies the implementation of UCCD.
+        max_nb_double_ex (int, optional):  Limit the number of
+            double excitation to consider. The number of parameter is
+            the sum of this argument and the one above. The default
+            value, 3, implies a (partial) implementation of UCC_D.
+
+    Returns:
+        l_ex_op (list(tuple(int))): The list of of (a, b, i, j) and (a,
+            i) tuples describing the excitation operators (without
+            Hermitian conjugate, i.e. only excitation from unoccupied to
+            occupied orbitals) to consider among the set associated to
+            the active orbitals.
+
+    Notes:
+        noons should be made optional, since it is used only if max_nb_single_ex
+        max_nb_double_ex are not None
+    """
+    l_ex_op = []
+
+    # 1. Determination of NOON variation induced by excitation between 2
+    #    orbitals
+    var_noons_1e, var_noons_2e = {}, {}
+
+    for a, i in itertools.product(
+            active_unoccupied_orbitals[::2], active_occupied_orbitals[::2]):
+        # Considering only *singlet* (spin-preserving) single excitation
+        var_noons_1e[(a, i)] = noons[a // 2] - noons[i // 2]
+        var_noons_1e[(a + 1, i + 1)] = noons[a // 2] - noons[i // 2]
+
+    for n_unocc, a in enumerate(active_unoccupied_orbitals[::1]):
+        for b in active_unoccupied_orbitals[n_unocc+1:]:
+            for n_occ, i in enumerate(active_occupied_orbitals[::1]):
+                for j in active_occupied_orbitals[n_occ+1:]:
+                    if (a%2==i%2 and b%2 == j%2) or (a%2==j%2 and b%2==i%2):
+                        var_noons_2e[(b, a, j, i)] = noons[a // 2] + noons[b // 2] - noons[i // 2] - noons[j // 2]
+               
+        # Considering only *singlet* (spin-preserving) double excitation
+        # var_noons_2e[(a + 1, a, i + 1, i)] = noons[a // 2] - noons[i // 2]
+
+    sorted_ex_op_1e = sorted(var_noons_1e, key=var_noons_1e.get)[::-1]
+    sorted_ex_op_2e = sorted(var_noons_2e, key=var_noons_2e.get)[::-1]
+    # Normal-ordered excitation operators ordered by induced NOON
+    # variation.
+
+    # 2. Selection of dominant one-electron excitation operators
+    if max_nb_single_ex is None:
+        l_ex_op += sorted_ex_op_1e
+    else:
+        for i in range(max_nb_single_ex):
+            if i < len(sorted_ex_op_1e):
+                l_ex_op.append(sorted_ex_op_1e[i])
+            else:
+                break
+    # 3. Selection of dominant two-electron excitation operators
+    if max_nb_double_ex is None:
+        l_ex_op += sorted_ex_op_2e
+    else:
+        for i in range(max_nb_double_ex):
+            if i < len(sorted_ex_op_2e):
+                l_ex_op.append(sorted_ex_op_2e[i])
+            else:
+                break
+    return l_ex_op
 
 def build_ucc_ansatz(cluster_ops: List[Hamiltonian], ket_hf: int, n_steps: Optional[int] = 1) -> Callable:
     r"""Builds the parametric state preparation circuit implementing the
