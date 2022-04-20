@@ -4,17 +4,21 @@ import numpy as np
 from typing import Callable, List, Optional, Tuple, Dict
 import itertools
 
+from qat.core import Term
+from qat.lang.AQASM import QRoutine, X
+
 from .ucc import (
     build_cluster_operator,
     construct_active_orbitals,
     _init_uccsd,
     _theta_ab_ij,
     tobin,
+    select_active_orbitals,
+    compute_active_space_integrals,
+    convert_to_h_integrals,
 )
-from ..hamiltonians import Hamiltonian
+from ..hamiltonians import Hamiltonian, ElectronicStructureHamiltonian
 from ..trotterisation import make_spin_hamiltonian_trotter_slice
-from qat.core import Term
-from qat.lang.AQASM import QRoutine, X
 
 
 def select_excitation_operators(
@@ -505,3 +509,208 @@ def get_cluster_ops_and_init_guess(
     theta_list = [theta_init[op_index] if op_index in theta_init else 0 for op_index in exc_op_list]
 
     return cluster_list, theta_list, ket_hf_init
+
+
+# def get_active_space_hamiltonian(
+#     one_body_integrals: np.ndarray,
+#     two_body_integrals: np.ndarray,
+#     nels: int,
+#     nuclear_repulsion: float,
+#     noons: List[float],
+#     threshold_1: Optional[float] = 0.02,
+#     threshold_2: Optional[float] = 1e-3,
+# ) -> Tuple[ElectronicStructureHamiltonian, List[int], List[int]]:
+#     r"""Selects the right active space and freezes core electrons
+#     according to their NOONs :math:`n_i`.
+
+#     This function is an implementation of the *Complete Active Space*
+#     (CAS) approach. It divides orbital space into sets of *active* and
+#     *inactive* orbitals, the occupation number of the latter remaining
+#     unchanged during the computation.
+
+#     The active space indices are defined as:
+
+#     .. math::
+
+#         \mathcal{A} = \{i, n_i \in [\varepsilon_2, 2 - \varepsilon_1[\} \cup \{i, n_i \geq 2-\varepsilon_1, 2(i+1)\geq N_e \}
+
+#     The inactive occupied orbitals are defined as:
+
+#     .. math::
+
+#         \mathcal{O} = \{i, n_i \geq 2 -\varepsilon_1, 2(i+1) < N_e \}
+
+#     The restriction of the one- and two-body integrals (and update of the core energy)
+#     is then carried out according to:
+
+#     .. math::
+
+#         \forall u,v \in \mathcal{A},\; I^{(a)}_{uv} = I_{uv} + \sum_{i\in \mathcal{O}} 2 I_{i,u,v,i} - I_{i,u,i,v}
+
+#     .. math::
+
+#         \forall u,v,w,x \in \mathcal{A}, I^{(a)}_{uvwx} = I_{uvwx}
+
+#     .. math::
+
+#         E_\mathrm{core}^{(a)} = E_\mathrm{core} + \sum_{i\in\mathcal{O}} I_{ii} + \sum_{ij\in\mathcal{O}} 2 I_{ijji} - I_{ijij}
+
+#     Finally, the one- and two-body integrals :math:`I` are converted to the (spin-resolved)
+#     one- and two-body coefficients :math:`h`:
+
+#     .. math::
+
+#         h_{u\sigma, v\sigma'} = I_{u, v} \delta_{\sigma, \sigma'}
+
+#     .. math::
+
+#         h_{u\sigma_1, v\sigma_2, w\sigma_2', x\sigma_1'} = I_{uvwx} \delta_{\sigma_1, \sigma_1'} \delta_{\sigma_2, \sigma_2'} \left((1-\delta_{\sigma_1,\sigma_2}) + \delta_{\sigma_1,\sigma_2} (1-\delta_{u,v})(1-\delta_{w,x})   \right)
+
+#     where the one- and two-body integrals are defined as:
+
+#     .. math::
+
+#         I_{uv}\equiv(u|h|v)=\int\mathrm{d}r\phi_{u}^{*}(r)T\phi_{v}(r)
+
+#     .. math::
+
+#         I_{uvwx}\equiv(ux|vw)=\iint\mathrm{d}r_{1}\mathrm{d}r_{2}\phi_{u}^{*}(r_{1})\phi_{x}(r_{1})v(r_{12})\phi_{v}^{*}(r_{2})\phi_{w}(r_{2})
+
+#     with :math:`T` (resp. :math:`v`) the one- (resp. two-) body potentials,
+#     and :math:`\phi_u(r)` is the molecular orbital wavefunction.
+
+
+#     Args:
+#         one_body_integrals (np.ndarray): 2D array of one-body integrals :math:`I_{uv}`.
+#         two_body_integrals (np.ndarray): 4D array of two-body integrals :math:`I_{uvwx}`.
+#         threshold_1 (Optional[float]): The upper threshold :math:`\varepsilon_1` on
+#             the NOON of an active orbital. Defaults to 0.02.
+#         nels (int): The number of electrons :math:`N_e`.
+#         nuclear_repulsion (float): value of the nuclear repulsion energy :math:`E_\mathrm{core}`.
+#         noons (List[float]): the natural-orbital occupation numbers :math:`n_i`, sorted
+#             in descending order (from high occupations to low occupations).
+#         threshold_2 (Optional[float]): The lower threshold :math:`\varepsilon_2` on
+#             the NOON of an active orbital. Defaults to 0.001.
+
+#     Returns:
+#          Tuple[ElectronicStructureHamiltonian, List[int], List[int]]:
+#             - the Hamiltonian in active space :math:`H^{(a)}`,
+#             - the list of indices corresponding to the active orbitals, :math:`\mathcal{A}`,
+#             - the list of indices corresponding to the occupied orbitals, :math:`\mathcal{O}`.
+#     """
+
+#     active_indices, occupied_indices = select_active_orbitals(
+#         noons=noons, n_electrons=nels, threshold_1=threshold_1, threshold_2=threshold_2
+#     )
+
+#     core_constant, one_body_as, two_body_as = compute_active_space_integrals(
+#         one_body_integrals, two_body_integrals, active_indices, occupied_indices
+#     )
+
+#     hpq, hpqrs = convert_to_h_integrals(one_body_as, two_body_as)
+
+#     H_active = ElectronicStructureHamiltonian(hpq, hpqrs, constant_coeff=nuclear_repulsion + core_constant, do_clean_up=False)
+
+#     return H_active, active_indices, occupied_indices
+
+
+def get_active_space_hamiltonian(one_body_integrals, two_body_integrals,
+                                 noons, nels, nuclear_repulsion,
+                                 threshold_1=0.02, threshold_2=1e-3):
+    r"""Selects the right active space and freezes core electrons
+    according to their NOONs :math:`n_i`.
+
+    This function is an implementation of the *Complete Active Space*
+    (CAS) approach. It divides orbital space into sets of *active* and
+    *inactive* orbitals, the occupation number of the latter remaining
+    unchanged during the computation.
+
+    The active space indices are defined as:
+
+    .. math::
+
+        \mathcal{A} = \{i, n_i \in [\varepsilon_2, 2 - \varepsilon_1[\} \cup \{i, n_i \geq 2-\varepsilon_1, 2(i+1)\geq N_e \}
+
+    The inactive occupied orbitals are defined as:
+
+    .. math::
+
+        \mathcal{O} = \{i, n_i \geq 2 -\varepsilon_1, 2(i+1) < N_e \}
+
+    The restriction of the one- and two-body integrals (and update of the core energy)
+    is then carried out according to:
+
+    .. math::
+
+        \forall u,v \in \mathcal{A},\; I^{(a)}_{uv} = I_{uv} + \sum_{i\in \mathcal{O}} 2 I_{i,u,v,i} - I_{i,u,i,v}
+
+    .. math::
+
+        \forall u,v,w,x \in \mathcal{A}, I^{(a)}_{uvwx} = I_{uvwx}
+
+    .. math::
+
+        E_\mathrm{core}^{(a)} = E_\mathrm{core} + \sum_{i\in\mathcal{O}} I_{ii} + \sum_{ij\in\mathcal{O}} 2 I_{ijji} - I_{ijij}
+
+    Finally, the one- and two-body integrals :math:`I` are converted to the (spin-resolved)
+    one- and two-body coefficients :math:`h`:
+
+    .. math::
+
+        h_{u\sigma, v\sigma'} = I_{u, v} \delta_{\sigma, \sigma'}
+
+    .. math::
+
+        h_{u\sigma_1, v\sigma_2, w\sigma_2', x\sigma_1'} = I_{uvwx} \delta_{\sigma_1, \sigma_1'} \delta_{\sigma_2, \sigma_2'} \left((1-\delta_{\sigma_1,\sigma_2}) + \delta_{\sigma_1,\sigma_2} (1-\delta_{u,v})(1-\delta_{w,x})   \right)
+
+    where the one- and two-body integrals are defined as:
+
+    .. math::
+
+        I_{uv}\equiv(u|h|v)=\int\mathrm{d}r\phi_{u}^{*}(r)T\phi_{v}(r)
+
+    .. math::
+
+        I_{uvwx}\equiv(ux|vw)=\iint\mathrm{d}r_{1}\mathrm{d}r_{2}\phi_{u}^{*}(r_{1})\phi_{x}(r_{1})v(r_{12})\phi_{v}^{*}(r_{2})\phi_{w}(r_{2})
+
+    with :math:`T` (resp. :math:`v`) the one- (resp. two-) body potentials,
+    and :math:`\phi_u(r)` is the molecular orbital wavefunction.
+
+
+    Args:
+        one_body_integrals (np.array): 2D array of one-body integrals :math:`I_{uv}`
+        two_body_integrals (np.array): 4D array of two-body integrals :math:`I_{uvwx}`
+        noons (list<float>): the natural-orbital occupation numbers :math:`n_i`, sorted
+            in descending order (from high occupations to low occupations)
+        nels (int): The number of electrons :math:`N_e`.
+        nuclear_repulsion (float): value of the nuclear repulsion energy :math:`E_\mathrm{core}`.
+        threshold_1 (float, optional): The upper threshold :math:`\varepsilon_1` on
+            the NOON of an active orbital. Defaults to 0.02.
+        threshold_2 (float, optional): The lower threshold :math:`\varepsilon_2` on
+            the NOON of an active orbital. Defaults to 0.001.
+
+    Returns:
+        ElectronicStructureHamiltonian, list<int>, list<int>:
+
+        - the Hamiltonian in active space :math:`H^{(a)}`
+        - the list of indices corresponding to the active orbitals, :math:`\mathcal{A}`
+        - the list of indices corresponding to the occupied orbitals, :math:`\mathcal{O}`
+
+    """
+    active_indices, occupied_indices = select_active_orbitals(noons=noons,
+                                                              n_electrons=nels,
+                                                              threshold_1=threshold_1,
+                                                              threshold_2=threshold_2)
+
+    core_constant, one_body_as, two_body_as = compute_active_space_integrals(one_body_integrals,
+                                                                             two_body_integrals,
+                                                                             active_indices,
+                                                                             occupied_indices)
+
+    hpq, hpqrs = convert_to_h_integrals(one_body_as, two_body_as)
+
+    H_active = ElectronicStructureHamiltonian(hpq, hpqrs,
+                                              constant_coeff=nuclear_repulsion + core_constant,
+                                              do_clean_up=False)
+
+    return H_active, active_indices, occupied_indices
