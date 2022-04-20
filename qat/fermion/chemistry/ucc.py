@@ -53,7 +53,7 @@ def transform_integrals_to_new_basis(
     return h_hat_ij, h_hat_ijkl
 
 
-def compute_core_constant(
+def _compute_active_space_constant(
     one_body_integrals: np.ndarray,
     two_body_integrals: np.ndarray,
     occupied_indices: List[int],
@@ -107,7 +107,7 @@ def compute_active_space_integrals(
             - core constant :math:`c^{(a)}`.
     """
     # Modified core constant
-    core_constant = compute_core_constant(one_body_integrals, two_body_integrals, occupied_indices)
+    core_constant = _compute_active_space_constant(one_body_integrals, two_body_integrals, occupied_indices)
 
     # Modified one electron integrals
     one_body_integrals_new = np.copy(one_body_integrals)
@@ -223,7 +223,7 @@ def convert_to_h_integrals(one_body_integrals: np.ndarray, two_body_integrals: n
     return one_body_coefficients, two_body_coefficients
 
 
-def build_cluster_operator(l_ex_op: List[Tuple[int]], nqbits: int) -> List[Hamiltonian]:
+def _build_cluster_operator(l_ex_op: List[Tuple[int]], nqbits: int) -> List[Hamiltonian]:
     r"""Builds the cluster operator and reduces the trial
     parametrization to match the selected excitation operators.
 
@@ -542,7 +542,7 @@ def _init_uccsd(
     # Convert to integer
     hf_init = BitArray("0b" + "".join([str(int(c)) for c in ket_hf_init])).uint
 
-    active_occupied_orbitals, active_unoccupied_orbitals = construct_active_orbitals(nb_e, l_ao)
+    active_occupied_orbitals, active_unoccupied_orbitals = _construct_active_orbitals(nb_e, l_ao)
 
     # Construction of theta_MP2 (to use it as a trial parametrization)
     theta_init = _theta_ab_ij(
@@ -556,7 +556,7 @@ def _init_uccsd(
     return hf_init, theta_init
 
 
-def construct_active_orbitals(nb_e: int, l_ao: List[int]) -> Tuple[List[int], List[int]]:
+def _construct_active_orbitals(nb_e: int, l_ao: List[int]) -> Tuple[List[int], List[int]]:
     """Construct the active occupied and unoccupied orbitals.
 
     Args:
@@ -718,75 +718,6 @@ def select_excitation_operators(
     return l_ex_op
 
 
-def _compute_init_state(
-    n_electrons: int,
-    orbital_energies: List[float],
-    hpqrs: np.ndarray,
-    noons: List[float] = None,
-) -> Tuple[List[Hamiltonian], int, List[int], List[int]]:
-    r"""Find initial guess using Møller-Plesset perturbation theory.
-
-    The trial parametrization is efficiently improved upon the
-    Hartree-Fock solution (which would set every initial parameter to
-    zero) thanks to the following formula identifying the UCC parameters
-    in the Møller-Plesset (MP2) solution :
-
-    .. math::
-
-        \theta_a^i = 0
-
-    .. math::
-
-        \theta_{a, b}^{i, j} = \frac{h_{a, b, i, j} -
-        h_{a, b, j, i}}{\epsilon_i + \epsilon_j -\epsilon_a -
-        \epsilon_b}
-
-    where :math:`h_{p, q, r, s}` is the 2-electron molecular orbital integral,
-    and :math:`\epsilon_i` is the orbital energy.
-
-    Args:
-        n_electrons (int): the number of active electrons of the system.
-        orbital_energies (List[float]): the energies of the molecular orbitals
-            :math:`\epsilon_i` (doubled due to spin degeneracy).
-        hpqrs (np.ndarray): the 4D array of (active) two-body integrals :math:`h_{pqrs}`.
-        noons (Optional[List[float]]): the natural-orbital occupation numbers
-            :math:`n_i`, sorted in descending order (from high occupations
-            to low occupations) (doubled due to spin degeneracy).
-
-    Returns:
-        Tuple[List[int], int, List[int], List[int]]:
-            - the list of initial coefficients :math:`\{\theta_{a}^{i}, a \in \mathcal{I}', i \in \mathcal{O}' \} \cup \{\theta_{ab}^{ij}, a>b, i>j, a,b \in \mathcal{I}', i,j \in \mathcal{O}'\}`,
-            - the integer corresponding to the occupation of the Hartree-Fock solution,
-            - the active occupied orbitals indices,
-            - the active unoccupied orbitals indices.
-
-    """
-    if noons is not None:
-        noons = _extend_list(noons)
-
-    orbital_energies = _extend_list(orbital_energies)
-
-    active_size = len(noons) if noons is not None else hpqrs.shape[0]
-    active_range = list(range(active_size))
-
-    (
-        ket_hf_init,
-        theta_init,
-    ) = _init_uccsd(active_size, n_electrons, hpqrs, active_range, orbital_energies)
-
-    actives_occupied_orbitals, actives_unoccupied_orbitals = construct_active_orbitals(n_electrons, list(range(active_size)))
-
-    exc_op_list = select_excitation_operators(actives_occupied_orbitals, actives_unoccupied_orbitals, noons)
-    theta_list = [theta_init[op_index] if op_index in theta_init else 0 for op_index in exc_op_list]
-
-    return (
-        theta_list,
-        ket_hf_init,
-        actives_occupied_orbitals,
-        actives_unoccupied_orbitals,
-    )
-
-
 def guess_init_params(
     two_body_integrals: np.ndarray,
     n_electrons: int,
@@ -831,12 +762,24 @@ def guess_init_params(
     """
 
     hpqrs = _two_body_integrals_to_h(two_body_integrals)
+
+    if noons is not None:
+        noons = _extend_list(noons)
+
+    orbital_energies = _extend_list(orbital_energies)
+
+    active_size = len(noons) if noons is not None else hpqrs.shape[0]
+    active_range = list(range(active_size))
+
     (
-        theta_list,
         _,
-        _,
-        _,
-    ) = _compute_init_state(n_electrons, orbital_energies, hpqrs, noons)
+        theta_init,
+    ) = _init_uccsd(active_size, n_electrons, hpqrs, active_range, orbital_energies)
+
+    actives_occupied_orbitals, actives_unoccupied_orbitals = _construct_active_orbitals(n_electrons, list(range(active_size)))
+
+    exc_op_list = select_excitation_operators(actives_occupied_orbitals, actives_unoccupied_orbitals, noons)
+    theta_list = [theta_init[op_index] if op_index in theta_init else 0 for op_index in exc_op_list]
 
     return theta_list
 
@@ -889,21 +832,19 @@ def get_cluster_ops(n_electrons: int, nqbits: Optional[int] = None, noons: Optio
 
     if noons is not None:
         noons = _extend_list(noons)
-        active_range = list(range(len(noons)))
+        qbit_range = list(range(len(noons)))
 
     else:
-        active_range = list(range(nqbits))
+        qbit_range = list(range(nqbits))
 
     (
-        actives_occupied_orbitals,
-        actives_unoccupied_orbitals,
-    ) = construct_active_orbitals(n_electrons, active_range)
+        occupied_orbitals,
+        unoccupied_orbitals,
+    ) = _construct_active_orbitals(n_electrons, qbit_range)
 
-    active_size = len(active_range)
+    exc_op_list = select_excitation_operators(occupied_orbitals, unoccupied_orbitals, noons)
 
-    exc_op_list = select_excitation_operators(actives_occupied_orbitals, actives_unoccupied_orbitals, noons)
-
-    cluster_list = build_cluster_operator(exc_op_list, active_size)
+    cluster_list = _build_cluster_operator(exc_op_list, len(qbit_range))
 
     return cluster_list
 

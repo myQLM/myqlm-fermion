@@ -8,8 +8,8 @@ from qat.core import Term
 from qat.lang.AQASM import QRoutine, X
 
 from .ucc import (
-    build_cluster_operator,
-    construct_active_orbitals,
+    _build_cluster_operator,
+    _construct_active_orbitals,
     _init_uccsd,
     _theta_ab_ij,
     tobin,
@@ -260,7 +260,7 @@ def get_cluster_ops(
 
     exc_op_list = select_excitation_operators(active_noons, actives_occupied_orbitals, actives_unoccupied_orbitals)
 
-    cluster_list = build_cluster_operator(exc_op_list, active_size)
+    cluster_list = _build_cluster_operator(exc_op_list, active_size)
 
     return cluster_list
 
@@ -320,7 +320,7 @@ def guess_init_state(
         theta_init,
     ) = _init_uccsd(active_size, n_active_els, hpqrs, list(range(active_size)), active_orb_energies)
 
-    actives_occupied_orbitals, actives_unoccupied_orbitals = construct_active_orbitals(n_active_els, list(range(active_size)))
+    actives_occupied_orbitals, actives_unoccupied_orbitals = _construct_active_orbitals(n_active_els, list(range(active_size)))
 
     exc_op_list = select_excitation_operators(active_noons, actives_occupied_orbitals, actives_unoccupied_orbitals)
     theta_list = [theta_init[op_index] if op_index in theta_init else 0 for op_index in exc_op_list]
@@ -505,7 +505,7 @@ def get_cluster_ops_and_init_guess(
     )
 
     exc_op_list = select_excitation_operators(active_noons, as_occ, as_unocc)
-    cluster_list = build_cluster_operator(exc_op_list, active_size)
+    cluster_list = _build_cluster_operator(exc_op_list, active_size)
     theta_list = [theta_init[op_index] if op_index in theta_init else 0 for op_index in exc_op_list]
 
     return cluster_list, theta_list, ket_hf_init
