@@ -956,7 +956,7 @@ def get_hf_ket(n_electrons: int, nqbits: int) -> int:
         int: Hartree-Fock state.
     """
 
-    ket_hf_init = np.zeros(nqbits * 2)
+    ket_hf_init = np.zeros(nqbits)
 
     for i in range(n_electrons):
         ket_hf_init[i] = 1
@@ -995,7 +995,7 @@ def get_cluster_ops(n_electrons: int, nqbits: Optional[int] = None, noons: Optio
         active_range = list(range(len(noons)))
 
     else:
-        active_range = list(range(2 * nqbits))
+        active_range = list(range(nqbits))
 
     (
         actives_occupied_orbitals,

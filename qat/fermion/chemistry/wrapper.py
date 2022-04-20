@@ -59,7 +59,7 @@ class MolecularHamiltonian(object):
     @property
     def nqbits(self):
         "Compute number of qubits from the one body integral."
-        return self.one_body_integrals.shape[0]
+        return self.one_body_integrals.shape[0] * 2
 
     def transform_basis(self, transformation_matrix: np.ndarray) -> "MolecularHamiltonian":
         """
