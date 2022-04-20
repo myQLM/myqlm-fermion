@@ -614,9 +614,9 @@ def get_cluster_ops_and_init_guess(
 #     return H_active, active_indices, occupied_indices
 
 
-def get_active_space_hamiltonian(one_body_integrals, two_body_integrals,
-                                 noons, nels, nuclear_repulsion,
-                                 threshold_1=0.02, threshold_2=1e-3):
+def get_active_space_hamiltonian(
+    one_body_integrals, two_body_integrals, noons, nels, nuclear_repulsion, threshold_1=0.02, threshold_2=1e-3
+):
     r"""Selects the right active space and freezes core electrons
     according to their NOONs :math:`n_i`.
 
@@ -697,20 +697,16 @@ def get_active_space_hamiltonian(one_body_integrals, two_body_integrals,
         - the list of indices corresponding to the occupied orbitals, :math:`\mathcal{O}`
 
     """
-    active_indices, occupied_indices = select_active_orbitals(noons=noons,
-                                                              n_electrons=nels,
-                                                              threshold_1=threshold_1,
-                                                              threshold_2=threshold_2)
+    active_indices, occupied_indices = select_active_orbitals(
+        noons=noons, n_electrons=nels, threshold_1=threshold_1, threshold_2=threshold_2
+    )
 
-    core_constant, one_body_as, two_body_as = compute_active_space_integrals(one_body_integrals,
-                                                                             two_body_integrals,
-                                                                             active_indices,
-                                                                             occupied_indices)
+    core_constant, one_body_as, two_body_as = compute_active_space_integrals(
+        one_body_integrals, two_body_integrals, active_indices, occupied_indices
+    )
 
     hpq, hpqrs = convert_to_h_integrals(one_body_as, two_body_as)
 
-    H_active = ElectronicStructureHamiltonian(hpq, hpqrs,
-                                              constant_coeff=nuclear_repulsion + core_constant,
-                                              do_clean_up=False)
+    H_active = ElectronicStructureHamiltonian(hpq, hpqrs, constant_coeff=nuclear_repulsion + core_constant, do_clean_up=False)
 
     return H_active, active_indices, occupied_indices
