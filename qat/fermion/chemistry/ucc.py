@@ -469,7 +469,6 @@ def _theta_ab_ij(
 
 
 def _init_uccsd(
-    nb_o: int,
     nb_e: int,
     int2e: np.ndarray,
     l_ao: List[int],
@@ -509,7 +508,6 @@ def _init_uccsd(
         j}`of :math:`a^\dagger_a a^\dagger_b a_i a_j`.
 
     Args:
-        nb_o (int): The number of active spin-orbitals.
         nb_e (int): The number of active electrons.
         int2e (np.ndarray): The 2-electron integrals corrected for
             and reduced to the active space.
@@ -533,15 +531,7 @@ def _init_uccsd(
             ``threshold`` are stored.)
     """
 
-    # Construction of the ket vector representing RHF state
-    ket_hf_init = np.zeros(nb_o)
-
-    for i in range(nb_e):
-        ket_hf_init[i] = 1
-
-    # Convert to integer
-    hf_init = BitArray("0b" + "".join([str(int(c)) for c in ket_hf_init])).uint
-
+    # Compute the initial state
     active_occupied_orbitals, active_unoccupied_orbitals = _construct_active_orbitals(nb_e, l_ao)
 
     # Construction of theta_MP2 (to use it as a trial parametrization)
@@ -553,7 +543,7 @@ def _init_uccsd(
     )
     # Note: At least for initialization, theta_a_i = 0
 
-    return hf_init, theta_init
+    return theta_init
 
 
 def _construct_active_orbitals(nb_e: int, l_ao: List[int]) -> Tuple[List[int], List[int]]:
@@ -771,10 +761,7 @@ def guess_init_params(
     active_size = len(noons) if noons is not None else hpqrs.shape[0]
     active_range = list(range(active_size))
 
-    (
-        _,
-        theta_init,
-    ) = _init_uccsd(active_size, n_electrons, hpqrs, active_range, orbital_energies)
+    theta_init = _init_uccsd(n_electrons, hpqrs, active_range, orbital_energies)
 
     actives_occupied_orbitals, actives_unoccupied_orbitals = _construct_active_orbitals(n_electrons, list(range(active_size)))
 

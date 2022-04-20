@@ -16,6 +16,7 @@ from .ucc import (
     select_active_orbitals,
     compute_active_space_integrals,
     convert_to_h_integrals,
+    get_hf_ket,
 )
 from ..hamiltonians import Hamiltonian, ElectronicStructureHamiltonian
 from ..trotterisation import make_spin_hamiltonian_trotter_slice
@@ -315,10 +316,8 @@ def guess_init_state(
 
     active_size = len(active_noons)
 
-    (
-        ket_hf_init,
-        theta_init,
-    ) = _init_uccsd(active_size, n_active_els, hpqrs, list(range(active_size)), active_orb_energies)
+    ket_hf_init = get_hf_ket(n_active_els, active_size)
+    theta_init = _init_uccsd(n_active_els, hpqrs, list(range(active_size)), active_orb_energies)
 
     actives_occupied_orbitals, actives_unoccupied_orbitals = _construct_active_orbitals(n_active_els, list(range(active_size)))
 
