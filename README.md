@@ -78,4 +78,3 @@ Various improvements have been made in `MyQLM-fermion`.
         *   `get_cluster_ops` to get the cluster operator list.
 *   `select_excitation_operators` and `get_cluster_ops` have been updated. The deprecated versions are located in `qat.fermion.chemistry.ucc_deprecated`.
 *   `get_active_space_hamiltonian` has been deprecated. It can still be found in `qat.fermion.chemistry.ucc_deprecated`.
-*   Unittest tests have been updated to PyTest tests.

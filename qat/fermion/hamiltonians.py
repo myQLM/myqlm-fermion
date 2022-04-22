@@ -443,7 +443,13 @@ class ElectronicStructureHamiltonian(Hamiltonian):
 class SpinHamiltonian(Hamiltonian):
     """Ensures restrocompatibility of old SpinHamiltonian class with new Hamiltonian class"""
 
-    def __init__(self, nqbits: int, pauli_terms: List[Term], constant_coeff: float = 0.0, do_clean_up: bool = True,):
+    def __init__(
+        self,
+        nqbits: int,
+        pauli_terms: List[Term],
+        constant_coeff: float = 0.0,
+        do_clean_up: bool = True,
+    ):
         from warnings import warn
 
         warn(
