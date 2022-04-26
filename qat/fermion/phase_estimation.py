@@ -17,7 +17,7 @@ from .transforms import (
 
 from qat.lang.AQASM import Program, X, QRoutine, H, PH, QInt
 from qat.lang.AQASM.qftarith import IQFT
-from qat.qpus import LinAlg
+from qat.qpus import get_default_qpu
 from qat.core import Observable
 
 
@@ -30,7 +30,7 @@ def perform_phase_estimation(
     E_target: Optional[float] = 0,
     size_interval: Optional[float] = 2.0,
     basis_transform: Optional[str] = "jordan-wigner",
-    qpu=LinAlg(),
+    qpu=get_default_qpu(),
     n_shots: Optional[int] = 0,
     verbose: Optional[bool] = False,
 ) -> Tuple[float, float]:

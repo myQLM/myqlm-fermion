@@ -8,7 +8,7 @@ from qat.core import default_gate_set
 from qat.lang.AQASM import Program, QRoutine, AbstractGate, X, RX, RY, RZ, PH, H, CNOT, QInt
 from qat.core.simutil import wavefunction
 
-from qat.qpus import LinAlg
+from qat.qpus import get_default_qpu
 
 
 def copy_doc(copy_func: Callable) -> Callable:
@@ -320,7 +320,7 @@ def get_unitary_from_circuit(Qrout: QRoutine, number_qubits: int) -> np.ndarray:
         circuit = p.to_circ()
 
         # pylint: disable=E1101
-        unitary_matrix[numero_colonne] = list(wavefunction(circuit, LinAlg()))
+        unitary_matrix[numero_colonne] = list(wavefunction(circuit, get_default_qpu()))
 
     return np.transpose(unitary_matrix)
 
