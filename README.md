@@ -24,6 +24,7 @@ or install from the sources directly :
 ```python
 git clone https://github.com/myQLM/myqlm-fermion.git
 cd myqlm-fermion
+pip install -r requirements.txt
 pip install .
 ```
 

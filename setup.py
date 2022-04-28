@@ -70,7 +70,7 @@ setup(
         exclude=["qat.fermion.ansatz_generator", "qat.fermion.observable_generator", "qat.generators.hook_vqe"],
     ),
     test_suite="tests",
-    install_requires=["myqlm", "qat-core", "qat-lang", "pyscf"],
+    install_requires=["qat-core", "qat-lang", "myqlm", "pyscf", "anytree", "bitstring", "numpy", "pyscf", "pytest", "scipy"],
     tests_require=["pytest"],
     cmdclass={"test": PyTest},
 )
