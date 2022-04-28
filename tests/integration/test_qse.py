@@ -2,7 +2,7 @@ import numpy as np
 from qat.core import Term
 from qat.fermion import Hamiltonian
 from qat.lang.AQASM import Program, RY, CNOT, RZ
-from qat.qpus import NoisyQProc
+from qat.qpus import get_default_qpu
 from qat.plugins import SeqOptim
 from qat.fermion.chemistry.qse import (
     apply_quantum_subspace_expansion,
@@ -26,13 +26,8 @@ circ = prog.to_circ()
 # construct a (variational) job with the variational circuit and the observable
 job = circ.to_job(observable=hamiltonian, nbshots=0)
 
-# we now build a stack that can handle variational jobs
-from qat.hardware import make_depolarizing_hardware_model
+qpu = get_default_qpu()
 
-qpu = NoisyQProc(
-    hardware_model=make_depolarizing_hardware_model(eps1=0.001, eps2=0.01),
-    sim_method="deterministic-vectorized",
-)
 optimizer = SeqOptim(ncycles=10, x0=[0, 0.5, 0])
 stack = optimizer | qpu
 
@@ -55,7 +50,7 @@ def test_apply_quantum_subspace_expansion():
 
     e_qse = apply_quantum_subspace_expansion(hamiltonian, opt_circ, expansion_operators, qpu, return_matrices=False)
 
-    np.testing.assert_equal(e_qse, -2.979211358273586)
+    np.testing.assert_almost_equal(e_qse, -3.0)
 
 
 def test_build_linear_pauli_expansion():

@@ -4,7 +4,7 @@ from qat.plugins import MultipleLaunchesAnalyzer
 
 from qat.core import Observable, Term
 from qat.lang.AQASM import Program, RX
-from qat.qpus import LinAlg
+from qat.qpus import get_default_qpu
 
 
 def test_keep_min():
@@ -20,7 +20,7 @@ def test_keep_min():
     obs.constant_coeff += 0.5 * 5
 
     job = circ.to_job("OBS", observable=obs, nbshots=30)
-    qpu = LinAlg()
+    qpu = get_default_qpu()
     stack = MultipleLaunchesAnalyzer() | qpu
     res = stack.submit(job)
 

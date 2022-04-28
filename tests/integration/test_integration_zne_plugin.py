@@ -5,15 +5,13 @@ from qat.fermion.circuits import make_shallow_circ
 from qat.fermion.transforms import transform_to_jw_basis
 from qat.fermion.hamiltonians import ElectronicStructureHamiltonian
 
-from qat.hardware import make_depolarizing_hardware_model
-
-from qat.qpus import NoisyQProc
+from qat.qpus import get_default_qpu
 
 np.random.seed(0)
 eps1 = 0.0016
 eps2 = 0.006
-hw_model = make_depolarizing_hardware_model(eps1=eps1, eps2=eps2, depol_type="randomizing", correl_type="multi_qubit")
-noisy_qpu = NoisyQProc(hardware_model=hw_model, sim_method="deterministic-vectorized")
+
+qpu = get_default_qpu()
 
 circ = make_shallow_circ()
 theta = np.random.random(8)
@@ -34,12 +32,12 @@ job = bd_circ.to_job(observable=obs)
 
 
 def test_linear_ZNE_emb_4qb():
-    stack = ZeroNoiseExtrapolator() | noisy_qpu
+    stack = ZeroNoiseExtrapolator() | qpu
     res = stack.submit(job)  # deterministic
-    np.testing.assert_almost_equal(res.value, 1.4846479157570722, decimal=12)
+    np.testing.assert_almost_equal(res.value, 1.482703437040279, decimal=12)
 
 
 def test_exponential_ZNE_emb_4qb():
-    stack = ZeroNoiseExtrapolator(extrap_method="exponential") | noisy_qpu
+    stack = ZeroNoiseExtrapolator(extrap_method="exponential") | qpu
     res = stack.submit(job)  # deterministic
-    np.testing.assert_almost_equal(res.value, 1.48462310330087, decimal=12)
+    np.testing.assert_almost_equal(res.value, 1.482703437040279, decimal=12)
