@@ -1,21 +1,5 @@
 # -*- coding: utf-8 -*-
 
-"""
-@authors    Arnaud Gazda <arnaud.gazda@atos.net>
-@copyright  2022 Bull S.A.S. - All rights reserved
-            This is not Free or Open Source software.
-            Please contact Bull SAS for details about its license.
-            Bull - Rue Jean Jaurès - B.P. 68 - 78340 Les Clayes-sous-Bois
-
-Description: Testing generators defined in qat-dqs
-
-Overview
-========
-Generators defined in this module:
- - AnsatzGenerator
- - ObservableGenerator
-"""
-
 import pytest
 import numpy as np
 from qat.qpus import QPUHandler
@@ -34,6 +18,7 @@ try:
 
 except ModuleNotFoundError:
     pytest.skip(allow_module_level=True)
+
 
 class FakeQPU(QPUHandler):
     "QPU checking the value of an observable or a circuit"

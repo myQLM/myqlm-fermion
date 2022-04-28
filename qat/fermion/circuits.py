@@ -357,6 +357,6 @@ try:
         compressed_circ = graph.to_circ()
 
         return compressed_circ
-        
+
 except ModuleNotFoundError:
     pass

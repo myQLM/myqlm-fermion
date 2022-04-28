@@ -4,10 +4,12 @@ from typing import List, Optional, Union
 import numpy as np
 
 from qat.core.variables import Symbol
+
 real = Symbol("real", np.real, 1, diff=None)
 
 # TODO : Delete after qat.core package upgrade
 from qat.core.variables import ALL_SYMBOLS
+
 ALL_SYMBOLS["real"] = real
 
 from qat.lang.AQASM import QRoutine, PH, CNOT, H, RX, RZ, CustomGate, Z

@@ -65,10 +65,12 @@ setup(
         "Community": "https://myqlmworkspace.slack.com",
         "Source code": "https://github.com/myQLM/myqlm-fermion",
     },
-    packages=find_namespace_packages(include=["qat.*", "qat.fermion.*"], 
-    exclude=["qat.fermion.ansatz_generator", "qat.fermion.observable_generator", "qat.generators.hook_vqe"]),
+    packages=find_namespace_packages(
+        include=["qat.*", "qat.fermion.*"],
+        exclude=["qat.fermion.ansatz_generator", "qat.fermion.observable_generator", "qat.generators.hook_vqe"],
+    ),
     test_suite="tests",
-    install_requires=["qat-core", "qat-lang", "pyscf"],
+    install_requires=["myqlm", "qat-core", "qat-lang", "pyscf"],
     tests_require=["pytest"],
     cmdclass={"test": PyTest},
 )
