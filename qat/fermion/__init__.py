@@ -10,9 +10,6 @@ from .hamiltonians import Hamiltonian, ElectronicStructureHamiltonian
 # from .ansatz_generator import AnsatzGenerator
 # from .observable_generator import ObservableGenerator
 
-# from .ansatz_generator import AnsatzGenerator
-# from .observable_generator import ObservableGenerator
-
 # Backward compatiblity import
 from .hamiltonians import SpinHamiltonian
 from .hamiltonians import FermionHamiltonian
