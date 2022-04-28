@@ -11,6 +11,7 @@
 __pycache__
 doc/notebooks/.ipynb_checkpoints/
 misc/.ipynb_checkpoints/
+doc/notebooks/deprecated/.ipynb_checkpoints/
 
 # Code analysis
 tests/prof
