@@ -3,7 +3,7 @@
 import scipy
 import numpy as np
 
-from qat.linalg import LinAlg
+from qat.qpus import get_default_qpu
 from qat.lang.AQASM import Program
 
 from qat.fermion.hamiltonians import ElectronicStructureHamiltonian
@@ -118,7 +118,7 @@ def test_basic(use_pyscf=False, verbose=False):
 
     # we define the cost function to be minimized (the energy)
     def fun(theta):
-        qpu = LinAlg()
+        qpu = get_default_qpu()
         prog = Program()
         reg = prog.qalloc(nqbits)
         prog.apply(qrout(theta), reg)
@@ -168,7 +168,7 @@ def test_more_basic(use_pyscf=False, verbose=False):
 
     # we define the cost function to be minimized (the energy)
     def fun(theta):
-        qpu = LinAlg()
+        qpu = get_default_qpu()
         prog = Program()
         reg = prog.qalloc(H_sp.nbqbits)
         prog.apply(qrout(theta), reg)

@@ -68,7 +68,7 @@ def perform_phase_estimation(
         basis_transform (Optional[str]): Transformation to go from :class:`qat.fermion.ElectronicStructureHamiltonian`
             into a :class:`qat.fermion.Hamiltonian`: one can use the "jordan-wigner" (default),
             "bravyi-kitaev" or "parity" transformations.
-        qpu (Optional[QPU]): QPU to use for computation, default is :class:`~qat.linalg.LinAlg`.
+        qpu (Optional[QPU]): QPU to use for computation, default is :class:`~qat.qpus.get_default_qpu`.
 
     Returns:
         float, float: Energy found, associated probability.

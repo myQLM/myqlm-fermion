@@ -20,9 +20,6 @@ import pytest
 import numpy as np
 from qat.qpus import QPUHandler
 from qat.core import Result, Job, Observable
-from qat.core.application import Application
-from qat.plugins import TransformObservable, AbstractPlugin
-from qat.generators import AbstractGenerator, AnsatzGenerator, ObservableGenerator
 from qat.fermion.circuits import make_shallow_circ
 from qat.fermion.hamiltonians import make_embedded_model
 
@@ -30,6 +27,13 @@ from qat.fermion.hamiltonians import make_embedded_model
 OBS_ARGS = [1, 0.5, 0.4 * np.eye(2), -0.04 * np.eye(2)]
 OBS_KWARGS = {"grouping": "spins", "name": "embedded"}
 
+try:
+    from qat.core.application import Application
+    from qat.generators import AbstractGenerator, AnsatzGenerator, ObservableGenerator
+    from qat.plugins import TransformObservable, AbstractPlugin
+
+except ModuleNotFoundError:
+    pytest.skip(allow_module_level=True)
 
 class FakeQPU(QPUHandler):
     "QPU checking the value of an observable or a circuit"

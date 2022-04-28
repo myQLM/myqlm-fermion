@@ -11,8 +11,7 @@ from qat.fermion.trotterisation import (
     _number_excitation_operator_jw,
     _double_excitation_operator_jw,
 )
-from qat.fermion.trotterisation import _number_operator_jw, make_trotter_slice_jw
-from qat.fermion.trotterisation import make_spin_hamiltonian_trotter_slice
+from qat.fermion.trotterisation import _number_operator_jw, make_trotter_slice_jw, make_spin_hamiltonian_trotter_slice
 from qat.fermion.hamiltonians import Hamiltonian, ElectronicStructureHamiltonian
 
 TOL1 = 4

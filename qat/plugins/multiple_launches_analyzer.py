@@ -26,7 +26,7 @@ class MultipleLaunchesAnalyzer(AbstractPlugin):
         self.n_runs = n_runs
         self.verbose = verbose
 
-    def compile(self, batch):
+    def compile(self, batch, specs):
         """
         Compile the batch.
 
