@@ -493,7 +493,7 @@ def make_anderson_model(U: float, mu: float, V: np.ndarray, epsilon: np.ndarray)
         epsilon (np.ndarray): Bath modes energies. This vector has the same size as the number of bath mode.  
 
     Returns:
-        :class:`~qat.dqs.hamiltonians.ElectronicStructureHamiltonian` object constructed from :math:`h_{pq}` (matrix of size :math:`(2n_b+2) \times (2n_b+2)`) and :math:`h_{pqrs}` (4D tensor with size :math:`2n_b+2` in each dimension)
+        :class:`~qat.fermion.hamiltonians.ElectronicStructureHamiltonian` object constructed from :math:`h_{pq}` (matrix of size :math:`(2n_b+2) \times (2n_b+2)`) and :math:`h_{pqrs}` (4D tensor with size :math:`2n_b+2` in each dimension)
 
     .. note::
         Convention:
@@ -578,7 +578,7 @@ def make_embedded_model(
         grouping (Optional[str]): Defines how spin-orbitals indices are ordered (see below), defaults to 'spins'. 
 
     Returns:
-        :class:`~qat.dqs.hamiltonians.ElectronicStructureHamiltonian`
+        :class:`~qat.fermion.hamiltonians.ElectronicStructureHamiltonian`
 
     The two grouping strategies are the following:
 
