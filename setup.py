@@ -52,7 +52,7 @@ def get_description():
 
 setup(
     name="myqlm-fermion",
-    version="0.3a1",
+    version="0.4a",
     author="Atos Quantum Lab",
     license="Atos myQLM EULA",
     description="myQLM-fermion package",

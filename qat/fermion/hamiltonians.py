@@ -314,7 +314,7 @@ class Hamiltonian(Observable):
 
         transform_map = {
             "jordan-wigner": transform_to_jw_basis,
-            "bk": transform_to_bk_basis,
+            "bravyi-kitaev": transform_to_bk_basis,
             "parity": transform_to_parity_basis,
         }
 
