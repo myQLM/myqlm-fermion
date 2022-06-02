@@ -2,6 +2,7 @@
 from math import pi
 from typing import List, Optional, Union
 import numpy as np
+import warnings
 
 from qat.core.variables import Symbol
 
@@ -20,34 +21,45 @@ def make_trotterisation_routine(
     hamiltonian: Union[Hamiltonian, ElectronicStructureHamiltonian],
     n_trotter_steps: int,
     final_time: Optional[float] = 1.0,
+    method: Optional[str] = "jordan-wigner",
 ) -> QRoutine:
     r"""
-    This function first trotterizes the evolution operator :math:`e^{-i H t}` of
-    a Hamiltonian :math:`H` using a first order approximation.
-
-    In the fermionic case:
-
-    .. math::
-         e^{-i H t} \approx \prod_{k=1}^{n} \left( \prod_{pq} e^{-i \frac{t}{n} h_{pq} c_p^\dagger c_q} \prod_{pqrs} e^{-\frac{i}{2}\frac{t}{n} h_{pqrs} e^{-i c_p^\dagger c_q^\dagger c_r c_s} } \right)
-
-    This operator is then mapped to a product of Pauli operators via a Jordan-Wigner transformation and the resulting QRoutine is
-    returned.
+    This function first trotterizes the evolution operator :math:`e^{-i H t}` of a Hamiltonian :math:`H` using a first
+    order approximation. If the Hamiltonian is fermionic, it is converted to its spin representation.
 
     Args:
         hamiltonian (Union[Hamiltonian, ElectronicStructureHamiltonian]): Hamiltonian to trotterize.
         n_trotter_steps (int): Number :math:`n` of Trotter steps.
         final_time (Optional[float]): Time :math:`t` in the evolution operator.
+        method (Optional[str]): Method to use for the transformation to a spin representation. Defaults to "jordan-wigner".
+        Available methods are :
+            * "jordan-wigner" : Jordan-Wigner transform,
+            * "bravyi-kitaev" : Bravyi-Kitaev transform,
+            * "parity" : Parity transform.
 
     Returns:
         QRoutine: gates to apply to perform the time evolution
         of the chemical Hamiltonian with trotterisation
 
     Notes:
-        Here the QRoutine implements a first order trotter approximation, higher order approximations are possible.
+        * In the fermionic case :
+
+          .. math::
+            e^{-i H t} \approx \prod_{k=1}^{n} \left( \prod_{pq} e^{-i \frac{t}{n} h_{pq} c_p^\dagger c_q} \prod_{pqrs} e^{-\frac{i}{2}\frac{t}{n} h_{pqrs} e^{-i c_p^\dagger c_q^\dagger c_r c_s} } \right)
+
+          This operator is then mapped to a product of Pauli operators via a Jordan-Wigner transformation and the resulting QRoutine is
+          returned.
+
+        * The QRoutine implements a first order Trotter approximation, but higher order approximations are possible.
 
     """
 
     if isinstance(hamiltonian, Hamiltonian):
+
+        # Try to convert to spin representation
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            hamiltonian = hamiltonian.to_spin(method=method)
 
         Qrout = QRoutine()
         for _ in range(n_trotter_steps):

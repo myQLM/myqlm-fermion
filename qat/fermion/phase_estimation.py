@@ -35,17 +35,35 @@ def perform_phase_estimation(
     verbose: Optional[bool] = False,
 ) -> Tuple[float, float]:
     r"""
-    Perform quantum phase estimation (QPE) on an :class:`~qat.fermion.ElectronicStructureHamiltonian`. This Hamiltonian is transformed to the computational basis via a Jordan-Wigner transformation and approximated via first order trotterization. Other transformations like parity and Bravyi-Kitaev are also possible.
+    Perform quantum phase estimation (QPE) on an :class:`~qat.fermion.ElectronicStructureHamiltonian`. This Hamiltonian is
+    transformed to the computational basis via a Jordan-Wigner transformation and approximated via first order trotterization.
+    Other transformations like parity and Bravyi-Kitaev are also possible.
 
-    When providing an initial state one can specify it either as a string composed of zeros and ones, or as a :class:`~qat.lang.AQASM.routines.QRoutine` which will produce it. The QPE is meant to start from an eigenstate of the Hamiltonian, however, knowing apriori even one eigenstate of the system may be challenging. Therefore, this function comes with adiabatic state preparation - an optional preliminary step to create an eigenstate of the Hamiltonian :math:`H`. This step consists in performing QPE :code:`n_adiab_steps` number of times, but not to read the phase bits (it is set to only one), but rather to collapse the system to an eigenstate (read from the data bits). The first of the series of QPE executions starts from the lowest energy eigenstate of the Hamiltonian composed of :math:`h_{pq}`. Then, :math:`h_{pq}` is linearly transformed to :math:`H` and at each new step we start from the eigenstate of the Hamiltonian of the previous step. This guarantees that when the main QPE routine starts, it will do so from an eigenstate of the full :math:`H`.
+    When providing an initial state one can specify it either as a string composed of zeros and ones, or as a
+    :class:`~qat.lang.AQASM.routines.QRoutine` which will produce it. The QPE is meant to start from an eigenstate of the
+    Hamiltonian, however, knowing apriori even one eigenstate of the system may be challenging. Therefore, this function comes with
+    adiabatic state preparation - an optional preliminary step to create an eigenstate of the Hamiltonian :math:`H`.
+    This step consists in performing QPE :code:`n_adiab_steps` number of times, but not to read the phase bits (it is set to
+    only one), but rather to collapse the system to an eigenstate (read from the data bits). The first of the series of QPE
+    executions starts from the lowest energy eigenstate of the Hamiltonian composed of :math:`h_{pq}`. Then, :math:`h_{pq}` is
+    linearly transformed to :math:`H` and at each new step we start from the eigenstate of the Hamiltonian of the previous step.
+    This guarantees that when the main QPE routine starts, it will do so from an eigenstate of the full :math:`H`.
 
-    Usually, energies lie outside the range :math:`(-\frac{2\pi}{t}, 0)`. However, this range can be adjusted by searching inside the window :math:`(E_{target} - \frac{\Delta}{2}, E_{target} + \frac{\Delta}{2})` with :math:`E_{target}` and :math:`\Delta` specified by :code:`E_target` and :code:`size_interval`, respectively. It is suggested to always start from a large size interval and unbiased target energy like :math:`0` thus enclosing many of the eigenenergies including the desired one. One can then narrow the window around an already found eigenenergy for a better precision. Working with a window not enclosing an eigenenergy would still evaluate to a result, but it may be misleading.
+    Usually, energies lie outside the range :math:`(-\frac{2\pi}{t}, 0)`. However, this range can be adjusted by searching inside
+    the window :math:`(E_{target} - \frac{\Delta}{2}, E_{target} + \frac{\Delta}{2})` with :math:`E_{target}` and :math:`\Delta`
+    specified by :code:`E_target` and :code:`size_interval`, respectively. It is suggested to always start from a large size
+    interval and unbiased target energy like :math:`0` thus enclosing many of the eigenenergies including the desired one. One can
+    then narrow the window around an already found eigenenergy for a better precision. Working with a window not enclosing an
+    eigenenergy would still evaluate to a result, but it may be misleading.
 
     .. warning::
-        Regarding the adiabatic state preparation, if the lowest energy eigenstate of the first-step Hamiltonian :math:`h_{pq}` is also an eigenstate of the whole :math:`H`, the system will remain in it until the end of the whole adiabatic stage. Hence, this eigenstate may not be the one of the lowest energy anymore.
+        Regarding the adiabatic state preparation, if the lowest energy eigenstate of the first-step Hamiltonian :math:`h_{pq}` is
+        also an eigenstate of the whole :math:`H`, the system will remain in it until the end of the whole adiabatic stage. Hence,
+        this eigenstate may not be the one of the lowest energy anymore.
 
     .. warning::
-        As a rule of thumb, if small changes to the interval cause considerable deviations in the energy, that's a sign that the window is too small or a different target energy may be better.
+        As a rule of thumb, if small changes to the interval cause considerable deviations in the energy, that's a sign that the
+        window is too small or a different target energy may be better.
 
 
     Args:

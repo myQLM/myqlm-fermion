@@ -28,7 +28,7 @@ def compute_integrals(molecule: Union[np.ndarray, gto.Mole], mo_coeff, hcore):
     return one_electron_integrals, two_electron_integrals
 
 
-def perform_pyscf_computation(geometry, basis, spin, charge, verbose=False, run_FCI=True):
+def perform_pyscf_computation(geometry, basis, spin, charge, verbose=False, run_FCI=False):
     # define molecule in pySCF format
     molecule = gto.Mole()
     molecule.atom = geometry

@@ -63,8 +63,8 @@ Various improvements have been made in `MyQLM-fermion`.
 ### Other improvements
 
 *   `qat.dqs.fermionic_util` functions have now been included in `qat.fermion.util`.
-    *   function `exact_eigen_energies` has been deleted (replaced by the `eigenenergies()` method in `ElectronicStructureHamiltonian`).
-    *   function `fermionic_hamiltonian_exponential` has been deleted  (replaced by the `exponential()` method in `ElectronicStructureHamiltonian`).
+    *   function `exact_eigen_energies` has been deleted (replaced by the `eigen()` method in `Hamiltonian` and `ElectronicStructureHamiltonian`).
+    *   function `fermionic_hamiltonian_exponential` has been deleted  (replaced by the `exponential()` method in `Hamiltonian` and `ElectronicStructureHamiltonian`).
 *   `qat.dqs.impurity` models have been relocated in `qat.fermion.hamiltonians`.
 *   `qat.dqs.ansatz_circuits` has been renamed `qat.fermion.circuits`.
 *   In `qat.fermion.chemistry.ucc` (previously `qat.dqs.qchem.ucc`):

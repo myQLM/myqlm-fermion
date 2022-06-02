@@ -298,7 +298,7 @@ class Hamiltonian(Observable):
             method (str, optional): Method to use for the transformation to a spin representation. Defaults to "jordan-wigner".
             Available methods are :
             * "jordan-wigner" : Jordan-Wigner transform,
-            * "bk" : Bravyi-Kitaev transform,
+            * "bravyi-kitaev" : Bravyi-Kitaev transform,
             * "parity" : Parity transform.
 
         Returns:
@@ -323,6 +323,39 @@ class Hamiltonian(Observable):
             return self
 
         return transform_map[method](self)
+
+    def eigen(self) -> Tuple[np.ndarray, np.ndarray]:
+        r"""
+        This function returns eigenvalues and vector of an Hamiltonian defined by
+
+        .. math::
+
+            H = \sum_{pq} h_{pq}a_p^\dagger a_q
+            + \frac{1}{2} \sum_{pqrs} h_{pqrs}a_p^\dagger a_q^\dagger a_r a_s
+
+        Returns:
+            (numpy.ndarray, numpy.ndarray): Eigenenergy, eigenvectors (as column vectors, i.e. for eigenenergy i of the array, the
+            corresponding vector will be [:, i]).
+        """
+
+        E, eigvecs = np.linalg.eigh(self.get_matrix())
+
+        return E, eigvecs
+
+    def exponential(self) -> np.ndarray:
+        r"""
+        This function return the matricial expression of
+        :math:`e^{-i h_{pq} a^\dagger_p a_q + h.c.}` or
+        :math:`e^{-i h_{pqrs} a^\dagger_p a^\dagger_q a_r a_s +h.c.}`.
+
+        Returns:
+            numpy.ndarray
+
+        """
+
+        from scipy import linalg
+
+        return linalg.expm(-1j * self.get_matrix())
 
 
 class ElectronicStructureHamiltonian(Hamiltonian):
@@ -405,39 +438,6 @@ class ElectronicStructureHamiltonian(Hamiltonian):
             self.constant_coeff + other.constant_coeff,
             do_clean_up=self.do_clean_up,
         )
-
-    def eigenenergies(self) -> Tuple[np.ndarray, np.ndarray]:
-        r"""
-        This function returns eigenvalues and vector of an Hamiltonian defined by
-
-        .. math::
-
-            H = \sum_{pq} h_{pq}a_p^\dagger a_q
-            + \frac{1}{2} \sum_{pqrs} h_{pqrs}a_p^\dagger a_q^\dagger a_r a_s
-
-        Returns:
-            (numpy.ndarray, numpy.ndarray): Eigenenergy, eigenvectors (as column vectors, i.e. for eigenenergy i of the array, the
-            corresponding vector will be [:, i]).
-        """
-        H = ElectronicStructureHamiltonian(self.hpq, self.hpqrs).get_matrix()
-        E, eigvecs = np.linalg.eigh(H)
-
-        return E, eigvecs
-
-    def exponential(self) -> np.ndarray:
-        r"""
-        This function return the matricial expression of
-        :math:`e^{-i h_{pq} a^\dagger_p a_q + h.c.}` or
-        :math:`e^{-i h_{pqrs} a^\dagger_p a^\dagger_q a_r a_s +h.c.}`.
-
-        Returns:
-            numpy.ndarray
-
-        """
-
-        from scipy import linalg
-
-        return linalg.expm(-1j * self.get_matrix())
 
 
 class SpinHamiltonian(Hamiltonian):
