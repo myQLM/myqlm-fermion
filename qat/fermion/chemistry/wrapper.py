@@ -16,19 +16,45 @@ from ..hamiltonians import ElectronicStructureHamiltonian
 
 
 class MolecularHamiltonian(object):
+    """
+    MolecularHamiltonian helper class.
+
+    Args:
+        one_body_integrals (np.ndarray): One-body integrals.
+        two_body_integrals (np.ndarray): Two-body integrals.
+        constant_coeff (np.ndarray): Constant coefficient.
+
+    Attributes:
+        nbqbits (int): The total number of qubits
+        one_body_integrals (np.ndarray): One-body integrals.
+        two_body_integrals (np.ndarray): Two-body integrals.
+        constant_coeff (np.ndarray): Constant coefficient.
+
+    Example:
+
+        .. run-block:: python
+
+            import numpy as np
+            from qat.fermion.chemistry import MolecularHamiltonian
+
+            # Initialize random one- and two-body integrals, and a constant
+            one_body_integral = np.random.randn(2, 2)
+            two_body_integral = np.random.randn(2, 2, 2, 2)
+            constant = np.random.rand()
+
+            # Define the MolecularHamiltonian
+            mol_h = MolecularHamiltonian(one_body_integral, two_body_integral, constant)
+
+            print(mol_h)
+
+    """
+
     def __init__(
         self,
         one_body_integrals: np.ndarray,
         two_body_integrals: np.ndarray,
         constant_coeff: np.ndarray,
     ):
-        """MolecularHamiltonian helper class.
-
-        Args:
-            one_body_integrals (np.ndarray): One-body integrals
-            two_body_integrals (np.ndarray): Two-body integrals
-            constant_coeff (np.ndarray): Constant coefficient
-        """
 
         self.one_body_integrals = one_body_integrals
         self.two_body_integrals = two_body_integrals
@@ -52,21 +78,22 @@ class MolecularHamiltonian(object):
         s += f" - constant_coeff : {self.constant_coeff}\n"
         s += f" - integrals shape\n"
         s += f"    * one_body_integrals : {self.one_body_integrals.shape}\n"
-        s += f"    * two_body_integrals : {self.two_body_integrals.shape}\n"
+        s += f"    * two_body_integrals : {self.two_body_integrals.shape}\n)"
 
         return s
 
     @property
-    def nqbits(self):
+    def nbqbits(self):
         "Compute number of qubits from the one body integral."
         return self.one_body_integrals.shape[0] * 2
 
     def transform_basis(self, transformation_matrix: np.ndarray) -> "MolecularHamiltonian":
-        """
+        r"""
         Change one and two body integrals (indices p, q...) to new basis (indices i, j...)
         using transformation U such that
 
         .. math::
+
             \hat{c}_{i}=\sum_{q}U_{qi}c_{q}
 
         i.e
@@ -74,6 +101,7 @@ class MolecularHamiltonian(object):
         .. math::
 
             \hat{I}_{ij} =\sum_{pq}U_{pi}I_{pq}U_{jq}^{\dagger}
+
             \hat{I}_{ijkl}=\sum_{pqrs}U_{pi}U_{qj}I_{pqrs}U_{kr}^{\dagger}U_{ls}^{\dagger}
 
         Args:
@@ -81,6 +109,7 @@ class MolecularHamiltonian(object):
 
         Returns:
             molecular_hamiltonian (MolecularHamiltonian): MolecularHamiltonian updated to the new basis.
+
         """
 
         integrals = transform_integrals_to_new_basis(self.one_body_integrals, self.two_body_integrals, transformation_matrix)
@@ -173,10 +202,34 @@ class MolecularHamiltonian(object):
         return hamiltonian, active_indices, occupied_indices
 
     def get_electronic_hamiltonian(self) -> ElectronicStructureHamiltonian:
-        """Converts the MolecularHamiltonian to an ElectronicStructureHamiltonian.
+        r"""
+        Converts the MolecularHamiltonian to an ElectronicStructureHamiltonian. To do so, it converts from :math:`I_{uv},I_{uvwx}`
+        to :math:`h_{pq},h_{pqrs}`, with
+
+        .. math::
+
+            h_{u\sigma, v\sigma'} = I_{u, v} \delta_{\sigma, \sigma'}
+
+            h_{u\sigma_1, v\sigma_2, w\sigma_2', x\sigma_1'} =  I_{uvwx} \left((1-\delta_{\sigma,\sigma'}) + \delta_{\sigma,\sigma'} (1-\delta_{u,v})(1-\delta_{w,x})   \right)
+
+        and where the one- and two-body integrals are defined as:
+
+        .. math::
+
+            I_{uv}\equiv(u|h|v)=\int\mathrm{d}r\phi_{u}^{*}(r)T\phi_{v}(r)
+
+        .. math::
+
+            I_{uvwx}\equiv(ux|vw)=\iint\mathrm{d}r_{1}\mathrm{d}r_{2}\phi_{u}^{*}(r_{1})\phi_{x}(r_{1})v(r_{12})\phi_{v}^{*}(r_{2})\phi_{w}(r_{2})
+
+        with :math:`T` (resp. :math:`v`) the one- (resp. two-) body potentials,
+        and :math:`\phi_u(r)` is the molecular orbital wavefunction.
+
+        The :math:`h` integrals are used to construct hamiltonians of the ElectronicStructureHamiltonian type.
 
         Returns:
-            :py:class:`~qat.fermion.ElectronicStructureHamiltonian`: Electronic structure hamiltonian
+            :py:class:`~qat.fermion.ElectronicStructureHamiltonian`: Electronic structure hamiltonian.
+
         """
 
         hpq, hpqrs = convert_to_h_integrals(self.one_body_integrals, self.two_body_integrals)
@@ -192,6 +245,53 @@ class MolecularHamiltonian(object):
 
 
 class MoleculeInfo(object):
+    r"""MoleculeInfo helper class.
+
+    Args:
+        hamiltonian (MolecularHamiltonian): The MolecularHamiltonian of the studied molecule.
+        n_electrons (int): Number of electrons.
+        noons (Union[np.ndarray, List[float]]): Natural orbital occupation number.
+        orbital_energies (np.ndarray): Orbital energies.
+
+    Attributes:
+        nbqbits (int): The total number of qubits.
+        one_body_integrals (np.ndarray): One-body integrals.
+        two_body_integrals (np.ndarray): Two-body integrals.
+        constant_coeff (np.ndarray): Constant coefficient.
+        hamiltonian (MolecularHamiltonian): The MolecularHamiltonian of the studied molecule.
+        n_electrons (int): Number of electrons.
+        noons (Union[np.ndarray, List[float]]): Natural orbital occupation number.
+        orbital_energies (np.ndarray): Orbital energies.
+
+    Example:
+
+        .. run-block:: python
+
+            import numpy as np
+            from qat.fermion.chemistry import MolecularHamiltonian, MoleculeInfo
+
+            # For illustration purpose, initialize random one- and two-body integrals, and a constant
+            one_body_integral = np.random.randn(2, 2)
+            two_body_integral = np.random.randn(2, 2, 2, 2)
+            constant = np.random.rand()
+            noons = list(np.random.randn(10))
+            orbital_energies = list(np.random.randn(10))
+
+            # Define the MolecularHamiltonian
+            mol_h = MolecularHamiltonian(one_body_integral, two_body_integral, constant)
+
+            # Define MoleculeInfo
+            molecule = MoleculeInfo(
+                mol_h,
+                n_electrons=4,
+                noons=noons,
+                orbital_energies=orbital_energies
+            )
+
+            print(molecule)
+
+    """
+
     def __init__(
         self,
         hamiltonian: MolecularHamiltonian,
@@ -199,14 +299,6 @@ class MoleculeInfo(object):
         noons: Union[np.ndarray, List[float]],
         orbital_energies: np.ndarray,
     ):
-        """MoleculeInfo helper class.
-
-        Args:
-            hamiltonian (MolecularHamiltonian): The MolecularHamiltonian of the studied molecule.
-            n_electrons (int): Number of electrons.
-            noons (Union[np.ndarray, List[float]]): Natural orbital occupation number.
-            orbital_energies (np.ndarray): Orbital energies.
-        """
 
         self.hamiltonian = hamiltonian
         self.n_electrons = n_electrons
@@ -260,11 +352,11 @@ class MoleculeInfo(object):
         return self.hamiltonian.constant_coeff
 
     @property
-    def nqbits(self):
+    def nbqbits(self):
         """
         Compute number of qubits from the one body integral.
         """
-        return self.hamiltonian.nqbits
+        return self.hamiltonian.nbqbits
 
     def copy(self) -> "MolecularHamiltonian":
         """
@@ -328,11 +420,13 @@ class MoleculeInfo(object):
         self._update_molecule_active(active_indices, occupied_indices)
 
     def _update_molecule_active(self, active_indices: List[int], occupied_indices: List[int]):
-        """Update MoleculeInfo attributes depending on the input active space indices and occupied indices.
+        """
+        Update MoleculeInfo attributes depending on the input active space indices and occupied indices.
 
         Args:
             active_indices (List[int]): List of active indices
             occupied_indices (List[int]): List of occupied indices
+
         """
 
         self.noons = [self.noons[idx] for idx in active_indices]
@@ -340,10 +434,12 @@ class MoleculeInfo(object):
         self.n_electrons = self.n_electrons - 2 * len(occupied_indices)
 
     def _get_attr_dict(self) -> Dict:
-        """Generate attributes dictionary (needed for inclusion of MolecularHamiltonian attributes).
+        """
+        Generate attributes dictionary (needed for inclusion of MolecularHamiltonian attributes).
 
         Returns:
             Dict: Dictionary containing MoleculeInfo and MolecularHamiltonian attributes.
+
         """
 
         d = self.__dict__.copy()
@@ -356,41 +452,3 @@ class MoleculeInfo(object):
         )
 
         return d
-
-    # def apply(self, func: Callable) -> Any:
-    #     """Unpack the corresponding MoleculeInfo attributes and apply the function onto them.
-
-    #     This method will automatically select the right attributes depending on the arguments
-    #     names in the input function.It will ignore function arguments with an assigned
-    #     default value.
-
-    #     Args:
-    #         func (Callable): Function to apply on the MoleculeInfo attributes
-
-    #     Returns:
-    #         output (Any): Output of input function.
-    #     """
-
-    #     # Get function signature
-    #     signature = inspect.signature(func)
-
-    #     # Get function arguments names
-    #     args_name = list(signature.parameters)
-
-    #     # Remove default values from args_name list
-    #     for name in args_name.copy():
-    #         if signature.parameters[name].default is not inspect._empty:
-    #             args_name.remove(name)
-
-    #     # Define the dictionary with available attributes
-    #     attr_dict = self._get_attr_dict()
-
-    #     # Check that this dict contains all the necessary function arguments
-    #     for arg in args_name:
-    #         if arg not in attr_dict.keys():
-    #             raise AttributeError(f"Attribute {arg} not found.")
-
-    #     # Get the arguments in the correct order
-    #     args = [attr_dict[arg] for arg in args_name]
-
-    #     return func(*args)

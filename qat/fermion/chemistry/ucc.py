@@ -20,7 +20,7 @@ from ..trotterisation import make_trotterisation_routine
 def transform_integrals_to_new_basis(
     one_body_integrals: np.ndarray, two_body_integrals: np.ndarray, U_mat: np.ndarray
 ) -> Tuple[np.ndarray, np.ndarray]:
-    """
+    r"""
     Change one and two body integrals (indices p, q...) to
     new basis (indices i, j...) using transformation U such that
 
@@ -84,7 +84,8 @@ def compute_active_space_integrals(
     active_indices: List[int],
     occupied_indices: List[int],
 ) -> Tuple[np.ndarray, np.ndarray, float]:
-    r"""Restrict one- and two-body integrals for given list of active indices.
+    r"""
+    Restrict one- and two-body integrals for given list of active indices.
 
     .. math::
 
@@ -92,7 +93,7 @@ def compute_active_space_integrals(
 
         \forall u,v,w,x \in \mathcal{A}, I^{(a)}_{uvwx} = I_{uvwx}
 
-        c^{(a)} = c + \sum_{i\in\mathcal{O}) I_{ii} + \sum_{ij\in\mathcal{O} 2I_{ijji} - I_{ijij}
+        c^{(a)} = c + \sum_{i\in\mathcal{O}} I_{ii} + \sum_{ij\in\mathcal{O}} 2I_{ijji} - I_{ijij}
 
     Args:
         one_body_integrals (np.ndarray): Array of one-body integrals :math:`I_{uv}`. Must be 2D.
@@ -105,6 +106,7 @@ def compute_active_space_integrals(
             - 2D array of one-body integrals :math:`I_{uv}^{(a)}`,
             - 4D array of two-body integrals :math:`I_{uvwx}^{(a)}`,
             - core constant :math:`c^{(a)}`.
+
     """
     # Modified core constant
     core_constant = _compute_active_space_constant(one_body_integrals, two_body_integrals, occupied_indices)
@@ -183,7 +185,7 @@ def _two_body_integrals_to_h(two_body_integrals: np.ndarray) -> np.ndarray:
 
 
 def convert_to_h_integrals(one_body_integrals: np.ndarray, two_body_integrals: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-    """Convert from :math:`I_{uv},I_{uvwx}` to :math:`h_{pq},h_{pqrs}`, with
+    r"""Convert from :math:`I_{uv},I_{uvwx}` to :math:`h_{pq},h_{pqrs}`, with
 
     .. math::
 
@@ -714,7 +716,7 @@ def guess_init_params(
     orbital_energies: List[float],
     noons: List[float] = None,
 ) -> List[float]:
-    """Find initial parameters using Møller-Plesset perturbation theory.
+    r"""Find initial parameters using Møller-Plesset perturbation theory.
 
     The trial parametrization is efficiently improved upon the
     Hartree-Fock solution (which would set every initial parameter to

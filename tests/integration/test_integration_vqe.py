@@ -54,7 +54,7 @@ class TestVQE(unittest.TestCase):
         hpqrs = np.zeros((nqbit, nqbit, nqbit, nqbit))
 
         hamiltonian = ElectronicStructureHamiltonian(hpq, hpqrs)
-        min_theoritical_energy = min(hamiltonian.eigen()[0])
+        min_theoritical_energy = min(np.linalg.eigvalsh(hamiltonian.get_matrix()))
         hamilt = ElectronicStructureHamiltonian(hpq=hpq, hpqrs=hpqrs)
         hamilt_sp = transform_to_jw_basis(hamilt)
         qpu = get_default_qpu()

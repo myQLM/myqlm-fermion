@@ -235,7 +235,7 @@ def make_general_hwe_circ(
     rotation_gates: List[Gate] = [RY],
     entangling_gate: Gate = CNOT,
 ) -> Circuit:
-    """
+    r"""
     Constructs an ansatz made of :math:`n_{\mathrm{cycles}}` layers of so-called thinly-dressed routines,
     that is to say entanglers surrounded by four one-qubit rotations are applied on nearest-neighbour
     qubits in an odd/even alternating pattern.
@@ -251,6 +251,7 @@ def make_general_hwe_circ(
 
     Returns:
         :class:`~qat.core.Circuit`
+
     """
     n_rotations = len(rotation_gates)
 
@@ -358,5 +359,5 @@ try:
 
         return compressed_circ
 
-except ModuleNotFoundError:
+except:
     pass

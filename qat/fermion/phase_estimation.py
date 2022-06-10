@@ -35,7 +35,7 @@ def perform_phase_estimation(
     verbose: Optional[bool] = False,
 ) -> Tuple[float, float]:
     r"""
-    Perform quantum phase estimation (QPE) on an :class:`~qat.fermion.ElectronicStructureHamiltonian`. This Hamiltonian is
+    Perform quantum phase estimation (QPE) on an :class:`~qat.fermion.hamiltonians.ElectronicStructureHamiltonian`. This Hamiltonian is
     transformed to the computational basis via a Jordan-Wigner transformation and approximated via first order trotterization.
     Other transformations like parity and Bravyi-Kitaev are also possible.
 

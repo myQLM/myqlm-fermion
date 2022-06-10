@@ -52,7 +52,7 @@ Various improvements have been made in `MyQLM-fermion`.
 
 > Note : See `spin_fermion_transforms.ipynb` in `myqlm-fermion/doc/notebooks/` for more informations on this new `Hamiltonian` class.
 
-*   The `ElectronicStructureHamiltonian` inherits from the `Hamiltonian` class. The above methods are also valid for `ElectronicStructureHamiltonian`. Additionally, `ElectronicStructureHamiltonian` now contains an `.eigenenergies()` method and an `.exponential()` method, see `qat.fermion.hamiltonians.ElectronicStructureHamiltonian` docstring.
+*   The `ElectronicStructureHamiltonian` inherits from the `Hamiltonian` class. The above methods are also valid for `ElectronicStructureHamiltonian`.
 *   Many improvements have been made to the UCC submodule.
 *   New classes specific to atomic and molecular studies have been added:
     *   the class `MolecularHamiltonian` has been added. It allows for easier basis changes and active space selection.
@@ -63,8 +63,8 @@ Various improvements have been made in `MyQLM-fermion`.
 ### Other improvements
 
 *   `qat.dqs.fermionic_util` functions have now been included in `qat.fermion.util`.
-    *   function `exact_eigen_energies` has been deleted (replaced by the `eigen()` method in `Hamiltonian` and `ElectronicStructureHamiltonian`).
-    *   function `fermionic_hamiltonian_exponential` has been deleted  (replaced by the `exponential()` method in `Hamiltonian` and `ElectronicStructureHamiltonian`).
+    *   function `exact_eigen_energies` has been deleted.
+    *   function `fermionic_hamiltonian_exponential` has been deleted.
 *   `qat.dqs.impurity` models have been relocated in `qat.fermion.hamiltonians`.
 *   `qat.dqs.ansatz_circuits` has been renamed `qat.fermion.circuits`.
 *   In `qat.fermion.chemistry.ucc` (previously `qat.dqs.qchem.ucc`):

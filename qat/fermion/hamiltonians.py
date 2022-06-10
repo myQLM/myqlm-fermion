@@ -1,5 +1,6 @@
 """ Module with containers for common Hamiltonians """
 from typing import List, Optional, Tuple, Union
+from copy import deepcopy
 from enum import Enum
 from itertools import product
 import scipy.sparse as sp
@@ -40,7 +41,7 @@ class ObservableType(Enum):
 
 
 class Hamiltonian(Observable):
-    """
+    r"""
     Implementation of a generic hamiltonian.
 
     Args:
@@ -52,12 +53,12 @@ class Hamiltonian(Observable):
         nbqbits (int): the total number of qubits
         terms (List[Term]): the list of terms
         constant_coeff (float): constant term
-        matrix (np.ndarray): the corresponding matrix (None by default,
-            can be set by calling get_matrix method)
+        matrix (np.ndarray): the corresponding matrix (None by default, can be set by calling get_matrix method)
 
     Example:
 
         One can use spin operators :
+
         .. run-block:: python
 
             from qat.core import Term
@@ -70,6 +71,7 @@ class Hamiltonian(Observable):
             print("H matrix:", hamiltonian.get_matrix())
 
         Or fermionic operators :
+
         .. run-block:: python
 
             from qat.core import Term
@@ -77,9 +79,8 @@ class Hamiltonian(Observable):
 
             hamiltonian = Hamiltonian(2, [Term(0.3, "Cc", [0, 1]), Term(1.4, "CcCc", [0, 1, 1, 0])])
             print("H = ", hamiltonian)
-
-            # let us print the corresponding matrix representation:
             print("H matrix:", hamiltonian.get_matrix())
+
     """
 
     def __init__(
@@ -137,11 +138,36 @@ class Hamiltonian(Observable):
         res = super().__itruediv__(other)
         return Hamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
 
+    def copy(self):
+        """
+        Copy current MolecularHamiltonian.
+
+        Returns:
+            MolecularHamiltonian: Copy of MolecularHamiltonian.
+
+        """
+
     @property
-    def htype(self) -> bool:
+    def htype(self) -> ObservableType:
+        """
+        Check the type of the Hamiltonian (spin or fermionic).
+
+        Returns:
+            ObservableType: Type of the Hamiltonian
+
+        Note:
+            This method should not be used if the Hamiltonian is too large.
+
+        """
         return self._check_hamiltonian_type()
 
-    def dag(self):
+    def dag(self) -> "Hamiltonian":
+        """Compute the conjugate transpose of the Hamiltonian.
+
+        Returns:
+            Hamiltonian: Conjugate transpose of the Hamiltonian operator
+
+        """
         return Hamiltonian(
             self.nbqbits,
             [Term(np.conj(term.coeff), term.op, term.qbits) for term in self.terms],
@@ -295,11 +321,11 @@ class Hamiltonian(Observable):
         """Transform a fermionic Hamiltonian to a spin Hamiltonian.
 
         Args:
-            method (str, optional): Method to use for the transformation to a spin representation. Defaults to "jordan-wigner".
-            Available methods are :
-            * "jordan-wigner" : Jordan-Wigner transform,
-            * "bravyi-kitaev" : Bravyi-Kitaev transform,
-            * "parity" : Parity transform.
+            method (str, optional): Method to use for the transformation to a spin representation. Available methods are :
+
+                    - "jordan-wigner" : Jordan-Wigner transform (default),
+                    - "bravyi-kitaev" : Bravyi-Kitaev transform,
+                    - "parity" : Parity transform.
 
         Returns:
             :py:class:`~qat.fermion.Hamiltonian` : Hamiltonian in spin representation.
@@ -323,39 +349,6 @@ class Hamiltonian(Observable):
             return self
 
         return transform_map[method](self)
-
-    def eigen(self) -> Tuple[np.ndarray, np.ndarray]:
-        r"""
-        This function returns eigenvalues and vector of an Hamiltonian defined by
-
-        .. math::
-
-            H = \sum_{pq} h_{pq}a_p^\dagger a_q
-            + \frac{1}{2} \sum_{pqrs} h_{pqrs}a_p^\dagger a_q^\dagger a_r a_s
-
-        Returns:
-            (numpy.ndarray, numpy.ndarray): Eigenenergy, eigenvectors (as column vectors, i.e. for eigenenergy i of the array, the
-            corresponding vector will be [:, i]).
-        """
-
-        E, eigvecs = np.linalg.eigh(self.get_matrix())
-
-        return E, eigvecs
-
-    def exponential(self) -> np.ndarray:
-        r"""
-        This function return the matricial expression of
-        :math:`e^{-i h_{pq} a^\dagger_p a_q + h.c.}` or
-        :math:`e^{-i h_{pqrs} a^\dagger_p a^\dagger_q a_r a_s +h.c.}`.
-
-        Returns:
-            numpy.ndarray
-
-        """
-
-        from scipy import linalg
-
-        return linalg.expm(-1j * self.get_matrix())
 
 
 class ElectronicStructureHamiltonian(Hamiltonian):
@@ -392,7 +385,9 @@ class ElectronicStructureHamiltonian(Hamiltonian):
 
             print("H = ", hamiltonian)
             eigvals = np.linalg.eigvalsh(hamiltonian.get_matrix())
+
             print("eigenvalues =", eigvals)
+
     """
 
     TOL = 1e-12
@@ -441,7 +436,7 @@ class ElectronicStructureHamiltonian(Hamiltonian):
 
 
 class SpinHamiltonian(Hamiltonian):
-    """Ensures restrocompatibility of old SpinHamiltonian class with new Hamiltonian class"""
+    """Ensures retrocompatibility of old SpinHamiltonian class with new Hamiltonian class"""
 
     def __init__(
         self,
@@ -460,7 +455,7 @@ class SpinHamiltonian(Hamiltonian):
 
 
 class FermionHamiltonian(Hamiltonian):
-    """Ensures restrocompatibility of old SpinHamiltonian class with new Hamiltonian class"""
+    """Ensures retrocompatibility of old SpinHamiltonian class with new Hamiltonian class"""
 
     def __init__(self, *args, **kwargs):
         from warnings import warn

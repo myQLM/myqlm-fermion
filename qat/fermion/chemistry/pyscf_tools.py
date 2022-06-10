@@ -28,7 +28,26 @@ def compute_integrals(molecule: Union[np.ndarray, gto.Mole], mo_coeff, hcore):
     return one_electron_integrals, two_electron_integrals
 
 
-def perform_pyscf_computation(geometry, basis, spin, charge, verbose=False, run_FCI=False):
+def perform_pyscf_computation(geometry, basis, spin, charge, run_FCI=False):
+    """Perform various calculations using PySCF.
+
+
+
+    Note:
+        This function is a helper function meant to kickstart molecule studies. Its use is
+        completely optional, and using other methods or packages is entirely possible.
+
+    Args:
+        geometry (_type_): _description_
+        basis (_type_): _description_
+        spin (_type_): _description_
+        charge (_type_): _description_
+        run_FCI (bool, optional): _description_. Defaults to False.
+
+    Returns:
+        _type_: _description_
+    """
+
     # define molecule in pySCF format
     molecule = gto.Mole()
     molecule.atom = geometry
@@ -43,9 +62,6 @@ def perform_pyscf_computation(geometry, basis, spin, charge, verbose=False, run_
     scf_worker.verbose = 0
     scf_worker.run()
     hf_energy = float(scf_worker.e_tot)
-
-    if verbose:
-        print("HF energy=", hf_energy)
 
     one_body_integrals, two_body_integrals = compute_integrals(molecule, scf_worker.mo_coeff, scf_worker.get_hcore())
 
@@ -70,9 +86,6 @@ def perform_pyscf_computation(geometry, basis, spin, charge, verbose=False, run_
     mp2.run()
     mp2_energy = scf_worker.e_tot + mp2.e_corr
 
-    if verbose:
-        print("MP2 energy=", mp2_energy)
-
     # Run FCI
     if run_FCI:
         fci_worker = fci.FCI(molecule, scf_worker.mo_coeff)
@@ -80,8 +93,6 @@ def perform_pyscf_computation(geometry, basis, spin, charge, verbose=False, run_
         fci_energy = fci_worker.kernel()[0]
     else:
         fci_energy = None
-    if verbose:
-        print("FCI energy=", fci_energy)
 
     info = {"MP2": mp2_energy, "FCI": fci_energy, "HF": hf_energy}
 

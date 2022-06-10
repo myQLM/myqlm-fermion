@@ -48,9 +48,7 @@ def apply_quantum_subspace_expansion(
 
     .. math::
 
-        S_{i,j} =   \langle \Psi^\star |
-                    \hat{O}_i^\dagger \hat{O}_j
-                    | \Psi^\star \rangle
+        S_{i,j} = \langle \Psi^\star | \hat{O}_i^\dagger \hat{O}_j | \Psi^\star \rangle
 
     Args:
 

@@ -93,19 +93,19 @@ def transform_to_jw_basis(fermion_hamiltonian: Union[Hamiltonian, ElectronicStru
 
         from qat.core import Term
         from qat.fermion import Hamiltonian
+        from qat.fermion.transforms import transform_to_jw_basis
 
         hamiltonian = Hamiltonian(
             2, [Term(0.3, "Cc", [0, 1]), Term(1.4, "CcCc", [0, 1, 1, 0])])
-        print("H = ", hamiltonian)
 
-        from qat.fermion.transforms import transform_to_jw_basis
         spin_hamiltonian = transform_to_jw_basis(hamiltonian)
-        print("H(spin) = ", spin_hamiltonian)
+
+        print(f"H = {hamiltonian}\n")
+        print(f"H(spin) = {spin_hamiltonian}")
 
     """
 
     nqbits = fermion_hamiltonian.nbqbits
-
     spin_hamiltonian = Hamiltonian(nqbits, [], constant_coeff=fermion_hamiltonian.constant_coeff, do_clean_up=False)
 
     for term in fermion_hamiltonian.terms:
