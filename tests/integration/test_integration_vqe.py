@@ -3,7 +3,7 @@ import numpy as np
 import unittest
 
 from qat.lang.AQASM import QRoutine, RY, RX
-from qat.qpus import LinAlg
+from qat.qpus import get_default_qpu
 from qat.fermion.transforms import transform_to_jw_basis
 from qat.fermion.hamiltonians import ElectronicStructureHamiltonian
 from qat.fermion.vqe import VQE
@@ -33,7 +33,7 @@ class TestVQE(unittest.TestCase):
         hpqrs = np.zeros((1, 1, 1, 1))
         hamilt = ElectronicStructureHamiltonian(hpq=hpq, hpqrs=hpqrs)
         hamilt_sp = transform_to_jw_basis(hamilt)
-        qpu = LinAlg()
+        qpu = get_default_qpu()
         energy, _, _, _ = VQE(
             hamilt_sp,
             spsa_optimizer,
@@ -54,10 +54,10 @@ class TestVQE(unittest.TestCase):
         hpqrs = np.zeros((nqbit, nqbit, nqbit, nqbit))
 
         hamiltonian = ElectronicStructureHamiltonian(hpq, hpqrs)
-        min_theoritical_energy = min(hamiltonian.eigenenergies()[0])
+        min_theoritical_energy = min(np.linalg.eigvalsh(hamiltonian.get_matrix()))
         hamilt = ElectronicStructureHamiltonian(hpq=hpq, hpqrs=hpqrs)
         hamilt_sp = transform_to_jw_basis(hamilt)
-        qpu = LinAlg()
+        qpu = get_default_qpu()
         calculated_energy, _, _, _ = VQE(
             hamilt_sp,
             spsa_optimizer,

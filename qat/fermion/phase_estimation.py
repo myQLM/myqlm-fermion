@@ -35,18 +35,33 @@ def perform_phase_estimation(
     verbose: Optional[bool] = False,
 ) -> Tuple[float, float]:
     r"""
-    Perform quantum phase estimation (QPE) on an :class:`~qat.fermion.ElectronicStructureHamiltonian`. This Hamiltonian is transformed to the computational basis via a Jordan-Wigner transformation and approximated via first order trotterization. Other transformations like parity and Bravyi-Kitaev are also possible.
+    Perform quantum phase estimation (QPE) on an :class:`~qat.fermion.hamiltonians.ElectronicStructureHamiltonian`. This Hamiltonian is
+    transformed to the computational basis via a Jordan-Wigner transformation and approximated via first order trotterization.
+    Other transformations like parity and Bravyi-Kitaev are also possible.
 
-    When providing an initial state one can specify it either as a string composed of zeros and ones, or as a :class:`~qat.lang.AQASM.routines.QRoutine` which will produce it. The QPE is meant to start from an eigenstate of the Hamiltonian, however, knowing apriori even one eigenstate of the system may be challenging. Therefore, this function comes with adiabatic state preparation - an optional preliminary step to create an eigenstate of the Hamiltonian :math:`H`. This step consists in performing QPE :code:`n_adiab_steps` number of times, but not to read the phase bits (it is set to only one), but rather to collapse the system to an eigenstate (read from the data bits). The first of the series of QPE executions starts from the lowest energy eigenstate of the Hamiltonian composed of :math:`h_{pq}`. Then, :math:`h_{pq}` is linearly transformed to :math:`H` and at each new step we start from the eigenstate of the Hamiltonian of the previous step. This guarantees that when the main QPE routine starts, it will do so from an eigenstate of the full :math:`H`.
+    When providing an initial state one can specify it either as a string composed of zeros and ones, or as a
+    :class:`~qat.lang.AQASM.routines.QRoutine` which will produce it. The QPE is meant to start from an eigenstate of the
+    Hamiltonian, however, knowing apriori even one eigenstate of the system may be challenging. Therefore, this function comes with
+    adiabatic state preparation - an optional preliminary step to create an eigenstate of the Hamiltonian :math:`H`.
+    This step consists in performing QPE :code:`n_adiab_steps` number of times, but not to read the phase bits (it is set to
+    only one), but rather to collapse the system to an eigenstate (read from the data bits). The first of the series of QPE
+    executions starts from the lowest energy eigenstate of the Hamiltonian composed of :math:`h_{pq}`. Then, :math:`h_{pq}` is
+    linearly transformed to :math:`H` and at each new step we start from the eigenstate of the Hamiltonian of the previous step.
+    This guarantees that when the main QPE routine starts, it will do so from an eigenstate of the full :math:`H`.
 
-    Usually, energies lie outside the range :math:`(-\frac{2\pi}{t}, 0)`. However, this range can be adjusted by searching inside the window :math:`(E_{target} - \frac{\Delta}{2}, E_{target} + \frac{\Delta}{2})` with :math:`E_{target}` and :math:`\Delta` specified by :code:`E_target` and :code:`size_interval`, respectively. It is suggested to always start from a large size interval and unbiased target energy like :math:`0` thus enclosing many of the eigenenergies including the desired one. One can then narrow the window around an already found eigenenergy for a better precision. Working with a window not enclosing an eigenenergy would still evaluate to a result, but it may be misleading.
+    Usually, energies lie outside the range :math:`(-\frac{2\pi}{t}, 0)`. However, this range can be adjusted by searching inside
+    the window :math:`(E_{target} - \frac{\Delta}{2}, E_{target} + \frac{\Delta}{2})` with :math:`E_{target}` and :math:`\Delta`
+    specified by :code:`E_target` and :code:`size_interval`, respectively. It is suggested to always start from a large size
+    interval and unbiased target energy like :math:`0` thus enclosing many of the eigenenergies including the desired one. One can
+    then narrow the window around an already found eigenenergy for a better precision. Working with a window not enclosing an
+    eigenenergy would still evaluate to a result, but it may be misleading.
 
     .. warning::
-        Regarding the adiabatic state preparation, if the lowest energy eigenstate of the first-step Hamiltonian :math:`h_{pq}` is also an eigenstate of the whole :math:`H`, the system will remain in it until the end of the whole adiabatic stage. Hence, this eigenstate may not be the one of the lowest energy anymore.
-
-    .. warning::
-        As a rule of thumb, if small changes to the interval cause considerable deviations in the energy, that's a sign that the window is too small or a different target energy may be better.
-
+        * Regarding the adiabatic state preparation, if the lowest energy eigenstate of the first-step Hamiltonian :math:`h_{pq}` is
+        also an eigenstate of the whole :math:`H`, the system will remain in it until the end of the whole adiabatic stage. Hence,
+        this eigenstate may not be the one of the lowest energy anymore.
+        * As a rule of thumb, if small changes to the interval cause considerable deviations in the energy, that's a sign that the
+        window is too small or a different target energy may be better.
 
     Args:
         H_el (:class:`~qat.fermion.ElectronicStructureHamiltonian`): an electronic-structure Hamiltonian
@@ -68,15 +83,17 @@ def perform_phase_estimation(
         basis_transform (Optional[str]): Transformation to go from :class:`qat.fermion.ElectronicStructureHamiltonian`
             into a :class:`qat.fermion.Hamiltonian`: one can use the "jordan-wigner" (default),
             "bravyi-kitaev" or "parity" transformations.
-        qpu (Optional[QPU]): QPU to use for computation, default is :class:`~qat.linalg.LinAlg`.
+        qpu (Optional[QPU]): QPU to use for computation, default is :class:`~qat.qpus.get_default_qpu`.
 
     Returns:
-        float, float: Energy found, associated probability.
+        Tuple[float, float]:
+            - Energy found,
+            - associated probability.
 
     Note:
         Usually, energies lie outside the range :math:`(-\frac{2\pi}{t}, 0)`. However, this range can be adjusted
         by specifying the arguments `E_target` and `size_interval` thus searching inside the window
-        :math:`(E_{t} - \frac{\Delta}{2}, E_{target} + \frac{size_interval}{2})`,
+        :math:`(E_{t} - \frac{\Delta}{2}, E_{target} + \frac{size\_interval}{2})`,
         where :math:`E_{t}` and :math:`\Delta` stand for . We suggest to always start from a large size interval
         and unbiased target energy like 0 thus enclosing many of the eigenenergies including the desired one.
         One can then narrow the window around an already found eigenenergy for a better precision.
@@ -101,7 +118,6 @@ def perform_phase_estimation(
         H_qbasis = transform_to_parity_basis(H_el)
 
     else:
-
         current_line_no = inspect.stack()[0][2]
 
         raise exceptions_types.QPUException(
@@ -270,6 +286,7 @@ def apply_adiabatic_state_prep(
         H_current = (1 - t) * H_el_hopping_qbasis + t * H_qbasis
 
         pea_routine = build_qpe_routine_for_hamiltonian(H_current, nqbits_adiab, global_phase=0, n_trotter_steps=n_trotter_steps)
+
         # use only the first nqbits_adiab of all the n_phase_bits
         prog.apply(pea_routine, phase_reg[:nqbits_adiab], data_reg)
 
@@ -302,6 +319,7 @@ def build_qpe_routine_for_hamiltonian(
         QRoutine: Quantum routine.
 
     """
+
     routine = QRoutine()
     phase_reg = routine.new_wires(n_phase_bits)
     data_reg = routine.new_wires(hamiltonian.nbqbits)
@@ -312,6 +330,7 @@ def build_qpe_routine_for_hamiltonian(
 
     # Controlled unitaries along with a global phase application
     for j_ind in range(n_phase_bits):
+
         # happens before the trotterization
         routine.apply(PH(global_phase * 2**j_ind), phase_reg[j_ind])
         for _ in range(n_trotter_steps):

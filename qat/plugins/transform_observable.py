@@ -6,16 +6,16 @@ from qat.fermion.transforms import transform_to_jw_basis, transform_to_bk_basis,
 class TransformObservable(AbstractPlugin):
     """
     Plugin performing a transformation on the Observable, to cast
-    a class:`qat.dqs.FermionHamiltonian` or a :class:`qat.dqs.ElectronicStructureHamiltonian`
-    into a :class:`qat.dqs.SpinHamiltonian`. The transformation is defined
+    a :class:`qat.fermion.Hamiltonian` or a :class:`qat.fermion.ElectronicStructureHamiltonian`
+    into a :class:`qat.fermion.Hamiltonian`. The transformation is defined
     by a identifier (i.e. string)
 
      - **jordan-wigner**: Jordan-Wigned transformation
-       (cf. :func:`~qat.dqs.transforms.transfrom_to_jw_basis`**)
+       (cf. :func:`~qat.fermion.transforms.transfrom_to_jw_basis`**)
      - **bravyi-kitaev**: Bravyi-Kitaev transformation
-       (cf. :func:`~qat.dqs.transforms.transform_to_bk_basis`)
+       (cf. :func:`~qat.fermion.transforms.transform_to_bk_basis`)
      - **parity-basis**: Parity basis transformation
-       (cf. :func:`~qat.dqs.transforms.transform_to_parity_basis`)
+       (cf. :func:`~qat.fermion.transforms.transform_to_parity_basis`)
 
     Args:
         name (str): Transformation

@@ -198,7 +198,7 @@ class ZeroNoiseExtrapolator(AbstractPlugin):
         self.extrap_gates = extrap_gates
         self.extrap_method = extrap_method
 
-    def compile(self, batch: Batch):
+    def compile(self, batch: Batch, specs):
         """
         Compile the batch.
 

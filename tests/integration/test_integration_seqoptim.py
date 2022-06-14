@@ -5,13 +5,13 @@ from qat.fermion.circuits import make_shallow_circ
 from qat.fermion.hamiltonians import ElectronicStructureHamiltonian
 from qat.fermion.transforms import transform_to_jw_basis
 
-from qat.qpus import LinAlg
+from qat.qpus import get_default_qpu
 
 
 def test_VQE_SeqOptim_emb_4qb():
     np.random.seed(1)
     x0 = np.random.random(8)
-    stack = SeqOptim(x0=x0) | LinAlg()
+    stack = SeqOptim(x0=x0) | get_default_qpu()
     U = 1
     mu = U / 2
     V = 1

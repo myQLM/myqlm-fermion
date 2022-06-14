@@ -12,7 +12,6 @@ from qat.lang.AQASM import Program, RY, CNOT, X
 from qat.fermion.matchgates import nb_params_LDCA, LDCA_routine
 from qat.fermion.util import make_fSim_fan_routine, make_sugisaki_routine, tobin
 
-from qat.pbo import GraphCircuit, VAR
 from qat.lang.AQASM import Program, H, RX, RY, RZ, CNOT
 from qat.core import Observable, Circuit
 from qat.lang.AQASM.gates import Gate
@@ -102,19 +101,19 @@ def make_ldca_circ(
     eigstate_ind: Optional[int] = 0,
     slater: Optional[bool] = False,
 ) -> Circuit:
-    """
-    Construct a LDCA circuit, applying ncycles layers of matchgates routines
+    r"""
+    Construct a LDCA circuit (see `article by P. Dallaire-Demers et al. (2019) <https://doi.org/10.48550/arXiv.1801.01053>`_), applying ncycles layers of matchgates routines
     on nb_fermionic_modes qubits.
 
     Args:
-        nb_fermionic_modes (int): Number of qubits
-        ncycles (int): Number of LDCA cycles
+        nb_fermionic_modes (int): Number of qubits.
+        ncycles (int): Number of LDCA cycles.
         eigstate_ind (int, optional): Eigenstate index. Defaults to 0.
-        slater (Optional[bool]): Whether to only include excitation-preserving rotations.
-                                 Defaults to False.
+        slater (Optional[bool]): Whether to only include excitation-preserving rotations. Defaults to False.
 
     Return:
        :class:`~qat.core.Circuit`
+
     """
 
     prog = Program()
@@ -138,11 +137,12 @@ def make_ldca_circ(
 
 def make_mr_circ() -> Circuit:
     """
-    Builds a small, one-parameter Multi-Reference (MR) circuit on 4 qubits inspired from Sugisaki et al.,
-    10.1021/acscentsci.8b00788 [2019] to prepare states in natural orbitals.
+    Builds a small, one-parameter Multi-Reference (MR) circuit on 4 qubits inspired from `Sugisaki et al. article (2019) <https://doi.org/10.1021/acscentsci.8b00788>`_
+    to prepare states in natural orbitals.
 
     Returns:
         :class:`~qat.core.Circuit`
+
     """
 
     prog = Program()
@@ -163,7 +163,8 @@ def make_mr_circ() -> Circuit:
 def make_mrep_circ(n_fSim_cycles: Optional[int] = 4, set_phi_to_0: Optional[bool] = False) -> Circuit:
     """
     Constructs the 8-qubit Multi-Reference Excitation Preserving (MREP) ansatz that combines
-    the multi-reference routine of Sugisaki et al., 10.1021/acscentsci.8b00788 [2019] with some fSim nearest-neighbour cycles.
+    the multi-reference routine of `Sugisaki et al. article (2019) <https://doi.org/10.1021/acscentsci.8b00788>`_ with some fSim
+    nearest-neighbour cycles.
     The second angles of the fSim gates (phi) may be taken to 0.
 
     Args:
@@ -172,6 +173,7 @@ def make_mrep_circ(n_fSim_cycles: Optional[int] = 4, set_phi_to_0: Optional[bool
                                        or not (False). Defaults to False.
     Returns:
         :class:`~qat.core.Circuit`
+
     """
     nbqbits = 8
 
@@ -205,11 +207,12 @@ def make_mrep_circ(n_fSim_cycles: Optional[int] = 4, set_phi_to_0: Optional[bool
 
 def make_shallow_circ() -> Circuit:
     """
-    Builds the 8-parameter circuit proposed in Keen et al., 10.1088/2058-9565/ab7d4c (arXiv:1910.09512) [2019].
+    Builds the 8-parameter circuit proposed in `Keen et al. article (2019) <https://doi.org/10.48550/arXiv.1910.09512>`_.
     This is a 4-qubit circuit.
 
     Returns:
         :class:`~qat.core.Circuit`
+
     """
 
     prog = Program()
@@ -236,7 +239,7 @@ def make_general_hwe_circ(
     rotation_gates: List[Gate] = [RY],
     entangling_gate: Gate = CNOT,
 ) -> Circuit:
-    """
+    r"""
     Constructs an ansatz made of :math:`n_{\mathrm{cycles}}` layers of so-called thinly-dressed routines,
     that is to say entanglers surrounded by four one-qubit rotations are applied on nearest-neighbour
     qubits in an odd/even alternating pattern.
@@ -246,12 +249,12 @@ def make_general_hwe_circ(
     Args:
         nqbits (int): Number of qubits of the circuit.
         n_cycles (int): Number of layers.
-        rotation_gates (List[Gate]): Parametrized rotation gates to include around the entangling gate.
-        Defaults to :math:`RY`. Must be of arity 1.
+        rotation_gates (List[Gate]): Parametrized rotation gates to include around the entangling gate. Defaults to :math:`RY`. Must be of arity 1.
         entangling_gate (Gate): The 2-qubit entangler. Must be of arity 2. Defaults to :math:`CNOT`.
 
     Returns:
         :class:`~qat.core.Circuit`
+
     """
     n_rotations = len(rotation_gates)
 
@@ -294,64 +297,70 @@ def make_general_hwe_circ(
     return prog.to_circ()
 
 
-def make_compressed_ldca_circ(
-    nb_fermionic_modes: int,
-    ncycles: int,
-    eigstate_ind: Optional[int] = 0,
-    slater: Optional[bool] = False,
-) -> Circuit:
-    """
-    Builds a compressed version of the LDCA ansatz circuit.
+try:
+    from qat.pbo import GraphCircuit, VAR
 
-    The new pattern was obtained using qat.synthopline.
+    def make_compressed_ldca_circ(
+        nb_fermionic_modes: int,
+        ncycles: int,
+        eigstate_ind: Optional[int] = 0,
+        slater: Optional[bool] = False,
+    ) -> Circuit:
+        """
+        Builds a compressed version of the LDCA ansatz circuit.
 
-    Args:
-        nb_fermionic_modes (int): Number of qubits.
-        ncycles (int): Number of LDCA cycles.
-        eigstate_ind (Optional[int]): Eigenstate index. Defaults to 0.
-        slater (Optional[bool]): Whether to only include excitation-preserving rotations.
-                                 Defaults to False.
+        The new pattern was obtained using qat.synthopline.
 
-    Return:
-       :class:`~qat.core.Circuit`
-    """
+        Args:
+            nb_fermionic_modes (int): Number of qubits.
+            ncycles (int): Number of LDCA cycles.
+            eigstate_ind (Optional[int]): Eigenstate index. Defaults to 0.
+            slater (Optional[bool]): Whether to only include excitation-preserving rotations.
+                                    Defaults to False.
 
-    circ = make_ldca_circ(nb_fermionic_modes, ncycles, eigstate_ind=eigstate_ind, slater=slater)
+        Return:
+        :class:`~qat.core.Circuit`
+        """
 
-    graph = GraphCircuit()
-    graph.load_circuit(circ)
+        circ = make_ldca_circ(nb_fermionic_modes, ncycles, eigstate_ind=eigstate_ind, slater=slater)
 
-    a1 = VAR()
-    a2 = VAR()
-    a3 = VAR()
-    a4 = VAR()
-    a5 = VAR()
+        graph = GraphCircuit()
+        graph.load_circuit(circ)
 
-    old_pattern = [
-        ("RYY", [0, 1], a3),
-        ("RXX", [0, 1], a2),
-        ("RZZ", [0, 1], a1),
-        ("RYX", [0, 1], a5),
-        ("RXY", [0, 1], a4),
-    ]
-    new_pattern = [
-        ("CNOT", [1, 0]),
-        ("RX", [1], a2),
-        ("RY", [1], a4),
-        ("H", [1]),
-        ("CNOT", [0, 1]),
-        ("PH", [1], -a3),
-        ("PH", [0], a1),
-        ("RY", [1], -a5),
-        ("CNOT", [1, 0]),
-        ("H", [1]),
-        ("CNOT", [0, 1]),
-    ]
+        a1 = VAR()
+        a2 = VAR()
+        a3 = VAR()
+        a4 = VAR()
+        a5 = VAR()
 
-    # Replace pattern
-    while graph.replace_pattern(old_pattern, new_pattern):
-        continue
+        old_pattern = [
+            ("RYY", [0, 1], a3),
+            ("RXX", [0, 1], a2),
+            ("RZZ", [0, 1], a1),
+            ("RYX", [0, 1], a5),
+            ("RXY", [0, 1], a4),
+        ]
+        new_pattern = [
+            ("CNOT", [1, 0]),
+            ("RX", [1], a2),
+            ("RY", [1], a4),
+            ("H", [1]),
+            ("CNOT", [0, 1]),
+            ("PH", [1], -a3),
+            ("PH", [0], a1),
+            ("RY", [1], -a5),
+            ("CNOT", [1, 0]),
+            ("H", [1]),
+            ("CNOT", [0, 1]),
+        ]
 
-    compressed_circ = graph.to_circ()
+        # Replace pattern
+        while graph.replace_pattern(old_pattern, new_pattern):
+            continue
 
-    return compressed_circ
+        compressed_circ = graph.to_circ()
+
+        return compressed_circ
+
+except:
+    pass

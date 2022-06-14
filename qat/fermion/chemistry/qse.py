@@ -48,9 +48,7 @@ def apply_quantum_subspace_expansion(
 
     .. math::
 
-        S_{i,j} =   \langle \Psi^\star |
-                    \hat{O}_i^\dagger \hat{O}_j
-                    | \Psi^\star \rangle
+        S_{i,j} = \langle \Psi^\star | \hat{O}_i^\dagger \hat{O}_j | \Psi^\star \rangle
 
     Args:
 
@@ -68,10 +66,8 @@ def apply_quantum_subspace_expansion(
     Returns:
 
         e_qse (float):  Improved energy provided by the QSE procedure.
-        matrix_h (Optional[np.ndarray]): The subspace Hamiltonian :math:`H^{(s)}`. Only if
-            `return_matrices` is True.
-        matrix_s (Optional[np.ndarray]): The overlap matrix :math:`S`.  Only if
-            `return_matrices` is True.
+        matrix_h (Optional[np.ndarray]): The subspace Hamiltonian :math:`H^{(s)}`. Only if `return_matrices` is True.
+        matrix_s (Optional[np.ndarray]): The overlap matrix :math:`S`.  Only if `return_matrices` is True.
 
     Example:
 
@@ -81,12 +77,11 @@ def apply_quantum_subspace_expansion(
         from qat.core import Term
         from qat.fermion import Hamiltonian
         from qat.lang.AQASM import Program, RY, CNOT, RZ
-        from qat.qpus import NoisyQProc
+        from qat.qpus import get_default_qpu
         from qat.plugins import SeqOptim
 
         # we instantiate the Hamiltonian we want to approximate the ground state energy of
         hamiltonian = Hamiltonian(2, [Term(1, op, [0, 1]) for op in ["XX", "YY", "ZZ"]])
-
 
         # we construct the variational circuit (ansatz)
         prog = Program()
@@ -100,12 +95,11 @@ def apply_quantum_subspace_expansion(
 
         # construct a (variational) job with the variational circuit and the observable
         job = circ.to_job(observable=hamiltonian,
-                          nbshots=0)
+                        nbshots=0)
 
         # we now build a stack that can handle variational jobs
-        from qat.hardware import make_depolarizing_hardware_model
-        qpu = NoisyQProc(hardware_model=make_depolarizing_hardware_model(eps1=0.001, eps2=0.01),
-                         sim_method="deterministic-vectorized")
+        qpu = get_default_qpu()
+
         optimizer = SeqOptim(ncycles=10, x0=[0, 0.5, 0])
         stack = optimizer | qpu
 
@@ -119,15 +113,17 @@ def apply_quantum_subspace_expansion(
         opt_circ = circ.bind_variables(eval(result.meta_data["parameter_map"]))
 
         expansion_operators = [Hamiltonian(2, [], 1.0),
-                               Hamiltonian(2, [Term(1., "ZZ", [0, 1])])]
+                            Hamiltonian(2, [Term(1., "ZZ", [0, 1])])]
 
         from qat.fermion.chemistry.qse import apply_quantum_subspace_expansion
         e_qse = apply_quantum_subspace_expansion(hamiltonian,
-                                                 opt_circ,
-                                                 expansion_operators,
-                                                 qpu,
-                                                 return_matrices=False)
+                                                opt_circ,
+                                                expansion_operators,
+                                                qpu,
+                                                return_matrices=False)
+
         print("E(QSE) = %s (err = %s %%)"%(e_qse, 100*abs((e_qse-E_min)/E_min)))
+
     """
 
     matrix_h, matrix_s = _build_quantum_subspace_expansion(

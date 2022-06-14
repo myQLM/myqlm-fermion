@@ -6,16 +6,15 @@ Tools for pySCF interfacing
 """
 from functools import reduce
 import numpy as np
-from typing import Union, List
-
-from pyscf import gto, scf, fci, mp, ci
-from pyscf import ao2mo
+from typing import Union
 
 
-def compute_integrals(molecule: Union[np.ndarray, gto.Mole], mo_coeff, hcore):
+def compute_integrals(molecule: Union[np.ndarray, "pyscf.gto.Mole"], mo_coeff, hcore):
     """
-    For a given molecule, compute 1-body and 2-body integrals
+    For a given molecule, compute 1-body and 2-body integrals.
     """
+
+    from pyscf import ao2mo
 
     # no spin dof
     one_electron_compressed = reduce(np.dot, (mo_coeff.T, hcore, mo_coeff))
@@ -28,7 +27,54 @@ def compute_integrals(molecule: Union[np.ndarray, gto.Mole], mo_coeff, hcore):
     return one_electron_integrals, two_electron_integrals
 
 
-def perform_pyscf_computation(geometry, basis, spin, charge, verbose=False, run_FCI=True):
+def perform_pyscf_computation(geometry: list, basis: str, spin: int, charge: int, run_FCI: bool = False):
+    r"""Perform various calculations using PySCF.
+
+    This function will compute:
+
+       * The reduced density matrix,
+       * The orbital energies,
+       * The nuclear repulsion constant,
+       * The number of electrons,
+       * The one- and two-body integrals,
+       * The groundstate energies obtained through Hartree-Fock and 2nd order Möller-Plesset perturbation approach,
+       * (Optional) The groundstate energy using the full configuration interaction (full CI) approach.
+
+    Note:
+        This function is a helper function meant to kickstart molecule studies. Its use is
+        completely optional, and using other methods or packages is entirely possible.
+
+    Args:
+        geometry (list): Defines the molecular structure. The internal format is PySCF format:
+
+            .. code-block::
+
+                atom = [[atom1, (x, y, z)],
+                        [atom2, (x, y, z)],
+                        ...
+                        [atomN, (x, y, z)]]
+
+        basis (str): Defines the basis set.
+        spin (int): 2S, number of alpha electrons - number beta electrons to control multiplicity. If spin is None, multiplicity will be guessed
+        based on the neutral molecule.
+        charge (int): Charge of molecule. Affects the electron numbers.
+        run_FCI (bool, optional): Whether the groundstates energies should also be computed using a full CI approach. Defaults to False.
+
+    Returns:
+
+        Tuple[np.ndarray, list, float, int, np.ndarray, np.ndarray, dict]:
+            - rdm1 (np.ndarray): Reduced density matrix.
+            - orbital_energies (list): List of orbital energies.
+            - nuclear_repulsion (float): Nuclear repulsion constant.
+            - nels (int): Number of electrons.
+            - one_body_integrals (np.ndarray): One-body integral.
+            - two_body_integrals (np.ndarray): Two-body integral.
+            - info (dict): Dictionary containing the Hartree-Fock and 2nd order Möller-Plesset computed ground state energies (and optionally the Full CI energy if run_FCI is set to True).
+
+    """
+
+    from pyscf import gto, scf, fci, mp, ci
+
     # define molecule in pySCF format
     molecule = gto.Mole()
     molecule.atom = geometry
@@ -44,15 +90,7 @@ def perform_pyscf_computation(geometry, basis, spin, charge, verbose=False, run_
     scf_worker.run()
     hf_energy = float(scf_worker.e_tot)
 
-    if verbose:
-        print("HF energy=", hf_energy)
-
     one_body_integrals, two_body_integrals = compute_integrals(molecule, scf_worker.mo_coeff, scf_worker.get_hcore())
-
-    # overlap_integrals = pyscf_scf.get_ovlp()
-    # n_orbitals = int(molecule.nao_nr())
-    # n_qubits = 2 * molecule.n_orbitals
-    # canonical_orbitals = pyscf_scf.mo_coeff.astype(float)
     nuclear_repulsion = float(molecule.energy_nuc())
     orbital_energies = scf_worker.mo_energy.astype(float)
     nels = molecule.nelectron
@@ -70,9 +108,6 @@ def perform_pyscf_computation(geometry, basis, spin, charge, verbose=False, run_
     mp2.run()
     mp2_energy = scf_worker.e_tot + mp2.e_corr
 
-    if verbose:
-        print("MP2 energy=", mp2_energy)
-
     # Run FCI
     if run_FCI:
         fci_worker = fci.FCI(molecule, scf_worker.mo_coeff)
@@ -80,8 +115,6 @@ def perform_pyscf_computation(geometry, basis, spin, charge, verbose=False, run_
         fci_energy = fci_worker.kernel()[0]
     else:
         fci_energy = None
-    if verbose:
-        print("FCI energy=", fci_energy)
 
     info = {"MP2": mp2_energy, "FCI": fci_energy, "HF": hf_energy}
 

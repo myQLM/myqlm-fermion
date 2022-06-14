@@ -11,8 +11,7 @@ from qat.fermion.trotterisation import (
     _number_excitation_operator_jw,
     _double_excitation_operator_jw,
 )
-from qat.fermion.trotterisation import _number_operator_jw, make_trotter_slice_jw
-from qat.fermion.trotterisation import make_spin_hamiltonian_trotter_slice
+from qat.fermion.trotterisation import _number_operator_jw, make_trotter_slice_jw, make_spin_hamiltonian_trotter_slice
 from qat.fermion.hamiltonians import Hamiltonian, ElectronicStructureHamiltonian
 
 TOL1 = 4
@@ -21,7 +20,8 @@ TOL2 = 10
 
 def check_trotterisation(hpq, hpqrs, tol):
     hamiltonian = ElectronicStructureHamiltonian(hpq, hpqrs)
-    U_exact = hamiltonian.exponential()
+
+    U_exact = sp.linalg.expm(-1j * hamiltonian.get_matrix())
     U_trotter = get_unitary_from_circuit(make_trotter_slice_jw(hpq, hpqrs, 1), hpq.shape[0])
 
     np.testing.assert_almost_equal(np.linalg.norm(U_exact - U_trotter), 0, decimal=tol)
@@ -64,7 +64,7 @@ def test_make_trotter_slice_jw_4_qbits():
 def checks_trotter_slice(hpq, hpqrs):
     number_qubits = hpq.shape[0]
     hamiltonian = ElectronicStructureHamiltonian(hpq, hpqrs)
-    a = hamiltonian.exponential()
+    a = sp.linalg.expm(-1j * hamiltonian.get_matrix())
     rout1 = make_trotter_slice_jw(hpq, hpqrs, 1)
     b = get_unitary_from_circuit(rout1, number_qubits)
     assert np.linalg.norm(a - b) < TOL1
