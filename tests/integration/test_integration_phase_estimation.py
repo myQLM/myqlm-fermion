@@ -284,7 +284,7 @@ def test_hubbard_molecule__from_notebook():
             [0, 1, 2, 3],
         )
 
-        qpe_energy, probs = perform_phase_estimation(
+        qpe_energy, _ = perform_phase_estimation(
             hamilt,
             nqbits_phase,
             n_trotter_steps,
