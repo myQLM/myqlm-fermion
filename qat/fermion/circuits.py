@@ -101,19 +101,19 @@ def make_ldca_circ(
     eigstate_ind: Optional[int] = 0,
     slater: Optional[bool] = False,
 ) -> Circuit:
-    """
-    Construct a LDCA circuit, applying ncycles layers of matchgates routines
+    r"""
+    Construct a LDCA circuit (see `article by P. Dallaire-Demers et al. (2019) <https://doi.org/10.48550/arXiv.1801.01053>`_), applying ncycles layers of matchgates routines
     on nb_fermionic_modes qubits.
 
     Args:
-        nb_fermionic_modes (int): Number of qubits
-        ncycles (int): Number of LDCA cycles
+        nb_fermionic_modes (int): Number of qubits.
+        ncycles (int): Number of LDCA cycles.
         eigstate_ind (int, optional): Eigenstate index. Defaults to 0.
-        slater (Optional[bool]): Whether to only include excitation-preserving rotations.
-                                 Defaults to False.
+        slater (Optional[bool]): Whether to only include excitation-preserving rotations. Defaults to False.
 
     Return:
        :class:`~qat.core.Circuit`
+
     """
 
     prog = Program()
@@ -137,11 +137,12 @@ def make_ldca_circ(
 
 def make_mr_circ() -> Circuit:
     """
-    Builds a small, one-parameter Multi-Reference (MR) circuit on 4 qubits inspired from Sugisaki et al.,
-    10.1021/acscentsci.8b00788 [2019] to prepare states in natural orbitals.
+    Builds a small, one-parameter Multi-Reference (MR) circuit on 4 qubits inspired from `Sugisaki et al. article (2019) <https://doi.org/10.1021/acscentsci.8b00788>`_
+    to prepare states in natural orbitals.
 
     Returns:
         :class:`~qat.core.Circuit`
+
     """
 
     prog = Program()
@@ -162,7 +163,8 @@ def make_mr_circ() -> Circuit:
 def make_mrep_circ(n_fSim_cycles: Optional[int] = 4, set_phi_to_0: Optional[bool] = False) -> Circuit:
     """
     Constructs the 8-qubit Multi-Reference Excitation Preserving (MREP) ansatz that combines
-    the multi-reference routine of Sugisaki et al., 10.1021/acscentsci.8b00788 [2019] with some fSim nearest-neighbour cycles.
+    the multi-reference routine of `Sugisaki et al. article (2019) <https://doi.org/10.1021/acscentsci.8b00788>`_ with some fSim
+    nearest-neighbour cycles.
     The second angles of the fSim gates (phi) may be taken to 0.
 
     Args:
@@ -171,6 +173,7 @@ def make_mrep_circ(n_fSim_cycles: Optional[int] = 4, set_phi_to_0: Optional[bool
                                        or not (False). Defaults to False.
     Returns:
         :class:`~qat.core.Circuit`
+
     """
     nbqbits = 8
 
@@ -204,11 +207,12 @@ def make_mrep_circ(n_fSim_cycles: Optional[int] = 4, set_phi_to_0: Optional[bool
 
 def make_shallow_circ() -> Circuit:
     """
-    Builds the 8-parameter circuit proposed in Keen et al., 10.1088/2058-9565/ab7d4c (arXiv:1910.09512) [2019].
+    Builds the 8-parameter circuit proposed in `Keen et al. article (2019) <https://doi.org/10.48550/arXiv.1910.09512>`_.
     This is a 4-qubit circuit.
 
     Returns:
         :class:`~qat.core.Circuit`
+
     """
 
     prog = Program()
@@ -245,8 +249,7 @@ def make_general_hwe_circ(
     Args:
         nqbits (int): Number of qubits of the circuit.
         n_cycles (int): Number of layers.
-        rotation_gates (List[Gate]): Parametrized rotation gates to include around the entangling gate.
-        Defaults to :math:`RY`. Must be of arity 1.
+        rotation_gates (List[Gate]): Parametrized rotation gates to include around the entangling gate. Defaults to :math:`RY`. Must be of arity 1.
         entangling_gate (Gate): The 2-qubit entangler. Must be of arity 2. Defaults to :math:`CNOT`.
 
     Returns:

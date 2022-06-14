@@ -79,7 +79,7 @@ def make_PCU_sets(nqbits: int) -> List[Tuple]:
 
 
 def transform_to_jw_basis(fermion_hamiltonian: Union[Hamiltonian, ElectronicStructureHamiltonian]) -> Hamiltonian:
-    """Transform to Jordan-Wigner (JW) basis.
+    r"""Transform to Jordan-Wigner (JW) basis.
 
     Args:
         fermion_hamiltonian (Union[Hamiltonian, ElectronicStructureHamiltonian]): The fermionic hamiltonian.
@@ -100,7 +100,7 @@ def transform_to_jw_basis(fermion_hamiltonian: Union[Hamiltonian, ElectronicStru
 
         spin_hamiltonian = transform_to_jw_basis(hamiltonian)
 
-        print(f"H = {hamiltonian}\n")
+        print(f"H = {hamiltonian} \n")
         print(f"H(spin) = {spin_hamiltonian}")
 
     """
@@ -134,7 +134,7 @@ def transform_to_jw_basis(fermion_hamiltonian: Union[Hamiltonian, ElectronicStru
 
 
 def transform_to_parity_basis(fermion_hamiltonian: Union[Hamiltonian, ElectronicStructureHamiltonian]) -> Hamiltonian:
-    """Transform to parity basis.
+    r"""Transform to parity basis.
 
     Args:
         fermion_hamiltonian (Union[Hamiltonian, ElectronicStructureHamiltonian]): The fermionic hamiltonian.
@@ -148,14 +148,15 @@ def transform_to_parity_basis(fermion_hamiltonian: Union[Hamiltonian, Electronic
 
         from qat.core import Term
         from qat.fermion import Hamiltonian
+        from qat.fermion.transforms import transform_to_parity_basis
 
         hamiltonian = Hamiltonian(
             2, [Term(0.3, "Cc", [0, 1]), Term(1.4, "CcCc", [0, 1, 1, 0])])
-        print("H = ", hamiltonian)
 
-        from qat.fermion.transforms import transform_to_parity_basis
         spin_hamiltonian = transform_to_parity_basis(hamiltonian)
-        print("H(spin) = ", spin_hamiltonian)
+
+        print(f"H = {hamiltonian} \n")
+        print(f"H(spin) = {spin_hamiltonian}")
 
     """
 
@@ -188,7 +189,7 @@ def transform_to_parity_basis(fermion_hamiltonian: Union[Hamiltonian, Electronic
 
 
 def transform_to_bk_basis(fermion_hamiltonian: Union[Hamiltonian, ElectronicStructureHamiltonian]) -> Hamiltonian:
-    """Transform to Bravyi-Kitaev (BK) basis.
+    r"""Transform to Bravyi-Kitaev (BK) basis.
 
     Args:
         fermion_hamiltonian (Union[Hamiltonian, ElectronicStructureHamiltonian]): The fermionic hamiltonian.
@@ -202,14 +203,15 @@ def transform_to_bk_basis(fermion_hamiltonian: Union[Hamiltonian, ElectronicStru
 
         from qat.core import Term
         from qat.fermion import Hamiltonian
+        from qat.fermion.transforms import transform_to_bk_basis
 
         hamiltonian = Hamiltonian(
             2, [Term(0.3, "Cc", [0, 1]), Term(1.4, "CcCc", [0, 1, 1, 0])])
-        print("H = ", hamiltonian)
 
-        from qat.fermion.transforms import transform_to_bk_basis
         spin_hamiltonian = transform_to_bk_basis(hamiltonian)
-        print("H(spin) = ", spin_hamiltonian)
+
+        print(f"H = {hamiltonian} \n")
+        print(f"H(spin) = {spin_hamiltonian}")
 
     """
 
@@ -262,7 +264,7 @@ def transform_to_bk_basis(fermion_hamiltonian: Union[Hamiltonian, ElectronicStru
 
 
 def get_jw_code(nbits: int) -> np.ndarray:
-    """Construct Jordan-Wigner code matrix :math:`C`.
+    r"""Construct Jordan-Wigner code matrix :math:`C`.
 
     i.e matrix :math:`C` to get new bit value :math:`p_i` from bit values :math:`f_j`
     in occupation number basis:
@@ -283,7 +285,7 @@ def get_jw_code(nbits: int) -> np.ndarray:
 
 
 def get_parity_code(nbits: int) -> np.ndarray:
-    """Construct parity code matrix :math:`C`.
+    r"""Construct parity code matrix :math:`C`.
 
     i.e matrix :math:`C` to get new bit value :math:`p_i` from bit values :math:`f_j` in occupation number basis:
 
@@ -310,7 +312,7 @@ def get_parity_code(nbits: int) -> np.ndarray:
 
 
 def get_bk_code(nqbits: int) -> np.ndarray:
-    """Construct Bravyi-Kitaev code matrix :math:`C`.
+    r"""Construct Bravyi-Kitaev code matrix :math:`C`.
 
     i.e matrix :math:`C` to get new bit value :math:`p_i` from bit values :math:`f_j` in occupation number basis:
 
@@ -384,7 +386,7 @@ def recode_integer(integer: int, code: np.ndarray) -> int:
 
 
 def change_encoding(mat: np.ndarray, code: np.ndarray) -> np.ndarray:
-    """
+    r"""
     Change encoding of a matrix A:
 
     ..math ::

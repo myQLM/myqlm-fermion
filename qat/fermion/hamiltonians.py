@@ -65,10 +65,10 @@ class Hamiltonian(Observable):
             from qat.fermion import Hamiltonian
 
             hamiltonian = Hamiltonian(2, [Term(0.3, "X", [0]), Term(-0.4, "ZY", [0, 1])])
-            print(hamiltonian)
+            print(f"H = {hamiltonian}")
 
             # let us print the corresponding matrix representation:
-            print("H matrix:", hamiltonian.get_matrix())
+            print(f"H matrix: {hamiltonian.get_matrix()}")
 
         Or fermionic operators :
 
@@ -78,8 +78,8 @@ class Hamiltonian(Observable):
             from qat.fermion import Hamiltonian
 
             hamiltonian = Hamiltonian(2, [Term(0.3, "Cc", [0, 1]), Term(1.4, "CcCc", [0, 1, 1, 0])])
-            print("H = ", hamiltonian)
-            print("H matrix:", hamiltonian.get_matrix())
+            print(f"H = {hamiltonian}")
+            print(f"H matrix: {hamiltonian.get_matrix()}")
 
     """
 
@@ -383,10 +383,10 @@ class ElectronicStructureHamiltonian(Hamiltonian):
             h_pqrs[1, 0, 0, 1] = 0.7
             hamiltonian = ElectronicStructureHamiltonian(h_pq, h_pqrs, -6)
 
-            print("H = ", hamiltonian)
+            print(f"H = {hamiltonian}")
             eigvals = np.linalg.eigvalsh(hamiltonian.get_matrix())
 
-            print("eigenvalues =", eigvals)
+            print(f"eigenvalues = {eigvals}")
 
     """
 
@@ -679,7 +679,7 @@ def ind_spins_ord(ind_clusters_ord: int, M: int) -> int:
 
 
 def make_hubbard_model(t_mat: np.ndarray, U: float, mu: float) -> ElectronicStructureHamiltonian:
-    r"""Construct Hubbard model
+    r"""Constructs Hubbard model
 
     .. math::
         H = \sum_{ij,\sigma} t_{ij} c^\dagger_i c_j + U \sum_i n_{i\uparrow} n_{i \downarrow} - \mu \sum_i n_i

@@ -25,7 +25,7 @@ class MolecularHamiltonian(object):
         constant_coeff (np.ndarray): Constant coefficient.
 
     Attributes:
-        nbqbits (int): The total number of qubits
+        nqbits (int): The total number of qubits
         one_body_integrals (np.ndarray): One-body integrals.
         two_body_integrals (np.ndarray): Two-body integrals.
         constant_coeff (np.ndarray): Constant coefficient.
@@ -83,7 +83,7 @@ class MolecularHamiltonian(object):
         return s
 
     @property
-    def nbqbits(self):
+    def nqbits(self):
         "Compute number of qubits from the one body integral."
         return self.one_body_integrals.shape[0] * 2
 
@@ -254,7 +254,7 @@ class MoleculeInfo(object):
         orbital_energies (np.ndarray): Orbital energies.
 
     Attributes:
-        nbqbits (int): The total number of qubits.
+        nqbits (int): The total number of qubits.
         one_body_integrals (np.ndarray): One-body integrals.
         two_body_integrals (np.ndarray): Two-body integrals.
         constant_coeff (np.ndarray): Constant coefficient.
@@ -352,11 +352,11 @@ class MoleculeInfo(object):
         return self.hamiltonian.constant_coeff
 
     @property
-    def nbqbits(self):
+    def nqbits(self):
         """
         Compute number of qubits from the one body integral.
         """
-        return self.hamiltonian.nbqbits
+        return self.hamiltonian.nqbits
 
     def copy(self) -> "MolecularHamiltonian":
         """

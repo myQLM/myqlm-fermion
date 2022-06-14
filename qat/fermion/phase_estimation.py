@@ -57,14 +57,11 @@ def perform_phase_estimation(
     eigenenergy would still evaluate to a result, but it may be misleading.
 
     .. warning::
-        Regarding the adiabatic state preparation, if the lowest energy eigenstate of the first-step Hamiltonian :math:`h_{pq}` is
+        * Regarding the adiabatic state preparation, if the lowest energy eigenstate of the first-step Hamiltonian :math:`h_{pq}` is
         also an eigenstate of the whole :math:`H`, the system will remain in it until the end of the whole adiabatic stage. Hence,
         this eigenstate may not be the one of the lowest energy anymore.
-
-    .. warning::
-        As a rule of thumb, if small changes to the interval cause considerable deviations in the energy, that's a sign that the
+        * As a rule of thumb, if small changes to the interval cause considerable deviations in the energy, that's a sign that the
         window is too small or a different target energy may be better.
-
 
     Args:
         H_el (:class:`~qat.fermion.ElectronicStructureHamiltonian`): an electronic-structure Hamiltonian
@@ -89,12 +86,14 @@ def perform_phase_estimation(
         qpu (Optional[QPU]): QPU to use for computation, default is :class:`~qat.qpus.get_default_qpu`.
 
     Returns:
-        float, float: Energy found, associated probability.
+        Tuple[float, float]:
+            - Energy found,
+            - associated probability.
 
     Note:
         Usually, energies lie outside the range :math:`(-\frac{2\pi}{t}, 0)`. However, this range can be adjusted
         by specifying the arguments `E_target` and `size_interval` thus searching inside the window
-        :math:`(E_{t} - \frac{\Delta}{2}, E_{target} + \frac{size_interval}{2})`,
+        :math:`(E_{t} - \frac{\Delta}{2}, E_{target} + \frac{size\_interval}{2})`,
         where :math:`E_{t}` and :math:`\Delta` stand for . We suggest to always start from a large size interval
         and unbiased target energy like 0 thus enclosing many of the eigenenergies including the desired one.
         One can then narrow the window around an already found eigenenergy for a better precision.
@@ -119,7 +118,6 @@ def perform_phase_estimation(
         H_qbasis = transform_to_parity_basis(H_el)
 
     else:
-
         current_line_no = inspect.stack()[0][2]
 
         raise exceptions_types.QPUException(
@@ -288,6 +286,7 @@ def apply_adiabatic_state_prep(
         H_current = (1 - t) * H_el_hopping_qbasis + t * H_qbasis
 
         pea_routine = build_qpe_routine_for_hamiltonian(H_current, nqbits_adiab, global_phase=0, n_trotter_steps=n_trotter_steps)
+
         # use only the first nqbits_adiab of all the n_phase_bits
         prog.apply(pea_routine, phase_reg[:nqbits_adiab], data_reg)
 
@@ -320,6 +319,7 @@ def build_qpe_routine_for_hamiltonian(
         QRoutine: Quantum routine.
 
     """
+
     routine = QRoutine()
     phase_reg = routine.new_wires(n_phase_bits)
     data_reg = routine.new_wires(hamiltonian.nbqbits)
@@ -330,6 +330,7 @@ def build_qpe_routine_for_hamiltonian(
 
     # Controlled unitaries along with a global phase application
     for j_ind in range(n_phase_bits):
+
         # happens before the trotterization
         routine.apply(PH(global_phase * 2**j_ind), phase_reg[j_ind])
         for _ in range(n_trotter_steps):
