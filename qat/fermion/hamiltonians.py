@@ -296,7 +296,7 @@ class Hamiltonian(Observable):
                     - "parity" : Parity transform.
 
         Returns:
-            :py:class:`~qat.fermion.Hamiltonian` : Hamiltonian in spin representation.
+            :class:`~qat.fermion.hamiltonians.Hamiltonian` : Hamiltonian in spin representation.
 
         """
 

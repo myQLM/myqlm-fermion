@@ -57,14 +57,11 @@ def perform_phase_estimation(
     eigenenergy would still evaluate to a result, but it may be misleading.
 
     .. warning::
-        * Regarding the adiabatic state preparation, if the lowest energy eigenstate of the first-step Hamiltonian :math:`h_{pq}` is
-        also an eigenstate of the whole :math:`H`, the system will remain in it until the end of the whole adiabatic stage. Hence,
-        this eigenstate may not be the one of the lowest energy anymore.
-        * As a rule of thumb, if small changes to the interval cause considerable deviations in the energy, that's a sign that the
-        window is too small or a different target energy may be better.
+        * Regarding the adiabatic state preparation, if the lowest energy eigenstate of the first-step Hamiltonian :math:`h_{pq}` is also an eigenstate of the whole :math:`H`, the system will remain in it until the end of the whole adiabatic stage. Hence, this eigenstate may not be the one of the lowest energy anymore.
+        * As a rule of thumb, if small changes to the interval cause considerable deviations in the energy, that's a sign that the window is too small or a different target energy may be better.
 
     Args:
-        H_el (:class:`~qat.fermion.ElectronicStructureHamiltonian`): an electronic-structure Hamiltonian
+        H_el (:class:`~qat.fermion.hamiltonian.ElectronicStructureHamiltonian`): an electronic-structure Hamiltonian
         n_phase_bits (int): Number of qubits for the phase evaluation. The larger it is, the
             more accurate is the result.
         n_trotter_steps (int): Number of first order trotterization steps. For good phase estimation it
@@ -80,10 +77,10 @@ def perform_phase_estimation(
             of the energy is in: :math:`E \in [E_\mathrm{target}-\Delta/2, E_\mathrm{target}+\Delta/2]`
             If no idea take :math:`\Delta =2 E_\mathrm{max}`, with :math:`E_\mathrm{max}` an upper
             bound of the energy.
-        basis_transform (Optional[str]): Transformation to go from :class:`qat.fermion.ElectronicStructureHamiltonian`
+        basis_transform (Optional[str]): Transformation to go from :class:`qat.fermion.hamiltonians.ElectronicStructureHamiltonian`
             into a :class:`qat.fermion.Hamiltonian`: one can use the "jordan-wigner" (default),
             "bravyi-kitaev" or "parity" transformations.
-        qpu (Optional[QPU]): QPU to use for computation, default is :class:`~qat.qpus.get_default_qpu`.
+        qpu (Optional[QPU]): QPU to use for computation.
 
     Returns:
         Tuple[float, float]:

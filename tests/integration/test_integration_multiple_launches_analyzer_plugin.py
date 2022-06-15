@@ -19,7 +19,7 @@ def test_keep_min():
         obs.add_term(Term(-0.5, "Z", [i]))
     obs.constant_coeff += 0.5 * 5
 
-    job = circ.to_job("OBS", observable=obs, nbshots=30)
+    job = circ.to_job("OBS", observable=obs, nbshots=0)
     qpu = get_default_qpu()
     stack = MultipleLaunchesAnalyzer() | qpu
     res = stack.submit(job)

@@ -6,8 +6,8 @@ from qat.fermion.transforms import transform_to_jw_basis, transform_to_bk_basis,
 class TransformObservable(AbstractPlugin):
     """
     Plugin performing a transformation on the Observable, to cast
-    a :class:`qat.fermion.Hamiltonian` or a :class:`qat.fermion.ElectronicStructureHamiltonian`
-    into a :class:`qat.fermion.Hamiltonian`. The transformation is defined
+    a :class:`qat.fermion.hamiltonians.Hamiltonian` or a :class:`qat.fermion.hamiltonians.ElectronicStructureHamiltonian`
+    into a :class:`qat.fermion.hamiltonians.Hamiltonian`. The transformation is defined
     by a identifier (i.e. string)
 
      - **jordan-wigner**: Jordan-Wigned transformation

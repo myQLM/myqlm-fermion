@@ -228,7 +228,7 @@ class MolecularHamiltonian(object):
         The :math:`h` integrals are used to construct hamiltonians of the ElectronicStructureHamiltonian type.
 
         Returns:
-            :py:class:`~qat.fermion.ElectronicStructureHamiltonian`: Electronic structure hamiltonian.
+            :class:`~qat.fermion.hamiltonians.ElectronicStructureHamiltonian` Electronic structure hamiltonian.
 
         """
 
