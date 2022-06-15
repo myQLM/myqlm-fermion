@@ -435,36 +435,37 @@ class ElectronicStructureHamiltonian(Hamiltonian):
         )
 
 
-class SpinHamiltonian(Hamiltonian):
+class SpinHamiltonian:
     """Ensures retrocompatibility of old SpinHamiltonian class with new Hamiltonian class"""
 
-    def __init__(
-        self,
+    def __new__(
+        cls,
         nqbits: int,
         pauli_terms: List[Term],
         constant_coeff: float = 0.0,
         do_clean_up: bool = True,
     ):
+
         from warnings import warn
 
         warn(
             "The SpinHamiltonian class is deprecated. Please use the Hamiltonian class instead.",
             stacklevel=2,
         )
-        return super().__init__(nqbits=nqbits, terms=pauli_terms, constant_coeff=constant_coeff, do_clean_up=do_clean_up)
+        return Hamiltonian(nqbits=nqbits, terms=pauli_terms, constant_coeff=constant_coeff, do_clean_up=do_clean_up)
 
 
 class FermionHamiltonian(Hamiltonian):
     """Ensures retrocompatibility of old SpinHamiltonian class with new Hamiltonian class"""
 
-    def __init__(self, *args, **kwargs):
+    def __new__(cls, *args, **kwargs):
         from warnings import warn
 
         warn(
             "The FermionHamiltonian class is deprecated. Please use the Hamiltonian class instead.",
             stacklevel=2,
         )
-        return super().__init__(*args, **kwargs)
+        return Hamiltonian(*args, **kwargs)
 
 
 def make_anderson_model(U: float, mu: float, V: np.ndarray, epsilon: np.ndarray) -> ElectronicStructureHamiltonian:
