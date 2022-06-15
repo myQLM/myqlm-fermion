@@ -106,6 +106,34 @@ class Hamiltonian(Observable):
         res = super().__add__(other)
         return Hamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
 
+    def __radd__(self, other):
+        res = super().__radd__(other)
+        return Hamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
+
+    def __iadd__(self, other):
+        res = super().__iadd__(other)
+        return Hamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
+
+    def __sub__(self, other):
+        res = super().__sub__(other)
+        return Hamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
+
+    def __mul__(self, other):
+        res = super().__mul__(other)
+        return Hamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
+
+    def __rmul__(self, other):
+        res = super().__rmul__(other)
+        return Hamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
+
+    def __truediv__(self, other):
+        res = super().__truediv__(other)
+        return Hamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
+
+    def __itruediv__(self, other):
+        res = super().__itruediv__(other)
+        return Hamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
+
     def copy(self):
         """
         Copy current MolecularHamiltonian.
