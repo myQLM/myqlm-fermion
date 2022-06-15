@@ -61,7 +61,7 @@ def perform_phase_estimation(
         * As a rule of thumb, if small changes to the interval cause considerable deviations in the energy, that's a sign that the window is too small or a different target energy may be better.
 
     Args:
-        H_el (:class:`~qat.fermion.hamiltonian.ElectronicStructureHamiltonian`): an electronic-structure Hamiltonian
+        H_el (ElectronicStructureHamiltonian): An electronic-structure Hamiltonian.
         n_phase_bits (int): Number of qubits for the phase evaluation. The larger it is, the
             more accurate is the result.
         n_trotter_steps (int): Number of first order trotterization steps. For good phase estimation it
@@ -78,7 +78,7 @@ def perform_phase_estimation(
             If no idea take :math:`\Delta =2 E_\mathrm{max}`, with :math:`E_\mathrm{max}` an upper
             bound of the energy.
         basis_transform (Optional[str]): Transformation to go from :class:`qat.fermion.hamiltonians.ElectronicStructureHamiltonian`
-            into a :class:`qat.fermion.Hamiltonian`: one can use the "jordan-wigner" (default),
+            into a :class:`qat.fermion.hamiltonians.Hamiltonian`: one can use the "jordan-wigner" (default),
             "bravyi-kitaev" or "parity" transformations.
         qpu (Optional[QPU]): QPU to use for computation.
 
