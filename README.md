@@ -25,7 +25,12 @@ pip install .
 ```
 
 Documentation
--------------------
+-------------
 
 `MyQLM-fermion` is part of the MyQLM package, whose documentation can be found [here](https://myqlm.github.io/).
 To access directly MyQLM-fermion documentation, [click here](https://myqlm.github.io/qat-fermion.html).
+
+Changelog
+---------
+
+The changelog can be found [here](CHANGELOG.md).
