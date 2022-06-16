@@ -57,6 +57,7 @@ def perform_phase_estimation(
     eigenenergy would still evaluate to a result, but it may be misleading.
 
     .. warning::
+
         * Regarding the adiabatic state preparation, if the lowest energy eigenstate of the first-step Hamiltonian :math:`h_{pq}` is also an eigenstate of the whole :math:`H`, the system will remain in it until the end of the whole adiabatic stage. Hence, this eigenstate may not be the one of the lowest energy anymore.
         * As a rule of thumb, if small changes to the interval cause considerable deviations in the energy, that's a sign that the window is too small or a different target energy may be better.
 
@@ -69,7 +70,7 @@ def perform_phase_estimation(
         init_vec (Optional[str]): Initial vector specified in the computational basis as a
             string - '01101' for example. Starting from |0..0> an X will be applied to the respective
             qubits so as to produce the provided vector. This vector will enter the adiabatic state
-            preparation routine if n_adiab_steps is not 0 or will be given straight to the main QPE routine
+            preparation routine if n_adiab_steps is not 0 or will be given straight to the main QPE routine.
         n_adiab_steps (Optional[int]): Number of steps to pass from the part of the Hamiltonian containing
             only c_p^dagger * c_p terms (which is diagonal and fast to deal with) to the Hamiltonian of interest.
         E_target (Optional[float]): Expected energy. If unknown, set to 0.
