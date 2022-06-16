@@ -17,18 +17,42 @@ from ..hamiltonians import ElectronicStructureHamiltonian
 
 class MolecularHamiltonian(object):
     """
-    MolecularHamiltonian helper class.
+    MolecularHamiltonian helper class. It represents the electronic-structure Hamiltonian defined
+    using one- and two-body integrals.
+
+    This electronic-structure Hamiltonian is defined by:
+
+    ..  math::
+
+        H=\sum_{uv\sigma}I_{uv}c^{\dagger}_{u\sigma}c_{v\sigma}+\\frac{1}{2}\sum_{uvwx}\sum_{\sigma \sigma'} I_{uvwx}c^{\dagger}_{u\sigma}c^{\dagger}_{v\sigma'}c_{w\sigma'}c_{x\sigma}+r\mathbb{I}
+
+    with :math:`r` the core repulsion constant, and with :math:`I_{uv}` and :math:`I_{uvwx}` the one- and two-body integrals defined by:
+
+    ..  math::
+
+        I_{uv} = \int dr \phi^{*}_{u}(r)h_{1}[\phi_{v}(r)]
+
+        I_{uvwx} = \int dr dr' \phi^{*}_{u}(r)\phi^{*}_{v}(r')v[\phi_{w}(r)\phi_{x}(r')]
+
+    Here, :math:`\{\phi_{i}(r)\}_{i=0...N-1}` is the single-particle basis, with :math:`N` the size, which depends on the basis
+    chosen. :math:`h_{1} = h_{kin} + h_{pot}` is the one-body Hamiltonian, and :math:`v` the Coulomb operator.
+
+    Note:
+
+        This electronic-structure Hamiltonian definition is different than the one used in :class:`~qat.fermion.hamiltonians.ElectronicStructureHamiltonian`.
 
     Args:
-        one_body_integrals (np.ndarray): One-body integrals.
-        two_body_integrals (np.ndarray): Two-body integrals.
-        constant_coeff (np.ndarray): Constant coefficient.
+
+        one_body_integrals (np.ndarray): One-body integral :math:`I_{uv}`.
+        two_body_integrals (np.ndarray): Two-body integral :math:`I_{uvwx}`.
+        constant_coeff (np.ndarray): Constant coefficient :math:`r` (core repulsion).
 
     Attributes:
-        nqbits (int): The total number of qubits
-        one_body_integrals (np.ndarray): One-body integrals.
-        two_body_integrals (np.ndarray): Two-body integrals.
-        constant_coeff (np.ndarray): Constant coefficient.
+
+        nqbits (int): The total number of qubits.
+        one_body_integrals (np.ndarray): One-body integral :math:`I_{uv}`.
+        two_body_integrals (np.ndarray): Two-body integral :math:`I_{uvwx}`.
+        constant_coeff (np.ndarray): Constant coefficient :math:`r` (core repulsion).
 
     Example:
 
@@ -245,7 +269,8 @@ class MolecularHamiltonian(object):
 
 
 class MoleculeInfo(object):
-    r"""MoleculeInfo helper class.
+    r"""MoleculeInfo helper class. This class is a even higher level version of the
+    :class:`~qat.fermion.chemistry.wrapper.MolecularHamiltonian`.
 
     Args:
         hamiltonian (MolecularHamiltonian): The MolecularHamiltonian of the studied molecule.
@@ -255,10 +280,10 @@ class MoleculeInfo(object):
 
     Attributes:
         nqbits (int): The total number of qubits.
-        one_body_integrals (np.ndarray): One-body integrals.
-        two_body_integrals (np.ndarray): Two-body integrals.
-        constant_coeff (np.ndarray): Constant coefficient.
-        hamiltonian (MolecularHamiltonian): The MolecularHamiltonian of the studied molecule.
+        one_body_integrals (np.ndarray): One-body integrals :math:`I_{uv}`.
+        two_body_integrals (np.ndarray): Two-body integrals :math:`I_{uvwx}`.
+        constant_coeff (np.ndarray): Constant coefficient :math:`r` (core repulsion).
+        hamiltonian (MolecularHamiltonian): The :class:`~qat.fermion.chemistry.wrapper.MolecularHamiltonian` of the studied molecule.
         n_electrons (int): Number of electrons.
         noons (Union[np.ndarray, List[float]]): Natural orbital occupation number.
         orbital_energies (np.ndarray): Orbital energies.
@@ -329,7 +354,7 @@ class MoleculeInfo(object):
         """Getter for the one body integrals in the hamiltonian.
 
         Returns:
-            np.ndarray: One body integrals.
+            np.ndarray: One body integrals :math:`I_{uv}`.
         """
         return self.hamiltonian.one_body_integrals
 
@@ -338,7 +363,7 @@ class MoleculeInfo(object):
         """Getter for the two body integrals in the hamiltonian.
 
         Returns:
-            np.ndarray: Two body integrals.
+            np.ndarray: Two body integrals :math:`I_{uvwx}`.
         """
         return self.hamiltonian.two_body_integrals
 
@@ -347,7 +372,7 @@ class MoleculeInfo(object):
         """Getter for the constant coefficient in the hamiltonian.
 
         Returns:
-            np.ndarray: Constant coefficient.
+            np.ndarray: Constant coefficient :math:`r` (core repulsion).
         """
         return self.hamiltonian.constant_coeff
 
@@ -369,40 +394,12 @@ class MoleculeInfo(object):
         threshold_1: Optional[float] = 2.0e-2,
         threshold_2: Optional[float] = 1.0e-3,
     ):
-        r"""Restricts the right active space and freezes core electrons
-        according to their NOONs :math:`n_i`.
+        r"""Same method as the :class:`~qat.fermion.chemistry.wrapper.MolecularHamiltonian` method
+        :meth:`~qat.fermion.chemistry.wrapper.MolecularHamiltonian.select_active_space`, except it also modifies
+        all the molecule parameters accordingly (NOONs, orbital energies, and number of electrons).
 
-        This function is an implementation of the *Complete Active Space*
-        (CAS) approach. It divides orbital space into sets of *active* and
-        *inactive* orbitals, the occupation number of the latter remaining
-        unchanged during the computation.
-
-        The active space indices are defined as:
-
-        .. math::
-
-            \mathcal{A} = \{i, n_i \in [\varepsilon_2, 2 - \varepsilon_1[\} \cup \{i, n_i \geq 2-\varepsilon_1, 2(i+1)\geq N_e \}
-
-        The inactive occupied orbitals are defined as:
-
-        .. math::
-
-            \mathcal{O} = \{i, n_i \geq 2 -\varepsilon_1, 2(i+1) < N_e \}
-
-        The restriction of the one- and two-body integrals (and update of the core energy)
-        is then carried out according to:
-
-        .. math::
-
-            \forall u,v \in \mathcal{A},\; I^{(a)}_{uv} = I_{uv} + \sum_{i\in \mathcal{O}} 2 I_{i,u,v,i} - I_{i,u,i,v}
-
-        .. math::
-
-            \forall u,v,w,x \in \mathcal{A}, I^{(a)}_{uvwx} = I_{uvwx}
-
-        .. math::
-
-            E_\mathrm{core}^{(a)} = E_\mathrm{core} + \sum_{i\in\mathcal{O}} I_{ii} + \sum_{ij\in\mathcal{O}} 2 I_{ijji} - I_{ijij}
+        For more information, see :meth:`~qat.fermion.chemistry.wrapper.MolecularHamiltonian.select_active_space`
+        documentation.
 
         Args:
             threshold_1 (Optional[float]): The upper threshold :math:`\varepsilon_1` on

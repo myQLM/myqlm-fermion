@@ -151,7 +151,7 @@ class Hamiltonian(Observable):
         Returns:
             ObservableType: Type of the Hamiltonian
 
-        Note:
+        Warning:
             This method should not be used if the Hamiltonian is too large.
 
         """
@@ -172,7 +172,7 @@ class Hamiltonian(Observable):
 
     def get_matrix(self, sparse: bool = False) -> np.ndarray:
         r"""
-        This function returns matrix corresponding to :math:`H` in the computational basis.
+        This function returns the matrix corresponding to :math:`H` in the computational basis.
 
         Args:
             sparse (Optional[bool]): Whether to return in sparse representation.
@@ -180,6 +180,10 @@ class Hamiltonian(Observable):
 
         Returns:
             numpy.ndarray: The matrix of the Hamiltonian.
+
+        Warning:
+            This method should not be used if the Hamiltonian is too large.
+
         """
 
         if self.htype is ObservableType.SPIN:
