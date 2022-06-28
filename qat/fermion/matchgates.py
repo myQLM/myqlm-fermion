@@ -9,121 +9,61 @@ from qat.core import default_gate_set
 Define nearest-neighbour matchgates as custom gates
 """
 
+# exp(-i theta/2 XX)
+RXX_gen = lambda theta: np.array(
+    [
+        [np.cos(theta / 2), 0, 0, -1j * np.sin(theta / 2)],
+        [0, np.cos(theta / 2), -1j * np.sin(theta / 2), 0],
+        [0, -1j * np.sin(theta / 2), np.cos(theta / 2), 0],
+        [-1j * np.sin(theta / 2), 0, 0, np.cos(theta / 2)],
+    ],
+    dtype="complex",
+)
 
-def RXX_gen(theta):
-    r"""exp(-i theta/2 XX) custom gate.
-
-    Args:
-        theta (float): Theta value.
-
-    Returns:
-        np.ndarray: Custom gate array.
-    """
-    custom_gate = np.array(
-        [
-            [np.cos(theta / 2), 0, 0, -1j * np.sin(theta / 2)],
-            [0, np.cos(theta / 2), -1j * np.sin(theta / 2), 0],
-            [0, -1j * np.sin(theta / 2), np.cos(theta / 2), 0],
-            [-1j * np.sin(theta / 2), 0, 0, np.cos(theta / 2)],
-        ],
-        dtype="complex",
-    )
-    return
-
-
-def RXY_gen(theta):
-    r"""exp(-i theta/2 XY) custom gate.
-
-    Args:
-        theta (float): Theta value.
-
-    Returns:
-        np.ndarray: Custom gate array.
-    """
-
-    custom_gate = np.array(
-        [
-            [np.cos(theta / 2), 0, 0, -np.sin(theta / 2)],
-            [0, np.cos(theta / 2), np.sin(theta / 2), 0],
-            [0, -np.sin(theta / 2), np.cos(theta / 2), 0],
-            [np.sin(theta / 2), 0, 0, np.cos(theta / 2)],
-        ],
-        dtype="complex",
-    )
-
-    return custom_gate
-
+# exp(-i theta/2 XY)
+RXY_gen = lambda theta: np.array(
+    [
+        [np.cos(theta / 2), 0, 0, -np.sin(theta / 2)],
+        [0, np.cos(theta / 2), np.sin(theta / 2), 0],
+        [0, -np.sin(theta / 2), np.cos(theta / 2), 0],
+        [np.sin(theta / 2), 0, 0, np.cos(theta / 2)],
+    ],
+    dtype="complex",
+)
 
 # exp(-i theta/2 YY)
+RYY_gen = lambda theta: np.array(
+    [
+        [np.cos(theta / 2), 0, 0, 1j * np.sin(theta / 2)],
+        [0, np.cos(theta / 2), -1j * np.sin(theta / 2), 0],
+        [0, -1j * np.sin(theta / 2), np.cos(theta / 2), 0],
+        [1j * np.sin(theta / 2), 0, 0, np.cos(theta / 2)],
+    ],
+    dtype="complex",
+)
 
 
-def RYY_gen(theta):
-    r"""exp(-i theta/2 YY) custom gate.
+# exp(-i theta/2 YX)
+RYX_gen = lambda theta: np.array(
+    [
+        [np.cos(theta / 2), 0, 0, -np.sin(theta / 2)],
+        [0, np.cos(theta / 2), -np.sin(theta / 2), 0],
+        [0, np.sin(theta / 2), np.cos(theta / 2), 0],
+        [np.sin(theta / 2), 0, 0, np.cos(theta / 2)],
+    ],
+    dtype="complex",
+)
 
-    Args:
-        theta (float): Theta value.
-
-    Returns:
-        np.ndarray: Custom gate array.
-    """
-
-    custom_gate = np.array(
-        [
-            [np.cos(theta / 2), 0, 0, 1j * np.sin(theta / 2)],
-            [0, np.cos(theta / 2), -1j * np.sin(theta / 2), 0],
-            [0, -1j * np.sin(theta / 2), np.cos(theta / 2), 0],
-            [1j * np.sin(theta / 2), 0, 0, np.cos(theta / 2)],
-        ],
-        dtype="complex",
-    )
-
-    return custom_gate
-
-
-def RYX_gen(theta):
-    r"""exp(-i theta/2 YX) custom gate.
-
-    Args:
-        theta (float): Theta value.
-
-    Returns:
-        np.ndarray: Custom gate array.
-    """
-
-    custom_gate = np.array(
-        [
-            [np.cos(theta / 2), 0, 0, -np.sin(theta / 2)],
-            [0, np.cos(theta / 2), -np.sin(theta / 2), 0],
-            [0, np.sin(theta / 2), np.cos(theta / 2), 0],
-            [np.sin(theta / 2), 0, 0, np.cos(theta / 2)],
-        ],
-        dtype="complex",
-    )
-
-    return custom_gate
-
-
-def RZZ_gen(theta):
-    r"""exp(-i theta/2 ZZ) custom gate.
-
-    Args:
-        theta (float): Theta value.
-
-    Returns:
-        np.ndarray: Custom gate array.
-    """
-
-    custom_gate = np.array(
-        [
-            [np.exp(-1j * theta / 2), 0, 0, 0],
-            [0, np.exp(1j * theta / 2), 0, 0],
-            [0, 0, np.exp(1j * theta / 2), 0],
-            [0, 0, 0, np.exp(-1j * theta / 2)],
-        ],
-        dtype="complex",
-    )
-
-    return custom_gate
+# exp(-i theta/2 ZZ)
+RZZ_gen = lambda theta: np.array(
+    [
+        [np.exp(-1j * theta / 2), 0, 0, 0],
+        [0, np.exp(1j * theta / 2), 0, 0],
+        [0, 0, np.exp(1j * theta / 2), 0],
+        [0, 0, 0, np.exp(-1j * theta / 2)],
+    ],
+    dtype="complex",
+)
 
 
 RXX = AbstractGate("RXX", [float], 2, matrix_generator=lambda theta, mat_gen=RXX_gen: mat_gen(theta))

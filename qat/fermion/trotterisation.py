@@ -4,15 +4,6 @@ from typing import List, Optional, Union
 import numpy as np
 import warnings
 
-from qat.core.variables import Symbol
-
-real = Symbol("real", np.real, 1, diff=None)
-
-# TODO : Delete after qat.core package upgrade
-from qat.core.variables import ALL_SYMBOLS
-
-ALL_SYMBOLS["real"] = real
-
 from qat.lang.AQASM import QRoutine, PH, CNOT, H, RX, RZ, CustomGate, Z
 from .hamiltonians import ElectronicStructureHamiltonian, Hamiltonian
 
@@ -149,7 +140,7 @@ def make_spin_hamiltonian_trotter_slice(hamiltonian: Hamiltonian, coeff: Optiona
         if Qrout_one.arity != 0:
             Qrout.apply(Qrout_one, term.qbits)
 
-        Qrout.apply(RZ(2 * coeff * real(term.coeff)), ref)
+        Qrout.apply(RZ(2 * coeff * term.coeff), ref)
 
         if Qrout_one.arity != 0:
             Qrout.apply(Qrout_one.dag(), term.qbits)
