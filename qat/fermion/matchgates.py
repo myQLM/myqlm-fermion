@@ -85,6 +85,10 @@ MG_gate_set.add_signature(RYY)
 MG_gate_set.add_signature(RZZ)
 
 
+def add_gates_to_default_gate_set():
+    return MG_gate_set
+
+
 def MG_chain_routine(angles, slater: Optional[bool] = False, ZZ_angle: Optional[bool] = None) -> QRoutine:
     """
     Routine made of the 4 (resp.2) successive NN MG defining the building

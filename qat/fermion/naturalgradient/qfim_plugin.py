@@ -1,22 +1,16 @@
 import numpy as np
 import time
 from qat.comm.exceptions.ttypes import PluginException
-from qat.core import Result, Job, default_gate_set
+from qat.core import Result, Job
 from qat.plugins.junction import Junction
-from qat.lang.AQASM import AbstractGate
+
 from .auto_derivatives import (
-    partial_derivatives,
-    product_param_real_part,
-    compute_product_real_part,
-    hamiltonian_gradient_param_imag_part,
-    compute_gradient,
-    compute_QFIM,
     auto_differentiation_gradient_dictionary,
     auto_differentiation_QFIM_dictionaries,
 )
 
 # Temporary to handle XX gate
-from .custom_gate_set import get_custom_gate_set_1
+from qat.fermion.matchgates import add_gates_to_default_gate_set
 
 
 class GradientMinimizePlugin(Junction):
@@ -53,8 +47,8 @@ class GradientMinimizePlugin(Junction):
             Defaults to grad_norm.
         tol (float, optional): tolerance for stopping criterion.
             Defaults to 1e-10.
-        x0 (dict, optional): initial value of the parameters. Defaults to None,
-            in which case we assume random initialization.
+        x0 (dict, optional): initial value of the parameters. If None, the initial parameters will be randomly chosen. Defaults to
+            None.
 
     """
 
@@ -79,7 +73,7 @@ class GradientMinimizePlugin(Junction):
 
         # Parameters values
         self.parameters_index = {}
-        self.parameters_values = x0.copy()  # Dict for the values of the circuit parameters
+        self.parameters_values = x0.copy() if x0 is not None else None  # Dict for the values of the circuit parameters
 
         # For stopping criterion purposes
         self.maxiter = maxiter  # Maximum number of iterations
@@ -88,12 +82,12 @@ class GradientMinimizePlugin(Junction):
         self.check_crit_val = 1.0 + self.tolerance
         self.iterations = 0
 
-        # Plugin history after instanciation
+        # Plugin history after instantiation
         self.nb_use = 0
 
         # For custom gates (eg. XX)
         self.custom_gates = user_custom_gates
-        self.my_gate_set = get_custom_gate_set_1()
+        self.my_gate_set = add_gates_to_default_gate_set()
 
         super(GradientMinimizePlugin, self).__init__(collective=False)
 
@@ -103,11 +97,13 @@ class GradientMinimizePlugin(Junction):
         """
         res_weighted = []
         for coeff, my_test_job in jobs_list:
+
             temp_job = my_test_job(gate_set=self.my_gate_set, **self.parameters_values)
 
             res = self.execute(temp_job)
             val = res.value
             res_weighted.append(coeff * val)
+
         return res_weighted
 
     def run(self, qlm_object: Job, _) -> Result:
@@ -127,7 +123,9 @@ class GradientMinimizePlugin(Junction):
         if self.parameters_values is None:
 
             # By default, initiate search from (0., 0., ..., 0.)
-            self.parameters_values = {varkey: 0.0 for varkey in parameters}
+            self.parameters_values = {
+                variable: value for variable, value in zip(parameters, np.random.uniform(0, 2 * np.pi, len(parameters)))
+            }
 
         else:
 
@@ -163,7 +161,7 @@ class GradientMinimizePlugin(Junction):
             energy_trace.append(energy)
 
         gradient_jobs_dict = auto_differentiation_gradient_dictionary(
-            job, hamilt, self.parameters_values, user_custom_gates=self.custom_gates, do_print_status=False
+            job, hamilt, self.parameters_values, user_custom_gates=self.custom_gates
         )
 
         if self.natural_gradient:
@@ -193,7 +191,6 @@ class GradientMinimizePlugin(Junction):
                 for k in range(nb_parameters):
 
                     # Compute <dk|psi>
-
                     jobs_list = QFIM_dkpsi_jobs_dict[self.parameters_index[k]]
                     val_list = self.execute_weighted_jobs_list(jobs_list)
                     dkpsi = sum(val_list)  # should be a pure imaginary number
@@ -201,13 +198,11 @@ class GradientMinimizePlugin(Junction):
                     for l in range(nb_parameters):
 
                         # Compute <dk|dl>
-
                         jobs_list = QFIM_dkdl_jobs_dict[self.parameters_index[k] + ";" + self.parameters_index[l]]
                         val_list = self.execute_weighted_jobs_list(jobs_list)
                         dkdl = sum(val_list)
 
                         # Compute <psi|dl>
-
                         jobs_list = QFIM_psidl_jobs_dict[self.parameters_index[l]]
                         val_list = self.execute_weighted_jobs_list(jobs_list)
                         psidl = sum(val_list)  # should be a pure imaginary number
@@ -244,10 +239,11 @@ class GradientMinimizePlugin(Junction):
             for ind_param in self.parameters_index:
                 self.parameters_values[self.parameters_index[ind_param]] = cur_params[ind_param]
 
-            # Update Optimisation Data #
+            # Update Optimisation Data
             angle_trace.append([ang for ang in self.parameters_values.values()])  # Assumes dictionaries are ordered...
 
             if self.do_compute_energy:
+
                 # Temporary for XX gate
                 binded_job = qlm_object(gate_set=self.my_gate_set, **self.parameters_values)
 
@@ -270,8 +266,7 @@ class GradientMinimizePlugin(Junction):
 
         end_time = time.time()
 
-        # Return Result with some meta data #
-
+        # Return Result with some meta data
         self.nb_use += 1  # The plugin has successfully run
 
         if self.natural_gradient:
