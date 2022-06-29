@@ -1,0 +1,1 @@
+from qat.fermion.naturalgradient.qfim_plugin import GradientMinimizePlugin

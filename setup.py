@@ -52,7 +52,7 @@ def get_description():
 
 setup(
     name="myqlm-fermion",
-    version="0.6a",
+    version="0.7a",
     author="Atos Quantum Lab",
     license="Atos myQLM EULA",
     description="myQLM-fermion package",
@@ -66,8 +66,8 @@ setup(
         "Source code": "https://github.com/myQLM/myqlm-fermion",
     },
     packages=find_namespace_packages(
-        include=["qat.*", "qat.fermion.*"],
-        exclude=["qat.fermion.ansatz_generator", "qat.fermion.observable_generator", "qat.generators.hook_vqe"],
+        include=["qat.*", "qat.fermion.*", "qat.fermion.chemistry.*", "qat.fermion.naturalgradient.*"],
+        exclude=[],
     ),
     test_suite="tests",
     install_requires=["qat-core", "qat-lang", "myqlm", "pyscf", "anytree", "bitstring", "numpy", "pyscf", "pytest", "scipy"],
