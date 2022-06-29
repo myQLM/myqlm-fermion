@@ -20,6 +20,8 @@ Various improvements have been made in `MyQLM-fermion`.
     *   the class `MolecularHamiltonian` has been added. It allows for easier basis changes and active space selection.
     *   the class `MoleculeInfo` has been added to help with atomic and molecular computations.
 
+* A new plugin `GradientMinimizerPlugin` has been added, which allows gradient descent optimization using natural gradients.
+
 > For more information on the UCC changes and the new helper classes, see Jupyter notebook `vqe_ucc_example_1_h2.ipynb` and `vqe_ucc_example_2_lih.ipynb` in `myqlm-fermion/doc/notebooks/`.
 
 ### Other improvements
