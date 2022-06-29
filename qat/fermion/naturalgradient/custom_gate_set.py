@@ -69,12 +69,4 @@ def get_custom_gate_set_1():
     my_gate_set.add_signature(RYY)
     my_gate_set.add_signature(RZZ)
 
-    # Controlled versions
-    # CRXX = AbstractGate("C-RXX", [float], arity=3, matrix_generator= lambda theta: mat_CRXX(theta))
-    # CRYY = AbstractGate("C-RYY", [float], arity=3, matrix_generator= lambda theta: mat_CRYY(theta))
-    # CRZZ = AbstractGate("C-RZZ", [float], arity=3, matrix_generator= lambda theta: mat_CRZZ(theta))
-    # my_gate_set.add_signature(CRXX)
-    # my_gate_set.add_signature(CRYY)
-    # my_gate_set.add_signature(CRZZ)
-
     return my_gate_set
