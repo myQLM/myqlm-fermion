@@ -1,5 +1,6 @@
 import numpy as np
 import time
+from typing import Dict
 from qat.comm.exceptions.ttypes import PluginException
 from qat.core import Result, Job
 from qat.plugins.junction import Junction
@@ -9,8 +10,7 @@ from .auto_derivatives import (
     auto_differentiation_QFIM_dictionaries,
 )
 
-# Temporary to handle XX gate
-from qat.fermion.matchgates import add_gates_to_default_gate_set
+from qat.fermion.matchgates import gate_set
 
 
 class GradientMinimizePlugin(Junction):
@@ -54,18 +54,18 @@ class GradientMinimizePlugin(Junction):
 
     def __init__(
         self,
-        maxiter=1000,
-        lambda_step=0.2,
-        natural_gradient=True,
-        do_compute_energy=True,
-        stop_crit="grad_norm",
-        tol=1e-10,
-        x0=None,
+        maxiter: int = 1000,
+        lambda_step: float = 0.2,
+        natural_gradient: bool = True,
+        do_compute_energy: bool = True,
+        stop_crit: str = "grad_norm",
+        tol: float = 1e-10,
+        x0: Dict[str, float] = None,
         user_custom_gates=None,
     ):
 
         if do_compute_energy == False and stop_crit == "energy_dist":
-            raise PluginException("Can't check energy update steps if 'do_compute_enregy' is set to %s" % do_compute_energy)
+            raise PluginException(f"Cannot check energy update steps if 'do_compute_energy' is set to {do_compute_energy}")
 
         self.lambda_step = lambda_step
         self.natural_gradient = natural_gradient
@@ -87,7 +87,7 @@ class GradientMinimizePlugin(Junction):
 
         # For custom gates (eg. XX)
         self.custom_gates = user_custom_gates
-        self.my_gate_set = add_gates_to_default_gate_set()
+        self.my_gate_set = gate_set
 
         super(GradientMinimizePlugin, self).__init__(collective=False)
 
@@ -138,7 +138,6 @@ class GradientMinimizePlugin(Junction):
                 )
 
         # Keep track of which parameter corresponds to which index in the gradient, matrix, ... (assumes dictionaries are ordered)
-        # for ind, varkey in enumerate(parameters): # -> pb with the indices ?
         for ind, varkey in enumerate(self.parameters_values.keys()):
             self.parameters_index[ind] = varkey
 
@@ -151,7 +150,7 @@ class GradientMinimizePlugin(Junction):
 
         angle_trace = []
 
-        angle_trace.append([val for val in self.parameters_values.values()])  # Assumes dictionaries are ordered...
+        angle_trace.append([val for val in self.parameters_values.values()])  # Assumes dictionaries are ordered
 
         if self.do_compute_energy:
 
@@ -239,7 +238,7 @@ class GradientMinimizePlugin(Junction):
             for ind_param in self.parameters_index:
                 self.parameters_values[self.parameters_index[ind_param]] = cur_params[ind_param]
 
-            # Update Optimisation Data
+            # Update Optimization Data
             angle_trace.append([ang for ang in self.parameters_values.values()])  # Assumes dictionaries are ordered...
 
             if self.do_compute_energy:

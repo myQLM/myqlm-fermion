@@ -4,89 +4,88 @@ import scipy.optimize
 
 from qat.lang.AQASM import QRoutine, RZ, AbstractGate
 from qat.core import default_gate_set
+from qat.core.circuit_builder.matrix_util import gen_x, gen_y, gen_z
 
 """
 Define nearest-neighbour matchgates as custom gates
 """
 
-# exp(-i theta/2 XX)
-RXX_gen = lambda theta: np.array(
-    [
-        [np.cos(theta / 2), 0, 0, -1j * np.sin(theta / 2)],
-        [0, np.cos(theta / 2), -1j * np.sin(theta / 2), 0],
-        [0, -1j * np.sin(theta / 2), np.cos(theta / 2), 0],
-        [-1j * np.sin(theta / 2), 0, 0, np.cos(theta / 2)],
-    ],
-    dtype="complex",
-)
 
-# exp(-i theta/2 XY)
-RXY_gen = lambda theta: np.array(
-    [
-        [np.cos(theta / 2), 0, 0, -np.sin(theta / 2)],
-        [0, np.cos(theta / 2), np.sin(theta / 2), 0],
-        [0, -np.sin(theta / 2), np.cos(theta / 2), 0],
-        [np.sin(theta / 2), 0, 0, np.cos(theta / 2)],
-    ],
-    dtype="complex",
-)
+def generalized_pauli_gate(pauli_str: str):
+    """Generate an AbstractGate corresponding to the input Pauli string,
+    and add it to the default gate set.
 
-# exp(-i theta/2 YY)
-RYY_gen = lambda theta: np.array(
-    [
-        [np.cos(theta / 2), 0, 0, 1j * np.sin(theta / 2)],
-        [0, np.cos(theta / 2), -1j * np.sin(theta / 2), 0],
-        [0, -1j * np.sin(theta / 2), np.cos(theta / 2), 0],
-        [1j * np.sin(theta / 2), 0, 0, np.cos(theta / 2)],
-    ],
-    dtype="complex",
-)
+    Args:
+        pauli_str (str): Pauli rotation the gate should perform.
 
+    Example:
 
-# exp(-i theta/2 YX)
-RYX_gen = lambda theta: np.array(
-    [
-        [np.cos(theta / 2), 0, 0, -np.sin(theta / 2)],
-        [0, np.cos(theta / 2), -np.sin(theta / 2), 0],
-        [0, np.sin(theta / 2), np.cos(theta / 2), 0],
-        [np.sin(theta / 2), 0, 0, np.cos(theta / 2)],
-    ],
-    dtype="complex",
-)
+        .. run-block:: python
 
-# exp(-i theta/2 ZZ)
-RZZ_gen = lambda theta: np.array(
-    [
-        [np.exp(-1j * theta / 2), 0, 0, 0],
-        [0, np.exp(1j * theta / 2), 0, 0],
-        [0, 0, np.exp(1j * theta / 2), 0],
-        [0, 0, 0, np.exp(-1j * theta / 2)],
-    ],
-    dtype="complex",
-)
+            from qat.lang.AQASM import Program
+            from qat.core.console import display
+            from qat.fermion.matchgates import generalized_pauli_gate
 
+            # Define Pauli rotation gate
+            RXYZ = generalized_pauli_gate("XYZ")
 
-RXX = AbstractGate("RXX", [float], 2, matrix_generator=lambda theta, mat_gen=RXX_gen: mat_gen(theta))
+            # Define Program and Variable
+            prog = Program()
+            reg = prog.qalloc(RXYZ.arity)
+            theta = prog.new_var(float, "\\theta")
 
-RXY = AbstractGate("RXY", [float], 2, matrix_generator=lambda theta, mat_gen=RXY_gen: mat_gen(theta))
+            prog.apply(RXYZ(theta), *reg)
 
-RYY = AbstractGate("RYY", [float], 2, matrix_generator=lambda theta, mat_gen=RYY_gen: mat_gen(theta))
+            circ = prog.to_circ()
+            display(circ, batchmode=True)
 
-RYX = AbstractGate("RYX", [float], 2, matrix_generator=lambda theta, mat_gen=RYX_gen: mat_gen(theta))
+    """
 
-RZZ = AbstractGate("RZZ", [float], 2, matrix_generator=lambda theta, mat_gen=RZZ_gen: mat_gen(theta))
+    def _gen_r(var: float):
+        """
+        Generator for the generalized Pauli rotation gate.
+        """
 
-MG_gate_set = default_gate_set()
+        def _optimized_pauli_kron(pauli_1, pauli_2):
+            """
+            Faster version of the Kronecker product. Defined as such for optimization purpose.
+            """
+            return np.einsum("ik,jl", pauli_1, pauli_2).reshape((len(pauli_1) * 2,) * 2)
 
-MG_gate_set.add_signature(RXX)
-MG_gate_set.add_signature(RXY)
-MG_gate_set.add_signature(RYX)
-MG_gate_set.add_signature(RYY)
-MG_gate_set.add_signature(RZZ)
+        # Map string to Pauli matrices
+        map_dict = {"X": gen_x(), "Y": gen_y(), "Z": gen_z()}
+
+        # Guess arity depending on Pauli string
+        arity = len(pauli_str)
+
+        # Compute the Kronecker products if needed
+        kron = map_dict[pauli_str[0]]
+        for idx in range(len(pauli_str) - 1):
+            kron = _optimized_pauli_kron(kron, map_dict[pauli_str[idx + 1]])
+
+        # Build the final computed gate
+        gate = np.eye(2**arity) * np.cos(var / 2) - 1j * kron * np.sin(var / 2)
+
+        return gate
+
+    R = AbstractGate(f"R{pauli_str}", [float], arity=len(pauli_str), matrix_generator=_gen_r)
+
+    return R
 
 
-def add_gates_to_default_gate_set():
-    return MG_gate_set
+# Generate required Pauli gate
+RXX = generalized_pauli_gate("XX")
+RXY = generalized_pauli_gate("XY")
+RYX = generalized_pauli_gate("YX")
+RYY = generalized_pauli_gate("YY")
+RZZ = generalized_pauli_gate("ZZ")
+
+gate_set = default_gate_set()
+gate_set.add_signature(RXX)
+gate_set.add_signature(RXY)
+gate_set.add_signature(RYX)
+gate_set.add_signature(RYY)
+gate_set.add_signature(RZZ)
 
 
 def MG_chain_routine(angles, slater: Optional[bool] = False, ZZ_angle: Optional[bool] = None) -> QRoutine:
