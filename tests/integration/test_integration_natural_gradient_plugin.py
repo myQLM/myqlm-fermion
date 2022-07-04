@@ -112,3 +112,27 @@ def test_natural_gradient_with_custom_RXX_gates():
     result = qpu.submit(job)
 
     np.testing.assert_almost_equal(result.value, exact_energy, decimal=4)
+
+
+def test_natural_gradient_with_custom_RXX_gates_energy_earlystop():
+    """Test gradient descent plugin when circuit contains RYY, RXX,...etc custom gates."""
+
+    prog = Program()
+    reg = prog.qalloc(hamiltonian.nbqbits)
+    prog.apply(
+        ansatz_with_custom_RXX_gates([prog.new_var(float, "\\theta_%s" % i) for i in range(hamiltonian.nbqbits)]),
+        reg,
+    )
+    circ = prog.to_circ()
+
+    job = circ.to_job(job_type="OBS", observable=hamiltonian, nbshots=0)
+
+    linalg_qpu = get_default_qpu()
+
+    gradient_descent = GradientMinimizePlugin(
+        maxiter=100, lambda_step=0.2, natural_gradient=False, tol=1e-7, stop_crit="energy_dist"
+    )
+    qpu = gradient_descent | linalg_qpu
+    result = qpu.submit(job)
+
+    np.testing.assert_almost_equal(result.value, exact_energy, decimal=4)
