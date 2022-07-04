@@ -1,10 +1,5 @@
-# Using code by Simon, from August 10th, 2020
-
-# Handling arithmetic expressions
-
 from numbers import Number
 
-### We can "load" the stringified expressions back into python objects:
 from qat.core.variables import evaluate_thrift_expression, Variable
 
 
@@ -19,8 +14,7 @@ def gatedef_to_expr(gatedef):
         return evaluate_thrift_expression(gatedef.syntax.parameters[0].string_p)
 
 
-## Now we can reuse the same structure to additionaly extract the coefficient:
-def improved_detect_linear(expression):
+def detect_linear(expression):
     """
     Returns (True, coeff) if the expression is a linear function of a single variable.
     else returns (False, None)
@@ -38,8 +32,8 @@ def improved_detect_linear(expression):
     if expression.symbol.token in ["+", "-"]:
 
         # A +/- B is linear iff A and B are both linear
-        is_0_lin, coeff_0 = improved_detect_linear(expression.children[0])
-        is_1_lin, coeff_1 = improved_detect_linear(expression.children[1])
+        is_0_lin, coeff_0 = detect_linear(expression.children[0])
+        is_1_lin, coeff_1 = detect_linear(expression.children[1])
 
         if is_0_lin and is_1_lin:
             return True, coeff_0 + coeff_1
@@ -49,8 +43,8 @@ def improved_detect_linear(expression):
     if expression.symbol.token == "*":
 
         # A * B is linear iff only one is linear and the other is constant
-        is_0_lin, coeff_0 = improved_detect_linear(expression.children[0])
-        is_1_lin, coeff_1 = improved_detect_linear(expression.children[1])
+        is_0_lin, coeff_0 = detect_linear(expression.children[0])
+        is_1_lin, coeff_1 = detect_linear(expression.children[1])
 
         if is_0_lin and isinstance(expression.children[1], Number):
             return True, coeff_0 * expression.children[1]
@@ -68,8 +62,7 @@ def improved_detect_linear(expression):
     if expression.symbol.token == "/":
 
         # A / B is linear iff A is linear and B is constant (this not true because we could have B = 1/C with C linear)
-        # But i'm too lazy to think this through
-        is_lin, coeff = improved_detect_linear(expression.children[0])
+        is_lin, coeff = detect_linear(expression.children[0])
 
         if is_lin and isinstance(expression.children[1], Number):
             return True, coeff / expression.children[1]
@@ -79,7 +72,7 @@ def improved_detect_linear(expression):
     if expression.symbol.token == "UMINUS":
 
         # - A is linear iff A is linear
-        is_lin, coeff = improved_detect_linear(expression.children[0])
+        is_lin, coeff = detect_linear(expression.children[0])
 
         if is_lin:
             return True, -coeff
@@ -87,4 +80,5 @@ def improved_detect_linear(expression):
         return False, None
 
     ## All other symbols are non linear (cos, sin, exp, sqrt, etc)
+
     return False, None
