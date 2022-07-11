@@ -1,2 +1,2 @@
 #!/usr/local/bin/groovy
-Jenkinsfile()
+jenkinsfile('myqlm-fermion')
