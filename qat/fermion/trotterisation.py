@@ -140,7 +140,7 @@ def make_spin_hamiltonian_trotter_slice(hamiltonian: Hamiltonian, coeff: Optiona
         if Qrout_one.arity != 0:
             Qrout.apply(Qrout_one, term.qbits)
 
-        Qrout.apply(RZ(2 * coeff * term.coeff), ref)
+        Qrout.apply(RZ(2 * coeff * np.real(term.coeff)), ref)
 
         if Qrout_one.arity != 0:
             Qrout.apply(Qrout_one.dag(), term.qbits)
