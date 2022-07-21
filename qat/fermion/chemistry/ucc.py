@@ -1,24 +1,24 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-Tools imported from notebook
 
 """
+UCC tools
+"""
+
 import itertools
+from typing import Any, List, Tuple, Optional, Dict
+
 import numpy as np
 from bitstring import BitArray
-from typing import Any, List, Tuple, Callable, Optional, Dict
 
 from qat.core import Term
 from qat.lang.AQASM import X, Program
 from ..trotterisation import make_spin_hamiltonian_trotter_slice
-from ..hamiltonians import Hamiltonian, ElectronicStructureHamiltonian
+from ..hamiltonians import Hamiltonian
 from ..util import tobin
-from ..trotterisation import make_trotterisation_routine
 
 
 def transform_integrals_to_new_basis(
-    one_body_integrals: np.ndarray, two_body_integrals: np.ndarray, U_mat: np.ndarray
+    one_body_integrals: np.ndarray, two_body_integrals: np.ndarray, u_mat: np.ndarray
 ) -> Tuple[np.ndarray, np.ndarray]:
     r"""
     Change one and two body integrals (indices p, q...) to
@@ -38,7 +38,7 @@ def transform_integrals_to_new_basis(
 
         one_body_integrals (np.ndarray): One-body integrals :math:`I_{pq}`.
         two_body_integrals (np.ndarray): Two-body integrals :math:`I_{pqrs}`.
-        U_mat (np.ndarray): Transformation matrix :math:`U`.
+        u_mat (np.ndarray): Transformation matrix :math:`U`.
 
     Returns:
         Tuple[np.ndarray, np.ndarray]:
@@ -47,10 +47,10 @@ def transform_integrals_to_new_basis(
 
     """
 
-    U_matd = np.conj(U_mat.T)
+    u_matd = np.conj(u_mat.T)
 
-    h_hat_ij = np.einsum("pi,pq,jq", U_mat, one_body_integrals, U_matd)
-    h_hat_ijkl = np.einsum("pi,qj,pqrs,kr,ls", U_mat, U_mat, two_body_integrals, U_matd, U_matd)
+    h_hat_ij = np.einsum("pi,pq,jq", u_mat, one_body_integrals, u_matd)
+    h_hat_ijkl = np.einsum("pi,qj,pqrs,kr,ls", u_mat, u_mat, two_body_integrals, u_matd, u_matd)
 
     return h_hat_ij, h_hat_ijkl
 
@@ -261,7 +261,8 @@ def _build_cluster_operator(l_ex_op: List[Tuple[int]], nqbits: int) -> List[Hami
 
     Returns:
         t_opti (List[Hamiltonian]):
-            The cluster operator (times i) "iT" as a dictionary corresponding to each group of fermionic excitation operators parametrized identically.
+            The cluster operator (times i) "iT" as a dictionary corresponding to each group of fermionic excitation operators
+            parameterized identically.
 
     """
 
@@ -856,7 +857,7 @@ def _extend_list(lst: List[Any]) -> List[Any]:
     """
 
     extended_lst = []
-    for idx in range(len(lst)):
+    for idx, _ in enumerate(lst):
         extended_lst.extend((lst[idx], lst[idx]))
 
     return extended_lst

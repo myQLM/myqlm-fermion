@@ -1,3 +1,7 @@
+"""
+Define nearest-neighbour matchgates as custom gates
+"""
+
 from typing import List, Optional, Tuple
 import numpy as np
 import scipy.optimize
@@ -5,10 +9,6 @@ import scipy.optimize
 from qat.lang.AQASM import QRoutine, RZ, AbstractGate
 from qat.core import default_gate_set
 from qat.core.circuit_builder.matrix_util import gen_x, gen_y, gen_z
-
-"""
-Define nearest-neighbour matchgates as custom gates
-"""
 
 
 def generalized_pauli_gate(pauli_str: str):
@@ -68,9 +68,9 @@ def generalized_pauli_gate(pauli_str: str):
 
         return gate
 
-    R = AbstractGate(f"R{pauli_str}", [float], arity=len(pauli_str), matrix_generator=_gen_r)
+    r = AbstractGate(f"R{pauli_str}", [float], arity=len(pauli_str), matrix_generator=_gen_r)
 
-    return R
+    return r
 
 
 # Generate required Pauli gate
@@ -88,7 +88,7 @@ gate_set.add_signature(RYY)
 gate_set.add_signature(RZZ)
 
 
-def MG_chain_routine(angles, slater: Optional[bool] = False, ZZ_angle: Optional[bool] = None) -> QRoutine:
+def MG_chain_routine(angles, slater: Optional[bool] = False, zz_angle: Optional[bool] = None) -> QRoutine:
     """
     Routine made of the 4 (resp.2) successive NN MG defining the building
     block of the gaussian state (resp. slater determinant) preparation circuit.
@@ -101,8 +101,8 @@ def MG_chain_routine(angles, slater: Optional[bool] = False, ZZ_angle: Optional[
 
     q_rout.apply(RYY(2 * angles[0]), 0, 1)
     q_rout.apply(RXX(-2 * angles[1]), 0, 1)
-    if ZZ_angle is not None:
-        q_rout.apply(RZZ(-2 * ZZ_angle), 0, 1)
+    if zz_angle is not None:
+        q_rout.apply(RZZ(-2 * zz_angle), 0, 1)
     if not slater:
         q_rout.apply(RYX(2 * angles[2]), 0, 1)
         q_rout.apply(RXY(-2 * angles[3]), 0, 1)
@@ -119,30 +119,30 @@ def gaussian_state_prep_routine(nb_fermionic_modes, theta, slater: Optional[bool
         theta : M Rz angles + (M/2) * { even * lenm + odd * lenm   },
         with lenm = 2 for slater, 4 for not slater.
     """
-    M = nb_fermionic_modes
+    m = nb_fermionic_modes
 
-    if len(theta) != (2 * M**2 - M if not slater else M**2):
-        raise Exception("Theta doesn" "t have the correct length!")
+    if len(theta) != (2 * m**2 - m if not slater else m**2):
+        raise Exception("Theta doesn't have the correct length!")
 
     lenm = 2 if slater else 4
 
     q_rout = QRoutine()
 
-    for i in range(M):
+    for i in range(m):
         q_rout.apply(RZ(-2 * theta[i]), i)  # = exp(j theta Z)
 
-    for k in range(M // 2):
+    for k in range(m // 2):
 
-        for j in range(M // 2):
+        for j in range(m // 2):
 
-            offset = M + lenm * (M - 1) * k + lenm * j
+            offset = m + lenm * (m - 1) * k + lenm * j
             angles = theta[offset : offset + lenm]
 
             q_rout.apply(MG_chain_routine(angles, slater), 2 * j, 2 * j + 1)
 
-        for j in range(M // 2 - 1):
+        for j in range(m // 2 - 1):
 
-            offset = M + lenm * (M - 1) * k + lenm * M // 2 + lenm * j
+            offset = m + lenm * (m - 1) * k + lenm * m // 2 + lenm * j
             angles = theta[offset : offset + lenm]
 
             q_rout.apply(MG_chain_routine(angles, slater), 2 * j + 1, 2 * j + 2)
@@ -150,8 +150,8 @@ def gaussian_state_prep_routine(nb_fermionic_modes, theta, slater: Optional[bool
     return q_rout
 
 
-def LDCA_cycle_routine(nb_fermionic_modes, theta_MG, theta_RZZ, slater: Optional[bool] = False) -> QRoutine:
-    """
+def LDCA_cycle_routine(nb_fermionic_modes, theta_mg, theta_rzz, slater: Optional[bool] = False) -> QRoutine:
+    r"""
     Low Depth Circuit Ansatz building block.
 
     It implements the block called :math:`U_{\mathrm{Var MG}}^{NN(l)}` in the reference article.
@@ -168,8 +168,8 @@ def LDCA_cycle_routine(nb_fermionic_modes, theta_MG, theta_RZZ, slater: Optional
 
     Args:
         nb_fermionic_mode (int): (even) number of fermionic modes
-        theta_MG (numpy array): angles parametrizing the matchgates corresponding to :math:`U_{\mathrm{Bog}}`
-        theta_RZZ (numpy array): angles parametrizing the :math:`RZZ` gates inserted in :math:`U_{\mathrm{Bog}}`
+        theta_mg (numpy array): angles parametrizing the matchgates corresponding to :math:`U_{\mathrm{Bog}}`
+        theta_rzz (numpy array): angles parametrizing the :math:`RZZ` gates inserted in :math:`U_{\mathrm{Bog}}`
         slater (bool, optional): whether to only include excitation-preserving rotations.
                                  Defaults to False.
 
@@ -179,10 +179,11 @@ def LDCA_cycle_routine(nb_fermionic_modes, theta_MG, theta_RZZ, slater: Optional
 
     M = nb_fermionic_modes
 
-    if len(theta_MG) != (2 * M**2 - 2 * M if not slater else M**2 - M):
-        raise Exception("theta_MG doesn" "t have the correct length!")
-    if len(theta_RZZ) != M // 2 * (M - 1):
-        raise Exception("theta_RZZ doesn" "t have the correct length!")
+    if len(theta_mg) != (2 * M**2 - 2 * M if not slater else M**2 - M):
+        raise Exception("theta_mg doesn't have the correct length!")
+
+    if len(theta_rzz) != M // 2 * (M - 1):
+        raise Exception("theta_rzz doesn't have the correct length!")
 
     lenm = 2 if slater else 4
     q_rout = QRoutine()
@@ -192,10 +193,10 @@ def LDCA_cycle_routine(nb_fermionic_modes, theta_MG, theta_RZZ, slater: Optional
         for j in range(M // 2):  # even rotations
 
             offset = lenm * (M - 1) * k + lenm * j
-            angles_MG = theta_MG[offset : offset + lenm]
+            angles_mg = theta_mg[offset : offset + lenm]
 
             q_rout.apply(
-                MG_chain_routine(angles_MG, slater, theta_RZZ[(M - 1) * k + j]),
+                MG_chain_routine(angles_mg, slater, theta_rzz[(M - 1) * k + j]),
                 2 * j,
                 2 * j + 1,
             )
@@ -203,10 +204,10 @@ def LDCA_cycle_routine(nb_fermionic_modes, theta_MG, theta_RZZ, slater: Optional
         for j in range(M // 2 - 1):  # odd rotations
 
             offset = lenm * (M - 1) * k + lenm * M // 2 + lenm * j
-            angles_MG = theta_MG[offset : offset + lenm]
+            angles_mg = theta_mg[offset : offset + lenm]
 
             q_rout.apply(
-                MG_chain_routine(angles_MG, slater, theta_RZZ[(M - 1) * k + M // 2 + j]),
+                MG_chain_routine(angles_mg, slater, theta_rzz[(M - 1) * k + M // 2 + j]),
                 2 * j + 1,
                 2 * j + 2,
             )
@@ -240,17 +241,17 @@ def LDCA_routine(
     """
     M = nb_fermionic_modes
     lenm = 4 if not slater else 2
-    nb_MG_cycles = M // 2
+    nb_mg_cycles = M // 2
 
-    l_theta_MG = ncycles * nb_MG_cycles * lenm * (M - 1)
-    l_theta_RZZ = ncycles * nb_MG_cycles * (M - 1)
+    l_theta_mg = ncycles * nb_mg_cycles * lenm * (M - 1)
+    l_theta_rzz = ncycles * nb_mg_cycles * (M - 1)
 
-    if len(theta) != M + l_theta_MG + l_theta_RZZ:
+    if len(theta) != M + l_theta_mg + l_theta_rzz:
         raise Exception("Theta doesn't have the correct length!")
 
     if theta_gaussian is not None:
 
-        if len(theta_gaussian) != M + l_theta_MG // ncycles:
+        if len(theta_gaussian) != M + l_theta_mg // ncycles:
             raise Exception("Theta-gaussian doesn't have the correct length!")
 
     q_rout = QRoutine()
@@ -260,31 +261,31 @@ def LDCA_routine(
         # q_rout.apply(X, i)
         q_rout.apply(RZ(-2 * theta[i]), i)
 
-    # first M+l_theta_MG angles correspond to same params as U_Bog
-    theta_MG = theta[M : M + l_theta_MG]
+    # first M+l_theta_mg angles correspond to same params as U_Bog
+    theta_mg = theta[M : M + l_theta_mg]
 
     # remainder: RZZ angles
-    theta_RZZ = theta[M + l_theta_MG :]
+    theta_rzz = theta[M + l_theta_mg :]
 
-    pointeur_MG = 0
-    pointeur_RZZ = 0
+    pointeur_mg = 0
+    pointeur_rzz = 0
 
     for _ in range(ncycles):
 
-        theta_MG_cycle = theta_MG[pointeur_MG : pointeur_MG + nb_MG_cycles * lenm * (M - 1)]
-        theta_RZZ_cycle = theta_RZZ[pointeur_RZZ : pointeur_RZZ + nb_MG_cycles * (M - 1)]
+        theta_mg_cycle = theta_mg[pointeur_mg : pointeur_mg + nb_mg_cycles * lenm * (M - 1)]
+        theta_rzz_cycle = theta_rzz[pointeur_rzz : pointeur_rzz + nb_mg_cycles * (M - 1)]
         q_rout.apply(
-            LDCA_cycle_routine(nb_fermionic_modes, theta_MG_cycle, theta_RZZ_cycle, slater),
+            LDCA_cycle_routine(nb_fermionic_modes, theta_mg_cycle, theta_rzz_cycle, slater),
             list(range(M)),
         )
-        pointeur_MG += nb_MG_cycles * lenm * (M - 1)
-        pointeur_RZZ += nb_MG_cycles * (M - 1)
+        pointeur_mg += nb_mg_cycles * lenm * (M - 1)
+        pointeur_rzz += nb_mg_cycles * (M - 1)
 
     return q_rout
 
 
 def make_gen(a, b, M):
-    """construct antimsymmetric generator :math:`M_{ab}`
+    """Construct antimsymmetric generator :math:`M_{ab}`
     2M x 2M matrix with 1 at (a,b), -1 at b,a
     """
     res = np.zeros((2 * M, 2 * M))
@@ -364,7 +365,7 @@ def prepare_R_matrix(nb_fermionic_modes: int, theta: np.ndarray, slater: Optiona
     M = nb_fermionic_modes
 
     if len(theta) != (2 * M**2 - M if not slater else M**2):
-        raise Exception("Theta doesn" "t have the correct length!")
+        raise Exception("Theta doesn't have the correct length!")
 
     # r = exp(2*theta*G), with G generator
     # G: Generator
@@ -413,7 +414,7 @@ def prepare_R_matrix_gradient(nb_fermionic_modes: int, theta: np.ndarray, slater
 
 
 def find_R_angles(
-    R_target: np.ndarray,
+    r_target: np.ndarray,
     theta0: Optional[np.ndarray] = None,
     slater: Optional[bool] = False,
     use_gradient: Optional[bool] = False,
@@ -433,7 +434,7 @@ def find_R_angles(
         f(\theta) = - \mathrm{tr} R^T R(\theta) / (2 n_\mathrm{qbits}).
 
     Args:
-        R_target (np.ndarray): The target rotation matrix R (2Mx2M matrix)
+        r_target (np.ndarray): The target rotation matrix R (2Mx2M matrix)
             (in Majorana notation).
         theta0 (Optional[np.ndarray]): The initial guess for the angles.
             Defaults to None (in which case initialization to zero).
@@ -451,13 +452,13 @@ def find_R_angles(
         np.array, float: the list of angles and the value of the objective function
 
     """
-    nqbits = R_target.shape[0] // 2
+    nqbits = r_target.shape[0] // 2
 
     def func(theta):
 
         R_mat = prepare_R_matrix(nqbits, theta, slater)
 
-        return -np.trace(R_target.T.dot(R_mat)) / (2 * nqbits)
+        return -np.trace(r_target.T.dot(R_mat)) / (2 * nqbits)
 
     def der(theta):
 
@@ -465,8 +466,7 @@ def find_R_angles(
         grad_list = prepare_R_matrix_gradient(nqbits, theta, slater)
 
         for ind in range(len(grad_list)):
-
-            der_res[ind] = -np.trace(R_target.T.dot(grad_list[ind])) / (2 * nqbits)
+            der_res[ind] = -np.trace(r_target.T.dot(grad_list[ind])) / (2 * nqbits)
 
         return der_res
 

@@ -1,16 +1,21 @@
-import numpy as np
+# -*- coding: utf-8 -*-
+"""
+Natural Gradient Descend Plugin
+"""
+
 import time
 from typing import Dict
+import numpy as np
+
 from qat.comm.exceptions.ttypes import PluginException
 from qat.core import Result, Job
 from qat.plugins.junction import Junction
 
+from ..matchgates import gate_set
 from .auto_derivatives import (
     auto_differentiation_gradient_dictionary,
-    auto_differentiation_QFIM_dictionaries,
+    auto_differentiation_qfim_dictionaries,
 )
-
-from qat.fermion.matchgates import gate_set
 
 
 class GradientMinimizePlugin(Junction):
@@ -101,7 +106,7 @@ class GradientMinimizePlugin(Junction):
 
         return res_weighted
 
-    def run(self, qlm_object: Job, _) -> Result:
+    def run(self, initial_object: Job, _) -> Result:
         """
         The main method for the Junction plugin.
         """
@@ -109,11 +114,11 @@ class GradientMinimizePlugin(Junction):
         start_time = time.time()
 
         # The job and its hamiltonian observable
-        job = qlm_object()
+        job = initial_object()
         hamilt = job.observable
 
         # Initial values to be explored
-        parameters = qlm_object.get_variables()
+        parameters = initial_object.get_variables()
 
         if self.parameters_values is None:
 
@@ -125,11 +130,10 @@ class GradientMinimizePlugin(Junction):
         else:
 
             # Begin search from the given values if the dict keys are the same (it has already been copied)
-            if not (list(self.parameters_values.keys()) == parameters):
+            if list(self.parameters_values.keys()) != parameters:
 
                 raise PluginException(
-                    message="Initial parameters dict keys (%s) do not match the job parameters names. Program parameters are : %s"
-                    % (list(self.parameters_values.keys()), parameters)
+                    message=f"Initial parameters dict keys ({list(self.parameters_values.keys())}) do not match the job parameters names. Program parameters are : {parameters}"
                 )
 
         # Keep track of which parameter corresponds to which index in the gradient, matrix, ... (assumes dictionaries are ordered)
@@ -143,7 +147,7 @@ class GradientMinimizePlugin(Junction):
 
         angle_trace.append([val for val in self.parameters_values.values()])  # Assumes dictionaries are ordered
 
-        pristine_job = qlm_object(gate_set=self.my_gate_set, **self.parameters_values)
+        pristine_job = initial_object(gate_set=self.my_gate_set, **self.parameters_values)
 
         energy = self.execute(pristine_job).value
         energy_trace.append(energy)
@@ -153,14 +157,14 @@ class GradientMinimizePlugin(Junction):
         )
 
         if self.natural_gradient:
-            (QFIM_dkdl_jobs_dict, QFIM_dkpsi_jobs_dict, QFIM_psidl_jobs_dict) = auto_differentiation_QFIM_dictionaries(
+            (qfim_dkdl_jobs_dict, qfim_dkpsi_jobs_dict, qfim_psidl_jobs_dict) = auto_differentiation_qfim_dictionaries(
                 job, nb_parameters, self.parameters_index, user_custom_gates=self.custom_gates
             )
 
         self.iterations = 0
         stopping_criterion = False
 
-        while self.iterations < self.maxiter and stopping_criterion == False:
+        while self.iterations < self.maxiter and not stopping_criterion:
 
             q_gradient = {var_key: 0.0 for var_key in self.parameters_values}
 
@@ -174,37 +178,37 @@ class GradientMinimizePlugin(Junction):
             # Correct gradient with the Quantum Fisher Information Matrix as a metric tensor
             if self.natural_gradient:
 
-                QFIM = np.zeros((nb_parameters, nb_parameters), dtype=float)
+                qfim = np.zeros((nb_parameters, nb_parameters), dtype=float)
 
                 for k in range(nb_parameters):
 
                     # Compute <dk|psi>
-                    jobs_list = QFIM_dkpsi_jobs_dict[self.parameters_index[k]]
+                    jobs_list = qfim_dkpsi_jobs_dict[self.parameters_index[k]]
                     val_list = self.execute_weighted_jobs_list(jobs_list)
                     dkpsi = sum(val_list)  # should be a pure imaginary number
 
                     for l in range(nb_parameters):
 
                         # Compute <dk|dl>
-                        jobs_list = QFIM_dkdl_jobs_dict[self.parameters_index[k] + ";" + self.parameters_index[l]]
+                        jobs_list = qfim_dkdl_jobs_dict[self.parameters_index[k] + ";" + self.parameters_index[l]]
                         val_list = self.execute_weighted_jobs_list(jobs_list)
                         dkdl = sum(val_list)
 
                         # Compute <psi|dl>
-                        jobs_list = QFIM_psidl_jobs_dict[self.parameters_index[l]]
+                        jobs_list = qfim_psidl_jobs_dict[self.parameters_index[l]]
                         val_list = self.execute_weighted_jobs_list(jobs_list)
                         psidl = sum(val_list)  # should be a pure imaginary number
 
-                        QFIM[k][l] = 4 * (dkdl - dkpsi * psidl)
+                        qfim[k][l] = 4 * (dkdl - dkpsi * psidl)
 
                 # Truncate zero values
-                QFIM = np.where(np.abs(QFIM) < 1e-10, 0.0, QFIM)
+                qfim = np.where(np.abs(qfim) < 1e-10, 0.0, qfim)
 
                 # Inverse the metric tensor
-                invQFIM = np.linalg.pinv(QFIM)
+                invqfim = np.linalg.pinv(qfim)
 
             # Perform optimization step (update parameters)
-            # $\vec{\vartheta} <- \vec{\vartheta} - \lambda_step * [QFIM]^{-1} * \nabla E$
+            # $\vec{\vartheta} <- \vec{\vartheta} - \lambda_step * [qfim]^{-1} * \nabla E$
 
             cur_params = np.array([p_val for p_val in self.parameters_values.values()])
             cur_grad = np.array([grad_i for grad_i in q_gradient.values()])
@@ -215,11 +219,11 @@ class GradientMinimizePlugin(Junction):
             if self.natural_gradient:
 
                 try:
-                    soldiff = np.linalg.solve(QFIM, -self.lambda_step * cur_grad)
+                    soldiff = np.linalg.solve(qfim, -self.lambda_step * cur_grad)
                     cur_params = np.real(cur_params + soldiff)
 
                 except np.linalg.LinAlgError:
-                    cur_params = np.real(cur_params - self.lambda_step * invQFIM.dot(cur_grad))
+                    cur_params = np.real(cur_params - self.lambda_step * invqfim.dot(cur_grad))
 
             else:
                 cur_params = np.real(cur_params - self.lambda_step * cur_grad)
@@ -231,7 +235,7 @@ class GradientMinimizePlugin(Junction):
             angle_trace.append([ang for ang in self.parameters_values.values()])  # Assumes dictionaries are ordered
 
             # Temporary for XX gate
-            binded_job = qlm_object(gate_set=self.my_gate_set, **self.parameters_values)
+            binded_job = initial_object(gate_set=self.my_gate_set, **self.parameters_values)
 
             energy = self.execute(binded_job).value
 
@@ -243,7 +247,7 @@ class GradientMinimizePlugin(Junction):
             if self.stop_crit == "grad_norm":
                 self.check_crit_val = np.linalg.norm(cur_grad)
 
-            if not (self.stop_crit == "none"):
+            if self.stop_crit != "none":
 
                 if self.check_crit_val < self.tolerance:
                     stopping_criterion = True
@@ -256,9 +260,9 @@ class GradientMinimizePlugin(Junction):
         self.nb_use += 1  # The plugin has successfully run
 
         if self.natural_gradient:
-            title = r"Natural Gradient descent with QFIM. $\lambda =$ %f, nb_calls = %i" % (self.lambda_step, self.iterations)
+            title = rf"Natural Gradient descent with QFIM. $\lambda =$ {self.lambda_step}, nb_calls = {self.iterations}"
         else:
-            title = r"Gradient descent without QFIM. $\lambda =$ %f, nb_calls = %i" % (self.lambda_step, self.iterations)
+            title = rf"Gradient descent without QFIM. $\lambda =$ {self.lambda_step}, nb_calls = {self.iterations}"
 
         return Result(
             value=energy_trace[-1],  # supposing last energy is the minimum

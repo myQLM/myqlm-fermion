@@ -1,8 +1,15 @@
+# -*- coding: utf-8 -*-
+
+"""
+Deprecated UCC tools
+"""
+
 from warnings import warn
-from bitstring import BitArray
-import numpy as np
 from typing import Callable, List, Optional, Tuple, Dict
 import itertools
+
+from bitstring import BitArray
+import numpy as np
 
 from qat.core import Term
 from qat.lang.AQASM import QRoutine, X
@@ -148,7 +155,7 @@ def build_ucc_ansatz(cluster_ops: List[Hamiltonian], ket_hf: int, n_steps: Optio
     Returns:
         Lambda (Callable): The parametric state preparation implementing the UCCSD method, theta -> QRoutine
 
-    Warning: 
+    Warning:
         Deprecated
     """
 

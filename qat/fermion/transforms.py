@@ -11,12 +11,12 @@ from bitstring import BitArray
 from anytree import Node
 import numpy as np
 from qat.core import Term
-from qat.fermion.util import tobin
-from qat.fermion.hamiltonians import Hamiltonian, ElectronicStructureHamiltonian
+from .util import tobin
+from .hamiltonians import Hamiltonian, ElectronicStructureHamiltonian
 
 
-def make_fenwick_tree(N):
-    ftree = {N - 1: Node(str(N - 1))}
+def make_fenwick_tree(n):
+    ftree = {n - 1: Node(str(n - 1))}
 
     def fenwick(left, right):
         if left != right:
@@ -27,7 +27,7 @@ def make_fenwick_tree(N):
         else:
             return None
 
-    fenwick(0, N - 1)
+    fenwick(0, n - 1)
     return [ftree[k] for k in sorted(ftree.keys())]
 
 

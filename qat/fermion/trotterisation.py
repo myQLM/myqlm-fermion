@@ -22,11 +22,8 @@ def make_trotterisation_routine(
         hamiltonian (Union[Hamiltonian, ElectronicStructureHamiltonian]): Hamiltonian to trotterize.
         n_trotter_steps (int): Number :math:`n` of Trotter steps.
         final_time (Optional[float]): Time :math:`t` in the evolution operator.
-        method (Optional[str]): Method to use for the transformation to a spin representation. Defaults to "jordan-wigner". Available methods are :
-
-            - "jordan-wigner" : Jordan-Wigner transform,
-            - "bravyi-kitaev" : Bravyi-Kitaev transform,
-            - "parity" : Parity transform.
+        method (Optional[str]): Method to use for the transformation to a spin representation. Other available methods include
+            "bravyi-kitaev" and "parity". Defaults to "jordan-wigner".
 
     Returns:
         QRoutine: Gates to apply to perform the time evolution of the chemical Hamiltonian with trotterisation.

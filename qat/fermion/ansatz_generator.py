@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+"""
+Ansatz generator
+"""
+
 from qat.core.plugins import AbstractPlugin, contains_plugin
 from qat.core.generator import AbstractGenerator
 from .generator_tools import HybridResult
