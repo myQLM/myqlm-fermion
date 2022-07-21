@@ -1,6 +1,7 @@
+"""ADAPT-VQE Plugin"""
+
 from typing import List
 import numpy as np
-from tqdm.rich import tqdm
 from qat.plugins import Junction
 from qat.core import Result, Observable, Job
 from qat.lang.AQASM import Program, RX, RY, RZ, H, CNOT
@@ -122,7 +123,15 @@ class AdaptVQEPlugin(Junction):
 
         return prog
 
-    def run(self, job: Job, _):
+    def run(self, job: Job, _) -> Result:
+        """Execute the job
+
+        Args:
+            job (Job): Job.
+
+        Returns:
+            Result: Result
+        """
 
         # Get circuit
         circuit = job.circuit
@@ -169,12 +178,13 @@ class AdaptVQEPlugin(Junction):
             result = self.execute(circuit.to_job(observable=job.observable))
 
             # Store current energy
+            # pylint: disable=eval-used
             energy_trace += eval(result.meta_data["optimization_trace"])
 
             # Break ADAPT-VQE iterations if early stopping conditions are met
             if len(energy_trace) > 1:
 
-                delta = energy_trace[-1] - energy_trace[-2]
+                delta = np.abs(energy_trace[-1] - energy_trace[-2])
 
                 if delta < self.early_stopper:
                     break

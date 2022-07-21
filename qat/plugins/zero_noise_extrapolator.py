@@ -17,7 +17,7 @@ from qat.comm.exceptions.ttypes import PluginException
 
 
 def insert_ids(circ: Circuit, gates: list, n_ins: int) -> Circuit:
-    """
+    r"""
     Insert a number n_ins of GG^{\dagger} after each occurence of gate G in the circuit.
     In the absence of noise,  GG^{\dagger}=id is without effect.
 
@@ -57,7 +57,7 @@ def insert_ids(circ: Circuit, gates: list, n_ins: int) -> Circuit:
 
 
 def extract_values(batch_result: BatchResult, n_ins: int, n_jobs: int, job_number: int) -> list:
-    """
+    r"""
     Given a batch result corresponding to
 
     :math:`C_0^1, C_0^2, ..., C_0^{n_\mathrm{jobs}}, C_1^1, C_1^2, ..., C_1^{n_\mathrm{jobs}}, ..., C_{n_\mathrm{ins}}^{n_\mathrm{jobs}}`
@@ -98,7 +98,7 @@ def perform_extrapolation(
     extrap_method: Optional[str] = "linear",
     asymptot: Optional[float] = 0,
 ) -> float:
-    """
+    r"""
     Perform an extrapolation to zero noise.
 
     Args:
@@ -116,11 +116,11 @@ def perform_extrapolation(
     try:
         assert len(values_for_fit) == n_ins + 1
 
-    except:
+    except Exception as exc:
         raise PluginException(
-            "Not enough jobs in the batch (%i) compared with the max number"
-            "of local CNOT insertions (%i) extrapolation" % (len(values_for_fit), n_ins)
-        )
+            "Not enough jobs in the batch ({len(values_for_fit)}) compared with the max number"
+            "of local CNOT insertions ({n_ins}) extrapolation"
+        ) from exc
 
     if extrap_method == "linear" or not all([val - asymptot != 0 for val in values_for_fit]):
         a, b, _, _, _ = linregress(range(n_ins + 1), values_for_fit)
@@ -135,9 +135,7 @@ def perform_extrapolation(
 
     else:
         raise PluginException(
-            "Extrapolation method not implemented. You required the",
-            extrap_method,
-            "method whereas only " "linear" " and" " " "exponential" " options exist.",
+            f"Extrapolation method not implemented. You required the {extrap_method} method whereas only linear and exponential options exist.",
         )
 
     return value, a, b
@@ -189,14 +187,19 @@ class ZeroNoiseExtrapolator(AbstractPlugin):
     def __init__(
         self,
         n_ins: Optional[int] = 1,
-        extrap_gates: Optional[List[Gate]] = [CNOT],
+        extrap_gates: Optional[List[Gate]] = None,
         extrap_method: Optional[str] = "linear",
     ):
+        if extrap_gates is None:
+            extrap_gates = [CNOT]
 
         super(ZeroNoiseExtrapolator, self).__init__()
         self.n_ins = n_ins
         self.extrap_gates = extrap_gates
         self.extrap_method = extrap_method
+
+        self.is_sampling = None
+        self.asymptots = None
 
     def compile(self, batch: Batch, specs):
         """

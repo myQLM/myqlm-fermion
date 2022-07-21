@@ -301,7 +301,7 @@ def build_qpe_routine_for_hamiltonian(
     global_phase: Optional[float] = 0,
     t: Optional[float] = 1,
 ) -> QRoutine:
-    """
+    r"""
     Construct a phase estimation routine corresponding to a given spin Hamiltonian.
 
     Args:

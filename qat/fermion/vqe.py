@@ -10,7 +10,7 @@ def VQE(
     ansatz_routine: Callable,
     theta0: np.ndarray,
     qpu,
-    n_shots: Optional[List[int]] = [0, 0],
+    n_shots: Optional[List[int]] = None,
 ) -> Tuple[float, list, int, List[float]]:
     r"""
     This function implements the Variational Quantum Eigen solver i.e., it first prepares the variational ansatz and measures the
@@ -39,6 +39,8 @@ def VQE(
         This high-level function is there just to maintain backward compatibility.
 
     """
+    if n_shots is None:
+        n_shots = [0, 0]
 
     def fun(theta, n_shots_internal):
         prog = Program()
