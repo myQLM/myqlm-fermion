@@ -1,19 +1,21 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Tools for pySCF interfacing
-
 """
+
 from functools import reduce
+from typing import Union, TYPE_CHECKING
 import numpy as np
-from typing import Union
+
+if TYPE_CHECKING:
+    import pyscf
 
 
 def compute_integrals(molecule: Union[np.ndarray, "pyscf.gto.Mole"], mo_coeff, hcore):
     """
     For a given molecule, compute 1-body and 2-body integrals.
     """
-
+    # pylint: disable=import-outside-toplevel
     from pyscf import ao2mo
 
     # no spin dof
@@ -27,7 +29,7 @@ def compute_integrals(molecule: Union[np.ndarray, "pyscf.gto.Mole"], mo_coeff, h
     return one_electron_integrals, two_electron_integrals
 
 
-def perform_pyscf_computation(geometry: list, basis: str, spin: int, charge: int, run_FCI: bool = False):
+def perform_pyscf_computation(geometry: list, basis: str, spin: int, charge: int, run_fci: bool = False):
     r"""Perform various calculations using PySCF.
 
     This function will compute:
@@ -55,10 +57,11 @@ def perform_pyscf_computation(geometry: list, basis: str, spin: int, charge: int
                         [atomN, (x, y, z)]]
 
         basis (str): Defines the basis set.
-        spin (int): 2S, number of alpha electrons - number beta electrons to control multiplicity. If spin is None, multiplicity will be guessed
-        based on the neutral molecule.
+        spin (int): 2S, number of alpha electrons - number beta electrons to control multiplicity. If spin is None, multiplicity
+        will be guessed based on the neutral molecule.
         charge (int): Charge of molecule. Affects the electron numbers.
-        run_FCI (bool, optional): Whether the groundstates energies should also be computed using a full CI approach. Defaults to False.
+        run_fci (bool, optional): Whether the groundstates energies should also be computed using a full CI approach. Defaults to
+            False.
 
     Returns:
 
@@ -69,10 +72,11 @@ def perform_pyscf_computation(geometry: list, basis: str, spin: int, charge: int
             - nels (int): Number of electrons.
             - one_body_integrals (np.ndarray): One-body integral.
             - two_body_integrals (np.ndarray): Two-body integral.
-            - info (dict): Dictionary containing the Hartree-Fock and 2nd order Möller-Plesset computed ground state energies (and optionally the Full CI energy if run_FCI is set to True).
+            - info (dict): Dictionary containing the Hartree-Fock and 2nd order Möller-Plesset computed ground state energies (and
+                optionally the Full CI energy if run_fci is set to True).
 
     """
-
+    # pylint: disable=import-outside-toplevel
     from pyscf import gto, scf, fci, mp, ci
 
     # define molecule in pySCF format
@@ -109,7 +113,7 @@ def perform_pyscf_computation(geometry: list, basis: str, spin: int, charge: int
     mp2_energy = scf_worker.e_tot + mp2.e_corr
 
     # Run FCI
-    if run_FCI:
+    if run_fci:
         fci_worker = fci.FCI(molecule, scf_worker.mo_coeff)
         fci_worker.verbose = 0
         fci_energy = fci_worker.kernel()[0]

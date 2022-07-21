@@ -1,15 +1,19 @@
-""" Module with containers for common Hamiltonians """
-from typing import List, Optional, Tuple, Union
-from copy import deepcopy
+# -*- coding: utf-8 -*-
+"""
+Module with containers for common Hamiltonians
+"""
+
+from typing import List, Optional, Union
 from enum import Enum
 from itertools import product
-import scipy.sparse as sp
-import numpy as np
 import warnings
 
+import numpy as np
+import scipy.sparse as sp
 from qat.core import Observable, Term
 
 from .util import init_creation_ops, dag
+
 
 PAULI_MATS = {
     "X": [[0, 1], [1, 0]],
@@ -198,7 +202,7 @@ class Hamiltonian(Observable):
         for term in self.terms:
             for op, qb in zip(term.op, term.qbits):
 
-                if (op, qb) not in op_list.keys():
+                if (op, qb) not in op_list.items():
 
                     if op != "I":
                         try:
@@ -268,7 +272,7 @@ class Hamiltonian(Observable):
 
         for term in self.terms:
             for operator in term.op:
-                condition_1 = ObservableType.SPIN if operator in PAULI_MATS.keys() else condition_1
+                condition_1 = ObservableType.SPIN if operator in PAULI_MATS else condition_1
                 condition_2 = ObservableType.FERMION if operator in {"C", "c"} else condition_2
 
         if all((condition_1, condition_2)) is None:
@@ -294,8 +298,8 @@ class Hamiltonian(Observable):
             :class:`~qat.fermion.hamiltonians.Hamiltonian` : Hamiltonian in spin representation.
 
         """
-
-        from .transforms import (
+        # pylint: disable import-outside-top-level
+        from qat.fermion.transforms import (
             transform_to_jw_basis,
             transform_to_bk_basis,
             transform_to_parity_basis,
@@ -409,9 +413,7 @@ class SpinHamiltonian:
         do_clean_up: bool = True,
     ):
 
-        from warnings import warn
-
-        warn(
+        warnings.warn(
             "The SpinHamiltonian class is deprecated. Please use the Hamiltonian class instead.",
             stacklevel=2,
         )
@@ -422,37 +424,37 @@ class FermionHamiltonian(Hamiltonian):
     """Ensures retrocompatibility of old SpinHamiltonian class with new Hamiltonian class"""
 
     def __new__(cls, *args, **kwargs):
-        from warnings import warn
 
-        warn(
+        warnings.warn(
             "The FermionHamiltonian class is deprecated. Please use the Hamiltonian class instead.",
             stacklevel=2,
         )
         return Hamiltonian(*args, **kwargs)
 
 
-def make_anderson_model(U: float, mu: float, V: np.ndarray, epsilon: np.ndarray) -> ElectronicStructureHamiltonian:
+def make_anderson_model(u: float, mu: float, v: np.ndarray, epsilon: np.ndarray) -> ElectronicStructureHamiltonian:
     r"""
-    Returns the canonical second quantized form 
+    Returns the canonical second quantized form
 
     .. math::
-        H_{\mathrm{CSQ}} = \sum_{p,q} h_{pq} f_p^\dagger f_q + \frac{1}{2}\sum_{p,q,r,s} h_{pqrs} f_p^\dagger f_q^\dagger f_r f_s 
+        H_{\mathrm{CSQ}} = \sum_{p,q} h_{pq} f_p^\dagger f_q + \frac{1}{2}\sum_{p,q,r,s} h_{pqrs} f_p^\dagger f_q^\dagger f_r f_s
 
-    of a single impurity coupled with :math:`n_b` bath modes Anderson model Hamiltonian 
+    of a single impurity coupled with :math:`n_b` bath modes Anderson model Hamiltonian
 
     .. math::
-        H_{\mathrm{SIAM}} = U c_{\uparrow}^\dagger c_{\uparrow} c_{\downarrow}^\dagger c_{\downarrow} - \mu(c_{\uparrow}^\dagger c_{\uparrow}+c_{\downarrow}^\dagger c_{\downarrow}) 
+        H_{\mathrm{SIAM}} = U c_{\uparrow}^\dagger c_{\uparrow} c_{\downarrow}^\dagger c_{\downarrow} - \mu(c_{\uparrow}^\dagger c_{\uparrow}+c_{\downarrow}^\dagger c_{\downarrow})
         + \sum_{i=1..n_b} \sum_{\sigma=\uparrow,\downarrow} V_i (c_{\sigma}^\dagger a_{i,\sigma} + \mathrm{h.c.}) \\
         + \sum_{i=1..n_b} \sum_{\sigma=\uparrow,\downarrow} \epsilon_i a_{i,\sigma}^\dagger a_{i,\sigma}.
 
     Args:
         U (float): Coulomb repulsion intensity.
         mu (float): Chemical potential.
-        V (np.ndarray): Tunneling energies. This vector has the same size as the number of bath mode. 
-        epsilon (np.ndarray): Bath modes energies. This vector has the same size as the number of bath mode.  
+        V (np.ndarray): Tunneling energies. This vector has the same size as the number of bath mode.
+        epsilon (np.ndarray): Bath modes energies. This vector has the same size as the number of bath mode.
 
     Returns:
-        :class:`~qat.fermion.hamiltonians.ElectronicStructureHamiltonian` object constructed from :math:`h_{pq}` (matrix of size :math:`(2n_b+2) \times (2n_b+2)`) and :math:`h_{pqrs}` (4D tensor with size :math:`2n_b+2` in each dimension)
+        :class:`~qat.fermion.hamiltonians.ElectronicStructureHamiltonian` object constructed from :math:`h_{pq}` (matrix of size
+        :math:`(2n_b+2) \times (2n_b+2)`) and :math:`h_{pqrs}` (4D tensor with size :math:`2n_b+2` in each dimension)
 
     .. note::
         Convention:
@@ -465,7 +467,7 @@ def make_anderson_model(U: float, mu: float, V: np.ndarray, epsilon: np.ndarray)
     """
 
     # number of bath modes
-    n_b = len(V)
+    n_b = len(v)
     if len(epsilon) != n_b:
         raise Exception("Error : The bath modes energies vector must be the same size as the tunneling energies vector.")
 
@@ -486,20 +488,20 @@ def make_anderson_model(U: float, mu: float, V: np.ndarray, epsilon: np.ndarray)
 
     # hopping terms
     for i in range(0, n_b):
-        h_pq[0, 2 * (i + 1)] += V[i]
-        h_pq[2 * (i + 1), 0] += V[i]
-        h_pq[1, 2 * (i + 1) + 1] += V[i]
-        h_pq[2 * (i + 1) + 1, 1] += V[i]
+        h_pq[0, 2 * (i + 1)] += v[i]
+        h_pq[2 * (i + 1), 0] += v[i]
+        h_pq[1, 2 * (i + 1) + 1] += v[i]
+        h_pq[2 * (i + 1) + 1, 1] += v[i]
 
     # Coulomb repulsion when the impurity is occupied by two spins. The minus sign comes from the commutation we need to do in the U-term to get the operators in the right order.
-    h_pqrs[0, 1, 0, 1] = -U
-    h_pqrs[1, 0, 1, 0] = -U
+    h_pqrs[0, 1, 0, 1] = -u
+    h_pqrs[1, 0, 1, 0] = -u
 
     return ElectronicStructureHamiltonian(h_pq, h_pqrs)
 
 
 def make_embedded_model(
-    U: float,
+    u: float,
     mu: float,
     D: np.ndarray,
     lambda_c: np.ndarray,
@@ -553,7 +555,7 @@ def make_embedded_model(
     if int_kernel is None:
         h_pqrs = np.zeros((2 * M, 2 * M, 2 * M, 2 * M))
     else:
-        h_pqrs = -U * int_kernel
+        h_pqrs = -u * int_kernel
 
     const_coeff = 0
 
@@ -578,68 +580,65 @@ def make_embedded_model(
             perm_mat[2 * i, i] = 1
             perm_mat[2 * i + 1, i + M] = 1
 
-        if int_kernel is None and U != 0:
+        if int_kernel is None and u != 0:
             for i in range(M // 2):
                 a = ind_clusters_ord(2 * i, M)
                 b = ind_clusters_ord(2 * i + 1, M)
-                h_pqrs[a, b, a, b] = -U
-                h_pqrs[b, a, b, a] = -U
+                h_pqrs[a, b, a, b] = -u
+                h_pqrs[b, a, b, a] = -u
 
         h_pq = np.einsum("ap, pq, bq", perm_mat, h_pq, perm_mat)
 
     elif grouping == "clusters":
-        if int_kernel is None and U != 0:
+        if int_kernel is None and u != 0:
             for i in range(M // 2):
-                h_pqrs[2 * i, 2 * i + 1, 2 * i, 2 * i + 1] = -U  # minus sign comes from the def. of hpqrs: term c_dag c_dag c c
-                h_pqrs[2 * i + 1, 2 * i, 2 * i + 1, 2 * i] = -U
+                h_pqrs[2 * i, 2 * i + 1, 2 * i, 2 * i + 1] = -u  # minus sign comes from the def. of hpqrs: term c_dag c_dag c c
+                h_pqrs[2 * i + 1, 2 * i, 2 * i + 1, 2 * i] = -u
     else:
-        print("Grouping must be either " "clusters" " or " "spins" ".")
+        print("Grouping must be either clusters or spins.")
 
     return ElectronicStructureHamiltonian(h_pq, h_pqrs, const_coeff)
 
 
-def ind_clusters_ord(ind_spins_ord: int, M: int) -> int:
+def ind_clusters_ord(i: int, n_orb: int) -> int:
     """
     Computes the indice with cluster-ordering (up, dn, ..., up, dn)_imp(up, dn, ..., up, dn)_bath of spin-orbital of index
-    ind_clusters_ord in spin-ordering  (up_imp1, up_imp2, ..., up_bath1, ..., up_bathM)(dn_imp1, dn_imp2, ..., dn_bath1, ..., dn_bathM)
+    i in spin-ordering
+    (up_imp1, up_imp2, ..., up_bath1, ..., up_bathM)(dn_imp1, dn_imp2, ..., dn_bath1, ..., dn_bathM)
 
     Args:
-        ind_clusters_ord (int): Indice (with spin-ordering) of the spin-orbital we want to compute the indice in cluster-ordering of.
-        M (int): Number of orbitals (imp+bath).
+        i (int): Indice (with spin-ordering) of the spin-orbital we want to compute the indice in cluster-ordering of.
+        n_orb (int): Number of orbitals (imp+bath).
 
     """
 
-    i = ind_spins_ord
-
-    if i < M:
+    if i < n_orb:
         return 2 * i
 
+    try:
+        assert i < 2 * n_orb
+
+    except AssertionError:
+        print("index must be lesser than 2*n_orb")
+
     else:
-
-        try:
-            assert i < 2 * M
-
-        except AssertionError:
-            print("index must be lesser than 2*M")
-
-        else:
-            return 2 * i - (2 * M - 1)
+        return 2 * i - (2 * n_orb - 1)
 
 
-def ind_spins_ord(ind_clusters_ord: int, M: int) -> int:
+def ind_spins_ord(i: int, n_orb: int) -> int:
     """
-    Computes the indice with spin-ordering (up_imp1, up_imp2, ..., up_bath1, ..., up_bathM)(dn_imp1, dn_imp2, ..., dn_bath1, ..., dn_bathM)
-    of spin-orbital of index ind_clusters_ord in cluster-ordering (up, dn, ..., up, dn)_imp(up, dn, ..., up, dn)_bath
+    Computes the indice with spin-ordering
+    (up_imp1, up_imp2, ..., up_bath1, ..., up_bathM)(dn_imp1, dn_imp2, ..., dn_bath1, ..., dn_bathM) of spin-orbital of index
+    i in cluster-ordering (up, dn, ..., up, dn)_imp(up, dn, ..., up, dn)_bath
 
     Args:
-        ind_clusters_ord (int): Indice (with cluster-ordering) of the spin-orbital we want to compute the indice in spin-ordering of.
-        M (int): Number of orbitals (imp+bath).
+        i (int): Indice (with cluster-ordering) of the spin-orbital we want to compute the indice in spin-ordering of.
+        n_orb (int): Number of orbitals (imp+bath).
     """
 
-    i = ind_clusters_ord
-    ind_spins_ord = (i % 2 - 1) * (-i // 2) + (i % 2) * ((i - 1) // 2 + M)
+    idx_spins_ord = (i % 2 - 1) * (-i // 2) + (i % 2) * ((i - 1) // 2 + n_orb)
 
-    return ind_spins_ord
+    return idx_spins_ord
 
 
 def make_hubbard_model(t_mat: np.ndarray, U: float, mu: float) -> ElectronicStructureHamiltonian:
@@ -687,7 +686,7 @@ def make_hubbard_model(t_mat: np.ndarray, U: float, mu: float) -> ElectronicStru
 
 
 def make_tot_density_op(n_sites: int) -> ElectronicStructureHamiltonian:
-    """Construct total density operator.
+    r"""Construct total density operator.
 
     .. math::
         N = \sum_{i \sigma} n_{i\sigma}

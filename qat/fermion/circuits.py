@@ -7,14 +7,12 @@ This is a container for various ansatz circuits for variational preparation of f
 from typing import Optional, List
 import numpy as np
 
-from qat.lang.AQASM import Program, RY, CNOT, X
-
-from qat.fermion.matchgates import nb_params_LDCA, LDCA_routine
-from qat.fermion.util import make_fSim_fan_routine, make_sugisaki_routine, tobin
-
-from qat.lang.AQASM import Program, H, RX, RY, RZ, CNOT
+from qat.lang.AQASM import Program, CNOT, X, H, RX, RY, RZ
 from qat.core import Observable, Circuit
 from qat.lang.AQASM.gates import Gate
+
+from .matchgates import nb_params_LDCA, LDCA_routine
+from .util import make_fSim_fan_routine, make_sugisaki_routine, tobin
 
 
 def make_trotter_slice(op: Observable, iter_num: int) -> Program:
@@ -51,7 +49,7 @@ def make_trotter_slice(op: Observable, iter_num: int) -> Program:
 
     else:
 
-        for i in range(len(op.terms)):
+        for i, _ in enumerate(op.terms):
 
             pauli_string = op.terms[i].op
             list_qbits = op.terms[i].qbits
@@ -102,8 +100,8 @@ def make_ldca_circ(
     slater: Optional[bool] = False,
 ) -> Circuit:
     r"""
-    Construct a LDCA circuit (see `article by P. Dallaire-Demers et al. (2019) <https://doi.org/10.48550/arXiv.1801.01053>`_), applying ncycles layers of matchgates routines
-    on nb_fermionic_modes qubits.
+    Construct a LDCA circuit (see `article by P. Dallaire-Demers et al. (2019) <https://doi.org/10.48550/arXiv.1801.01053>`_),
+    applying ncycles layers of matchgates routines on nb_fermionic_modes qubits.
 
     Args:
         nb_fermionic_modes (int): Number of qubits.
@@ -125,11 +123,11 @@ def make_ldca_circ(
         nonzerobits = [index for index in range(nqbits) if nstring[index] == "1"]
     else:
         nonzerobits = list(range(nqbits))
-    for b in nonzerobits:
-        prog.apply(X, reg[b])
+    for bit in nonzerobits:
+        prog.apply(X, reg[bit])
 
     nb_params = nb_params_LDCA(nqbits, ncycles, slater=slater)
-    theta = [prog.new_var(float, r"\theta_{%i}" % i) for i in range(nb_params)]
+    theta = [prog.new_var(float, rf"\theta_{{{i}}}") for i in range(nb_params)]
     prog.apply(LDCA_routine(nqbits, ncycles, theta, None, slater=slater), reg)
 
     return prog.to_circ()
@@ -137,8 +135,8 @@ def make_ldca_circ(
 
 def make_mr_circ() -> Circuit:
     """
-    Builds a small, one-parameter Multi-Reference (MR) circuit on 4 qubits inspired from `Sugisaki et al. article (2019) <https://doi.org/10.1021/acscentsci.8b00788>`_
-    to prepare states in natural orbitals.
+    Builds a small, one-parameter Multi-Reference (MR) circuit on 4 qubits inspired from `Sugisaki et al. article (2019)
+    <https://doi.org/10.1021/acscentsci.8b00788>`_ to prepare states in natural orbitals.
 
     Returns:
         :class:`~qat.core.Circuit`
@@ -147,7 +145,7 @@ def make_mr_circ() -> Circuit:
 
     prog = Program()
     reg = prog.qalloc(4)
-    theta = [prog.new_var(float, r"\theta_{%i}" % i) for i in range(1)]
+    theta = [prog.new_var(float, rf"\theta_{{{i}}}") for i in range(1)]
     prog.apply(X, reg[2])
     prog.apply(X, reg[3])
     prog.apply(RY(theta[0]), reg[0])
@@ -160,7 +158,7 @@ def make_mr_circ() -> Circuit:
     return circ
 
 
-def make_mrep_circ(n_fSim_cycles: Optional[int] = 4, set_phi_to_0: Optional[bool] = False) -> Circuit:
+def make_mrep_circ(n_fsim_cycles: Optional[int] = 4, set_phi_to_0: Optional[bool] = False) -> Circuit:
     """
     Constructs the 8-qubit Multi-Reference Excitation Preserving (MREP) ansatz that combines
     the multi-reference routine of `Sugisaki et al. article (2019) <https://doi.org/10.1021/acscentsci.8b00788>`_ with some fSim
@@ -168,7 +166,7 @@ def make_mrep_circ(n_fSim_cycles: Optional[int] = 4, set_phi_to_0: Optional[bool
     The second angles of the fSim gates (phi) may be taken to 0.
 
     Args:
-        n_fSim_cycles (int, optional): Number of fSim cycles, defaults to 4.
+        n_fsim_cycles (int, optional): Number of fSim cycles, defaults to 4.
         set_phi_to_0 (bool, optional): Whether to set all second angles in the fSim gates to 0 (True)
                                        or not (False). Defaults to False.
     Returns:
@@ -179,7 +177,7 @@ def make_mrep_circ(n_fSim_cycles: Optional[int] = 4, set_phi_to_0: Optional[bool
 
     prog = Program()
     reg = prog.qalloc(nbqbits)
-    theta = [prog.new_var(float, "\\theta_{%i}" % i) for i in range(2 + 14 * n_fSim_cycles)]
+    theta = [prog.new_var(float, rf"\theta_{{{i}}}") for i in range(2 + 14 * n_fsim_cycles)]
 
     for i in range(nbqbits // 2, nbqbits):
         prog.apply(X, reg[i])
@@ -191,12 +189,12 @@ def make_mrep_circ(n_fSim_cycles: Optional[int] = 4, set_phi_to_0: Optional[bool
 
     ind = 2
 
-    for _ in range(n_fSim_cycles):
-        fSim_angles = theta[ind : (ind + 14)]
+    for _ in range(n_fsim_cycles):
+        fsim_angles = theta[ind : (ind + 14)]
         if set_phi_to_0:
-            for i in range(len(fSim_angles) // 2):
-                fSim_angles[2 * i + 1] = 0
-        rout = make_fSim_fan_routine(nbqbits, fSim_angles)
+            for i in range(len(fsim_angles) // 2):
+                fsim_angles[2 * i + 1] = 0
+        rout = make_fSim_fan_routine(nbqbits, fsim_angles)
         prog.apply(rout, reg)
         ind += 14
 
@@ -217,7 +215,7 @@ def make_shallow_circ() -> Circuit:
 
     prog = Program()
     reg = prog.qalloc(4)
-    theta = [prog.new_var(float, r"\theta_{%i}" % i) for i in range(8)]
+    theta = [prog.new_var(float, rf"\theta_{{{i}}}") for i in range(8)]
 
     for i in range(4):
         prog.apply(RY(theta[i]), reg[i])
@@ -236,7 +234,7 @@ def make_shallow_circ() -> Circuit:
 def make_general_hwe_circ(
     nqbits: int,
     n_cycles: int = 1,
-    rotation_gates: List[Gate] = [RY],
+    rotation_gates: List[Gate] = None,
     entangling_gate: Gate = CNOT,
 ) -> Circuit:
     r"""
@@ -249,25 +247,29 @@ def make_general_hwe_circ(
     Args:
         nqbits (int): Number of qubits of the circuit.
         n_cycles (int): Number of layers.
-        rotation_gates (List[Gate]): Parametrized rotation gates to include around the entangling gate. Defaults to :math:`RY`. Must be of arity 1.
+        rotation_gates (List[Gate]): Parametrized rotation gates to include around the entangling gate. Defaults to :math:`RY`. Must
+            be of arity 1.
         entangling_gate (Gate): The 2-qubit entangler. Must be of arity 2. Defaults to :math:`CNOT`.
 
     Returns:
         :class:`~qat.core.Circuit`
 
     """
+    if rotation_gates is None:
+        roration_gates = [RY]
+
     n_rotations = len(rotation_gates)
 
     prog = Program()
     reg = prog.qalloc(nqbits)
-    theta = [prog.new_var(float, r"\theta_{%i}" % i) for i in range(n_rotations * (nqbits + 2 * (nqbits - 1) * n_cycles))]
+    theta = [prog.new_var(float, rf"\theta_{{{i}}}") for i in range(n_rotations * (nqbits + 2 * (nqbits - 1) * n_cycles))]
     ind_theta = 0
 
     for i in range(nqbits):
 
-        for R in rotation_gates:
+        for rot in rotation_gates:
 
-            prog.apply(R(theta[ind_theta]), reg[i])
+            prog.apply(rot(theta[ind_theta]), reg[i])
             ind_theta += 1
 
     for _ in range(n_cycles):
@@ -276,22 +278,22 @@ def make_general_hwe_circ(
 
             prog.apply(entangling_gate, reg[2 * i], reg[2 * i + 1])
 
-            for R in rotation_gates:
+            for rot in rotation_gates:
 
-                prog.apply(R(theta[ind_theta]), reg[2 * i])
+                prog.apply(rot(theta[ind_theta]), reg[2 * i])
                 ind_theta += 1
-                prog.apply(R(theta[ind_theta]), reg[2 * i + 1])
+                prog.apply(rot(theta[ind_theta]), reg[2 * i + 1])
                 ind_theta += 1
 
         for i in range(nqbits // 2 - 1):
 
             prog.apply(entangling_gate, reg[2 * i + 1], reg[2 * i + 2])
 
-            for R in rotation_gates:
+            for rot in rotation_gates:
 
-                prog.apply(R(theta[ind_theta]), reg[2 * i + 1])
+                prog.apply(rot(theta[ind_theta]), reg[2 * i + 1])
                 ind_theta += 1
-                prog.apply(R(theta[ind_theta]), reg[2 * i + 2])
+                prog.apply(rot(theta[ind_theta]), reg[2 * i + 2])
                 ind_theta += 1
 
     return prog.to_circ()
@@ -362,5 +364,5 @@ try:
 
         return compressed_circ
 
-except:
+except ModuleNotFoundError:
     pass

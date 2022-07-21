@@ -20,6 +20,7 @@ def detect_linear(expression):
     else returns (False, None)
 
     """
+
     if isinstance(expression, Number):  # If it's a constant, its linear, with coefficient 0
         return True, 0.0
 
@@ -72,12 +73,10 @@ def detect_linear(expression):
     if expression.symbol.token == "UMINUS":
 
         # - A is linear iff A is linear
-        is_lin, coeff = detect_linear(expression.children[0])
+        is_linear, coeff = detect_linear(expression.children[0])
 
-        if is_lin:
-            return True, -coeff
-
-        return False, None
+        coeff = None if not is_linear else -coeff
+        return is_linear, coeff
 
     ## All other symbols are non linear (cos, sin, exp, sqrt, etc)
 

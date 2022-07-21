@@ -1,10 +1,13 @@
-from argparse import ArgumentError
-from typing import Any, Callable, Dict, Optional, Tuple, Union, List
+# -*- coding: utf-8 -*-
+
+"""
+Chemistry wrapper classes
+"""
+
+from typing import Dict, Optional, Tuple, Union, List
+from copy import deepcopy
 
 import numpy as np
-from copy import deepcopy
-from warnings import warn
-import inspect
 
 from .ucc import (
     transform_integrals_to_new_basis,
@@ -16,7 +19,7 @@ from ..hamiltonians import ElectronicStructureHamiltonian
 
 
 class MolecularHamiltonian(object):
-    """
+    r"""
     MolecularHamiltonian helper class. It represents the electronic-structure Hamiltonian defined
     using one- and two-body integrals.
 
@@ -26,7 +29,8 @@ class MolecularHamiltonian(object):
 
         H=\sum_{uv\sigma}I_{uv}c^{\dagger}_{u\sigma}c_{v\sigma}+\\frac{1}{2}\sum_{uvwx}\sum_{\sigma \sigma'} I_{uvwx}c^{\dagger}_{u\sigma}c^{\dagger}_{v\sigma'}c_{w\sigma'}c_{x\sigma}+r\mathbb{I}
 
-    with :math:`r` the core repulsion constant, and with :math:`I_{uv}` and :math:`I_{uvwx}` the one- and two-body integrals defined by:
+    with :math:`r` the core repulsion constant, and with :math:`I_{uv}` and :math:`I_{uvwx}` the one- and two-body integrals defined
+    by:
 
     ..  math::
 
@@ -39,7 +43,8 @@ class MolecularHamiltonian(object):
 
     Note:
 
-        This electronic-structure Hamiltonian definition is different than the one used in :class:`~qat.fermion.hamiltonians.ElectronicStructureHamiltonian`.
+        This electronic-structure Hamiltonian definition is different than the one used in
+        :class:`~qat.fermion.hamiltonians.ElectronicStructureHamiltonian`.
 
     Args:
 
@@ -85,6 +90,9 @@ class MolecularHamiltonian(object):
         self.constant_coeff = constant_coeff
         self.core_constant = 0
 
+        self.active_indices = None
+        self.occupied_indices = None
+
     def __getitem__(self, key):
         return self.__dict__[key]
 
@@ -95,12 +103,18 @@ class MolecularHamiltonian(object):
         return len(self.__dict__)
 
     def copy(self):
+        """Copy class
+
+        Returns:
+            Self: Copy of class
+        """
+
         return deepcopy(self)
 
     def __repr__(self):
         s = " MolecularHamiltonian(\n"
         s += f" - constant_coeff : {self.constant_coeff}\n"
-        s += f" - integrals shape\n"
+        s += " - integrals shape\n"
         s += f"    * one_body_integrals : {self.one_body_integrals.shape}\n"
         s += f"    * two_body_integrals : {self.two_body_integrals.shape}\n)"
 
@@ -258,14 +272,14 @@ class MolecularHamiltonian(object):
 
         hpq, hpqrs = convert_to_h_integrals(self.one_body_integrals, self.two_body_integrals)
 
-        H_electronic = ElectronicStructureHamiltonian(
+        h_electronic = ElectronicStructureHamiltonian(
             hpq,
             hpqrs,
             constant_coeff=self.constant_coeff + self.core_constant,
             do_clean_up=False,
         )
 
-        return H_electronic
+        return h_electronic
 
 
 class MoleculeInfo(object):

@@ -1,9 +1,13 @@
+# -*- coding: utf-8 -*-
+
 """
 Quantum Subspace Expansion (QSE)
 """
-import itertools as it
-import numpy as np
+
+import itertools
 from typing import List, Tuple, Optional
+
+import numpy as np
 from scipy.linalg import eig
 
 from qat.core import Term, Circuit, Observable
@@ -230,7 +234,7 @@ def build_linear_pauli_expansion(pauli_gates: List[str], nb_qubits: int) -> List
     """
     expansion_operators = []
 
-    for (pauli, qbit) in it.product(pauli_gates, range(nb_qubits)):
+    for (pauli, qbit) in itertools.product(pauli_gates, range(nb_qubits)):
         op = Hamiltonian(nb_qubits, [Term(1.0, pauli, [qbit])])
         expansion_operators.append(op)
 

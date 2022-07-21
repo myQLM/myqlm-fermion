@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+"""
+HybridResult class
+"""
+
 from qat.comm.shared.ttypes import PostProcessedResult, ParsedPostProcessedResult
 
 

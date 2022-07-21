@@ -1,22 +1,22 @@
-import numpy as np
+# -*- coding: utf-8 -*-
+"""
+Autoderivation tools for Natural gradient descent
+"""
+
 import copy
-
-import logging
-
+from typing import TYPE_CHECKING
+import numpy as np
 from qat.core import Observable, Term
 from qat.core.variables import Variable, ArithExpression
 from qat.core.circuit_builder.matrix_util import get_predef_generator
 from qat.lang.AQASM import X, Y, Z, Program, AbstractGate  # Quantum gates we want to use
-from qat.comm.datamodel.ttypes import GateDefinition, Op, GSyntax, Param
 from qat.core.circuit_builder.matrix_util import np_to_circ
-
-from qat.fermion.matchgates import _make_index_pair_list
-
-
-logging.basicConfig(level=logging.WARNING)
-
-# For generic arithmetic expressions handling
+from qat.comm.datamodel.ttypes import GateDefinition, Op, GSyntax, Param
 from .expressions import gatedef_to_expr, detect_linear
+
+if TYPE_CHECKING:
+    from qat.core import Job
+    from qat.lang.AQASM.gates import Gate
 
 
 def _sanity_check_term(pauli_str: str, nqbits: int):
@@ -42,13 +42,15 @@ def _sanity_check_term(pauli_str: str, nqbits: int):
 
     if len(pauli_str) != nqbits:
         is_multiple_term = False
+
     else:
         for gate in pauli_str:
-            if not (gate in valid_1qb_gates):
+
+            if not gate in valid_1qb_gates:
                 is_multiple_term = False
                 break
-            else:
-                gate_list.append(gate)
+
+            gate_list.append(gate)
 
     return (is_multiple_term, gate_list)
 
@@ -72,7 +74,7 @@ def _sanity_check_multirotation(pauli_str: str):
         while is_valid and ind_c < ind_max:
             g_name = next(names)
             ind_c += 1
-            if not (g_name in model):
+            if not g_name in model:
                 is_valid = False
             else:
                 single_rots.append(model[g_name])
@@ -87,8 +89,8 @@ def partial_derivatives(
     parameter_key: str,
     braket_side: str,
     add_ancilla: bool,
-    O_gate: "Gate" = None,
-    O_qbits: list = None,
+    o_gate: "Gate" = None,
+    o_qbits: list = None,
     user_custom_gates: dict = None,
 ):
     r"""
@@ -111,9 +113,9 @@ def partial_derivatives(
         parameter_key (str) : The key identifier of the parameter with respect to which the bra/ket part has to be derived.
         add_ancilla (bool) : Set to True if an ancilla qubit has to be added and configured. Set to False if one is already present
             (needs to be on the first register qubit)
-        O_gate (:class:`~qat.lang.AQASM.gate.Gate`, optional) : Observable gate part of a hamiltonian. Measurement will be different
+        o_gate (:class:`~qat.lang.AQASM.gate.Gate`, optional) : Observable gate part of a hamiltonian. Measurement will be different
             if given.
-        O_qbits (list, optional) : The list of qubits the O_gate should be applied to.
+        o_qbits (list, optional) : The list of qubits the o_gate should be applied to.
         user_custom_gates (dic) :  [Default to None] A dictionary where the user can provide entries that help define custom
             constant gates in the circuit (typically gates that do not appear in AQASM defaults).
             Syntax: {gate_name (string) : GateDefinition (GateDefinition)}. NOT SUPPORTING CUSTOM PARAMETERISED GATES YET.
@@ -124,56 +126,56 @@ def partial_derivatives(
 
     Returns :
 
-        A tuple list with PARAMETRIC job to evaluate Re(<\partial_i \Psi(vartheta)|\partial_j \Psi(vartheta)>) up to some coefficients that are given as the first element of the tuple.
-        It has to be post-processed.
+        A tuple list with PARAMETRIC job to evaluate Re(<\partial_i \Psi(vartheta)|\partial_j \Psi(vartheta)>) up to some
+        coefficients that are given as the first element of the tuple. It has to be post-processed.
 
     """
 
     gate_def_to_add = (
         []
-    )  # Used to store the custom gate defs that we will have to add to the circuits gateDic after having added a ancilla qubits (this operation resets the custom gates names)...
+    )  # Used to store the custom gate defs that we will have to add to the circuits gateDic after having added a ancilla qubits
     # At least add the three following GateDefinition objects, because they turn up very often:
     gate_def_to_add.append(GateDefinition(name="C-X", arity=2, nbctrls=1, subgate="X"))
     gate_def_to_add.append(GateDefinition(name="C-Y", arity=2, nbctrls=1, subgate="Y"))
     gate_def_to_add.append(GateDefinition(name="C-Z", arity=2, nbctrls=1, subgate="Z"))
 
     if not (braket_side == "bra" or braket_side == "ket" or braket_side == "none"):
-        raise Exception("braket_side argument must be 'bra' or 'ket' (or 'none'), got %s" % braket_side)
+        raise Exception(f"braket_side argument must be 'bra' or 'ket' (or 'none'), got {braket_side}")
 
     is_og_valid = False  # Default value
     og_term_list = []
-    if not (O_gate is None):
-        if O_qbits is None:
+    if not o_gate is None:
+        if o_qbits is None:
             raise Exception(
-                "O_gate was given. The list of qubits the observable O_gate should be applied to must be provided. The first qubit is 0 since the ancilla must not have been added yet."
+                "o_gate was given. The list of qubits the observable o_gate should be applied to must be provided. The first qubit "
+                "is 0 since the ancilla must not have been added yet."
             )
-        elif not (add_ancilla):
+        elif not add_ancilla:
             raise Exception(
-                "O_gate was given. Handling observable requires to add an ancilla qubits. No ancilla should be on the circuit yet."
+                "o_gate was given. Handling observable requires to add an ancilla qubits. No ancilla should be on the circuit yet."
             )
         else:
-            is_og_valid, og_term_list = _sanity_check_term(O_gate.name, len(O_qbits))
+            is_og_valid, og_term_list = _sanity_check_term(o_gate.name, len(o_qbits))
 
             if not is_og_valid:
-                if not ("C-%s" % O_gate.name in job.circuit.gateDic):
-                    ogname = O_gate.name
-                    gate_def_to_add.append(GateDefinition(name="C-%s" % ogname, arity=2, nbctrls=1, subgate=ogname))
+                if not f"C-{o_gate.name}" in job.circuit.gateDic:
+                    ogname = o_gate.name
+                    gate_def_to_add.append(GateDefinition(name=f"C-{ogname}", arity=2, nbctrls=1, subgate=ogname))
 
-    P_list = []  # A list to store the differentiable gates generators
+    p_list = []  # A list to store the differentiable gates generators
     coeff_list = []  # A list to store post process coefficients that arise from differentiation
 
-    logging.info("Initial gates : ")
-
     if braket_side == "none":
+
         # Adding one dummy Pauli operator
         raise Exception("No differentiation side has been given. Please set it to 'bra' or 'ket'.")
 
     else:  # braket_side is "bra" or "ket"
+
         # Doing a first circuit review to get the Pauli generator and the number of gates for each parameter
         for (op_op, (ind, (opname, params, qubits))) in zip(job.circuit.ops, enumerate(job.circuit.iterate_simple())):
             op_key = op_op.gate
 
-            logging.info(str(ind) + " " + str(opname) + " " + str(params) + " " + str(qubits))
             if len(params) == 0:
                 continue  # This is not a parameterized gate, so we skip it
             elif len(params) == 1:
@@ -201,16 +203,18 @@ def partial_derivatives(
 
                             else:
                                 raise Exception("For now, only supporting real coefficient in front of parameters!")
-                                # Could be improved in shifting the ancilla qubits to (|0>+e^(i\alpha)|1>)/\sqrt(2)) at the beginning of the Hadamard tests if the operation is e^{-i/2.\lambda.\vartheta.\sigma_gen} where \lambda = |\lamdba|.e^{i\alpha}...
+                                # Could be improved in shifting the ancilla qubits to (|0>+e^(i\alpha)|1>)/\sqrt(2)) at the
+                                # beginning of the Hadamard tests if the operation is e^{-i/2.\lambda.\vartheta.\sigma_gen} where
+                                # \lambda = |\lamdba|.e^{i\alpha}...
 
                         else:
                             raise Exception(
-                                "The gate %s (key: %s) doesn't contain a valid linear arithmetic expression!" % (opname, op_key)
+                                f"The gate {opname} (key: {op_key}) doesn't contain a valid linear arithmetic expression!"
                             )
 
                         (is_known_multirotation, pauli_gates_list) = _sanity_check_multirotation(opname)
 
-                        if not (is_known_multirotation):
+                        if not is_known_multirotation:
 
                             if len(opname) > 2:
                                 pauli_prod = get_predef_generator()[opname[1]]
@@ -218,31 +222,27 @@ def partial_derivatives(
                                     pauli_prod = np.kron(pauli_prod, get_predef_generator()[pauli])
 
                             pauli_gate = AbstractGate(
-                                "%s" % (opname[1:]), [], len(qubits), matrix_generator=lambda pauli_prod=pauli_prod: pauli_prod
+                                str(opname[1:]), [], len(qubits), matrix_generator=lambda pauli_prod=pauli_prod: pauli_prod
                             )()
 
                             # Add the control version of the gate
                             gate_def_to_add.append(
-                                GateDefinition(name="C-%s" % (opname[1:]), arity=2, nbctrls=1, subgate=(opname[1:]))
+                                GateDefinition(name=f"C-{(opname[1:])}", arity=2, nbctrls=1, subgate=(opname[1:]))
                             )
                             pauli_gates_list = [pauli_gate]
 
                         coeff_list.append(coeff)
 
-                        P_list.append((ind, pauli_gates_list, qubits))
+                        p_list.append((ind, pauli_gates_list, qubits))
 
                     else:
-                        logging.error("Not supporting parameterized gates different from rotations yet.")
                         raise Exception("Not supporting parameterized gates different from rotations yet.")
 
-            else:  # if len(params) > 1:
-                logging.error("Not supporting gates with multiple parameters yet, got %s" % params)
-                raise Exception("Not supporting gates with multiple parameters yet, got %s" % params)
-
-    logging.info("P_list : " + str(P_list))
+            else:
+                raise Exception(f"Not supporting gates with multiple parameters yet, got {params}")
 
     jobs_list = {
-        ind_job: [0.0, copy.copy(job)] for ind_job in range(len(P_list))
+        ind_job: [0.0, copy.copy(job)] for ind_job in range(len(p_list))
     }  # the float is to store the coefficient that comes from differentiation
 
     # To be able to modify circuits one by one, me must copy them
@@ -253,7 +253,7 @@ def partial_derivatives(
 
     ind_job = 0
 
-    for (process_coeff, (indi, pauli_gates_list, P_qbits)) in zip(coeff_list, P_list):
+    for (process_coeff, (indi, pauli_gates_list, p_qbits)) in zip(coeff_list, p_list):
 
         right_shift = 0
 
@@ -270,12 +270,11 @@ def partial_derivatives(
             jobs_list[ind_job][1].circuit.gateDic[gate_def_.name] = gate_def_
 
         # Add user custom gates
-        if not (user_custom_gates is None):
+        if not user_custom_gates is None:
             for gate_c_key in user_custom_gates:
                 jobs_list[ind_job][1].circuit.gateDic[gate_c_key] = user_custom_gates[gate_c_key]
 
         if add_ancilla:
-            logging.info("Applying first H gate")
 
             jobs_list[ind_job][1].circuit.ops.insert(0, Op(type=0, gate="H", qbits=[0]))
             right_shift += 1
@@ -283,13 +282,12 @@ def partial_derivatives(
         # Going through the original circuit to copy the gates and add generators beforehand if needed
         update_coeff = 1.0 + 0.0 * 1j
 
-        # As we have already copied the circuit, we do not need to iterate the circuit to copy it, but just to insert the generators gates at the right positions
-        logging.info("Pauli %s index : " % [pg.name for pg in pauli_gates_list] + str(indi))
-
+        # As we have already copied the circuit, we do not need to iterate the circuit to copy it, but just to insert the generators
+        # gates at the right positions
         if len(pauli_gates_list) == 1:
 
             temp_qbits1 = [0]  # the ancilla index for the control operation
-            for qb in P_qbits:
+            for qb in p_qbits:
 
                 if add_ancilla:
                     temp_qbits1.append(qb + 1)
@@ -302,7 +300,7 @@ def partial_derivatives(
         else:
 
             temp_qbits = []
-            for qb in P_qbits:
+            for qb in p_qbits:
 
                 if add_ancilla:
                     temp_qbits.append([0, qb + 1])
@@ -314,15 +312,13 @@ def partial_derivatives(
         if braket_side == "bra":
 
             # The operator is daggered, so we have to perform a X shit on the ancilla qubit
-            logging.info("   Applying ctrl generator gate (%s) with an ancilla shift : " % [pg.name for pg in pauli_gates_list])
-
             jobs_list[ind_job][1].circuit.ops.insert(right_shift + indi, Op(type=0, gate="X", qbits=[0]))
             ind_insert = 1
 
             for pauli_gate in pauli_gates_list:
 
                 jobs_list[ind_job][1].circuit.ops.insert(
-                    right_shift + indi + ind_insert, Op(type=0, gate="C-%s" % pauli_gate.name, qbits=next(active_qbits))
+                    right_shift + indi + ind_insert, Op(type=0, gate=f"C-{pauli_gate.name}", qbits=next(active_qbits))
                 )  # Wether an ancilla has been inserted or not, qubits index have already been shifted.
                 ind_insert += 1
 
@@ -335,49 +331,46 @@ def partial_derivatives(
             ind_insert = 0
             for pauli_gate in pauli_gates_list:
 
-                logging.info("   Applying ctrl generator gate (%s) with no ancilla shift : " % pauli_gate.name + str(pauli_gate))
-
                 jobs_list[ind_job][1].circuit.ops.insert(
-                    right_shift + indi + ind_insert, Op(type=0, gate="C-%s" % pauli_gate.name, qbits=next(active_qbits))
+                    right_shift + indi + ind_insert, Op(type=0, gate=f"C-{pauli_gate.name}", qbits=next(active_qbits))
                 )  # Wether an ancilla has been inserted or not, qubits index have already been shifted.
                 ind_insert += 1
 
             update_coeff = process_coeff
 
         # For the hamiltonian gate...
-        if not (O_gate is None):
+        if o_gate is not None:
 
             # assume add_ancilla is true
             if is_og_valid:
 
                 # We use the list (ex. ["X", "X", "X"]
                 # Assume the XXYYZ (eg) term is for different qubits...
-                it_qb = iter(O_qbits)
+                it_qb = iter(o_qbits)
                 for g_name in og_term_list:
                     # g_name is expected to be something like 'X', 'Y' or 'Z'
-                    jobs_list[ind_job][1].circuit.ops.append(Op(type=0, gate="C-%s" % g_name, qbits=[0, 1 + next(it_qb)]))
+                    jobs_list[ind_job][1].circuit.ops.append(Op(type=0, gate=f"C-{g_name}", qbits=[0, 1 + next(it_qb)]))
 
             else:
                 temp_qbits = [0]  # the ancilla index for the control operation
-                for qb in O_qbits:
+                for qb in o_qbits:
                     temp_qbits.append(qb + 1)  # assume add_ancilla is true
 
-                jobs_list[ind_job][1].circuit.ops.append(Op(type=0, gate="C-%s" % O_gate.name, qbits=temp_qbits))
+                jobs_list[ind_job][1].circuit.ops.append(Op(type=0, gate=f"C-{o_gate.name}", qbits=temp_qbits))
 
         if add_ancilla:
 
-            logging.info("Applying last H gate to change bases.")
             jobs_list[ind_job][1].circuit.ops.append(
                 Op(type=0, gate="H", qbits=[0])
             )  # Change ancilla bases for measurement along the X axis
 
-            if not (O_gate is None):
+            if o_gate is not None:
 
-                # In the case we have added an O_gate
-                RXpiO2 = 1 / np.sqrt(2) * np.array([[1.0 + 0.0 * 1j, 0.0 - 1j], [0.0 - 1j, 1.0 + 0.0 * 1j]])
+                # In the case we have added an o_gate
+                rx_pi_o2 = 1 / np.sqrt(2) * np.array([[1.0 + 0.0 * 1j, 0.0 - 1j], [0.0 - 1j, 1.0 + 0.0 * 1j]])
                 par = Param(type=1, double_p=np.pi / 2)
                 jobs_list[ind_job][1].circuit.gateDic["_MeasShift"] = GateDefinition(
-                    name="_MeasShift", arity=1, matrix=np_to_circ(RXpiO2), syntax=GSyntax(name="RX", parameters=[par])
+                    name="_MeasShift", arity=1, matrix=np_to_circ(rx_pi_o2), syntax=GSyntax(name="RX", parameters=[par])
                 )
                 jobs_list[ind_job][1].circuit.ops.append(Op(type=0, gate="_MeasShift", qbits=[0]))
 
@@ -471,8 +464,10 @@ def _product_param_real_part(job, bra_key, ket_key, user_custom_gates=None):
 
 def hamiltonian_gradient_param_imag_part(job, hamiltonian, partial_key, user_custom_gates=None):
     r"""
-    Returns the (coefficients, jobs) list to compute $\partial_{partial_key} <\Psi | H | \Psi> where Psi is the ansatz prepared according to the given job.
-    WARNING : For now, this function will only work if the ansatz job parametrized gates are of the shape e^(-i\theta /2) !
+    Returns the (coefficients, jobs) list to compute $\partial_{partial_key} <\Psi | H | \Psi> where Psi is the ansatz prepared
+    according to the given job.
+
+    Note : For now, this function will only work if the ansatz job parameterized gates are of the shape e^(-i\theta /2) !
 
     Args :
 
@@ -486,8 +481,8 @@ def hamiltonian_gradient_param_imag_part(job, hamiltonian, partial_key, user_cus
 
     """
 
-    O_list = []
-    H_coeff_list = []
+    o_list = []
+    h_coeff_list = []
 
     for _, term in enumerate(hamiltonian.terms):
 
@@ -507,15 +502,15 @@ def hamiltonian_gradient_param_imag_part(job, hamiltonian, partial_key, user_cus
                     op_gate_matrix = np.kron(op_gate_matrix, get_predef_generator()[op])
 
             op_gate = AbstractGate(
-                "%s" % (term.op), [], len(term.qbits), matrix_generator=lambda op_gate_matrix=op_gate_matrix: op_gate_matrix
+                f"{(term.op)}", [], len(term.qbits), matrix_generator=lambda op_gate_matrix=op_gate_matrix: op_gate_matrix
             )()
 
-        O_list.append((op_gate, term.qbits))
-        H_coeff_list.append(term.coeff)
+        o_list.append((op_gate, term.qbits))
+        h_coeff_list.append(term.coeff)
 
     # Now construct circuits
     jobs_list = []
-    for indj, (O_gate, O_qbits) in enumerate(O_list):
+    for indj, (o_gate, o_qbits) in enumerate(o_list):
 
         # Build a circuit with some of the Hamiltonian gates (issues with the xx gate for instance)
         first_jobs_list = partial_derivatives(
@@ -523,8 +518,8 @@ def hamiltonian_gradient_param_imag_part(job, hamiltonian, partial_key, user_cus
             parameter_key=partial_key,
             braket_side="ket",
             add_ancilla=True,
-            O_gate=O_gate,
-            O_qbits=O_qbits,
+            o_gate=o_gate,
+            o_qbits=o_qbits,
             user_custom_gates=user_custom_gates,
         )
 
@@ -534,13 +529,15 @@ def hamiltonian_gradient_param_imag_part(job, hamiltonian, partial_key, user_cus
             if np.isreal(corr_coeff):
 
                 jobs_list.append(
-                    (-H_coeff_list[indj] * np.real(corr_coeff), op_job)
-                )  # minus sign is because we compute (-1)*Im(<O|U(\theta)^\dagger.O_j.V_i(\theta)|0> with the hadamard test circuit with the "ket" side
+                    (-h_coeff_list[indj] * np.real(corr_coeff), op_job)
+                )  # minus sign is because we compute (-1)*Im(<O|U(\theta)^\dagger.O_j.V_i(\theta)|0> with the hadamard test circuit
+                # with the "ket" side
 
             else:
                 raise Exception(
-                    "For now, this function will only work if the ansatz job parameterized gates are of the shape e^(-i \lambda \\theta \\sigma /2) ! Instead of -i/2*\lambda, got a gen coeff : %f+%f i"
-                    % (np.real(op_coeff), np.imag(op_coeff))
+                    rf"For now, this function will only work if the ansatz job parameterizedgates are of the shape e^(-i \lambda "
+                    r"\\theta \\sigma /2) ! Instead of -i/2*\lambda, got a gen coeff : "
+                    f"{np.real(op_coeff)}+{np.imag(op_coeff)} i"
                 )
 
     return jobs_list
@@ -563,7 +560,7 @@ def auto_differentiation_gradient_dictionary(job, hamiltonian, parameters_dict, 
     return gradient_jobs_dict
 
 
-def auto_differentiation_QFIM_dictionaries(job, nb_parameters, parameters_index, user_custom_gates=None):
+def auto_differentiation_qfim_dictionaries(job, nb_parameters, parameters_index, user_custom_gates=None):
     """
     Computes the three jobs dictionaries used for QFIM computation
 
@@ -571,32 +568,34 @@ def auto_differentiation_QFIM_dictionaries(job, nb_parameters, parameters_index,
         job (Job) : The job we aim at differentiating
         nb_parameters (int) : The number of parameters keys
         parameters_index (dict) : A dictionary to link parameters names to their index
-        user_custom_gates (dict) :  [Default to None] A dictionary where the user can provide entries that help define custom constant gates in the circuit (typically gates that do not appear in AQASM defaults). Syntax: {gate_name (string) : GateDefinition (GateDefinition)}. NOT SUPPORTING CUSTOM PARAMETERISED GATES YET.
+        user_custom_gates (dict) :  [Default to None] A dictionary where the user can provide entries that help define custom
+            constant gates in the circuit (typically gates that do not appear in AQASM defaults).
+            Syntax: {gate_name (string) : GateDefinition (GateDefinition)}. NOT SUPPORTING CUSTOM PARAMETERISED GATES YET.
 
     Returns :
         A three-dictionary tuple. The jobs inside are PARAMETRIC
 
     """
 
-    QFIM_dkdl_jobs_dict = {}
-    QFIM_dkpsi_jobs_dict = {}
-    QFIM_psidl_jobs_dict = {}
+    qfim_dkdl_jobs_dict = {}
+    qfim_dkpsi_jobs_dict = {}
+    qfim_psidl_jobs_dict = {}
 
     for k in range(nb_parameters):
 
         param_k = parameters_index[k]
-        QFIM_dkpsi_jobs_dict[param_k] = _product_param_real_part(
+        qfim_dkpsi_jobs_dict[param_k] = _product_param_real_part(
             job, bra_key=param_k, ket_key="no_differentiation", user_custom_gates=user_custom_gates
         )
-        QFIM_psidl_jobs_dict[param_k] = _product_param_real_part(
+        qfim_psidl_jobs_dict[param_k] = _product_param_real_part(
             job, bra_key="no_differentiation", ket_key=param_k, user_custom_gates=user_custom_gates
         )
 
-        for l in range(nb_parameters):
+        for idx in range(nb_parameters):
 
-            param_l = parameters_index[l]
-            QFIM_dkdl_jobs_dict[param_k + ";" + param_l] = _product_param_real_part(
+            param_l = parameters_index[idx]
+            qfim_dkdl_jobs_dict[param_k + ";" + param_l] = _product_param_real_part(
                 job, bra_key=param_k, ket_key=param_l, user_custom_gates=user_custom_gates
             )
 
-    return (QFIM_dkdl_jobs_dict, QFIM_dkpsi_jobs_dict, QFIM_psidl_jobs_dict)
+    return (qfim_dkdl_jobs_dict, qfim_dkpsi_jobs_dict, qfim_psidl_jobs_dict)
