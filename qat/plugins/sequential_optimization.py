@@ -23,8 +23,8 @@ def rescale_params(params: list, coeff: float):
         try:
             rescaled_params[key] = value * coeff
 
-        except:
-            raise PluginException("Parameters must be real-valued!")
+        except Exception as exc:
+            raise PluginException("Parameters must be real-valued!") from exc
 
     return rescaled_params
 
@@ -44,7 +44,7 @@ class SeqOptimResult:
 
 
 class SeqOptim(Optimizer):
-    """
+    r"""
     This plugin implements the sequential parameter optimization technique (also known as *rotosolve*) described in:
 
     - `Nakanishi et al. <http://dx.doi.org/10.1103/PhysRevResearch.2.043158>`_ (arXiv:1903.12166) [2020]

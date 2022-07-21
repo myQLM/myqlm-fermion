@@ -5,7 +5,7 @@ from typing import Callable, Optional, List, Union
 
 from qat.core.variables import ArithExpression, Variable
 from qat.core import default_gate_set
-from qat.lang.AQASM import Program, QRoutine, AbstractGate, X, RX, RY, RZ, PH, H, CNOT, QInt
+from qat.lang.AQASM import Program, QRoutine, AbstractGate, X, RX, RY, RZ, H, CNOT
 from qat.core.simutil import wavefunction
 
 from qat.qpus import get_default_qpu
@@ -83,7 +83,7 @@ def make_fSim_fan_routine(nbqbits: int, theta: np.ndarray) -> QRoutine:
 
 
 def make_sugisaki_routine(theta: np.ndarray) -> QRoutine:
-    """
+    r"""
     A 4-qubit routine inspired from Sugisaki et al., 10.1021/acscentsci.8b00788 [2019] that acts on
 
     ...math::

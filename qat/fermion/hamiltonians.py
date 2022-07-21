@@ -298,7 +298,7 @@ class Hamiltonian(Observable):
             :class:`~qat.fermion.hamiltonians.Hamiltonian` : Hamiltonian in spin representation.
 
         """
-        # pylint: disable import-outside-top-level
+        # pylint: disable=import-outside-top-level
         from qat.fermion.transforms import (
             transform_to_jw_basis,
             transform_to_bk_basis,
@@ -493,7 +493,8 @@ def make_anderson_model(u: float, mu: float, v: np.ndarray, epsilon: np.ndarray)
         h_pq[1, 2 * (i + 1) + 1] += v[i]
         h_pq[2 * (i + 1) + 1, 1] += v[i]
 
-    # Coulomb repulsion when the impurity is occupied by two spins. The minus sign comes from the commutation we need to do in the U-term to get the operators in the right order.
+    # Coulomb repulsion when the impurity is occupied by two spins. The minus sign comes from the commutation we need to do in the
+    # U-term to get the operators in the right order.
     h_pqrs[0, 1, 0, 1] = -u
     h_pqrs[1, 0, 1, 0] = -u
 
@@ -519,24 +520,25 @@ def make_embedded_model(
 
     .. math::
         H_{\mathrm{emb}} = U \sum \limits_{i,j,k,l=1}^{2M} I_{ijkl} f^{\dagger}_i f_j f^{\dagger}_k f_l
-                       - \mu \sum \limits_{i=1}^{M} f^{\dagger}_{i} f_{j} 
+                       - \mu \sum \limits_{i=1}^{M} f^{\dagger}_{i} f_{j}
                        + \sum \limits_{i, j=1}^{M} t^{\mathrm{loc}}_{ij} f^{\dagger}_i f_j \\
                        + \sum \limits_{i,j=1}^{M} (D_{ij} f^{\dagger}_{i} f_{M+j} + \mathrm{h.c.}) \\
                        + \sum \limits_{i,j=1}^{M} \lambda^c_{ij} f_{M+i} f^{\dagger}_{M+j}
 
-    where :math:`M` is the number of orbitals (imp+bath). Indices here correspond to the spin-orbitals ordering referred to as 'cluster' (see below).
+    where :math:`M` is the number of orbitals (imp+bath). Indices here correspond to the spin-orbitals ordering referred to as
+    'cluster' (see below).
 
     Args:
         U (float): Onsite repulsion on impurity sites.
-        mu (float): Chemical potential. 
+        mu (float): Chemical potential.
         D (np.ndarray): Hopping matrix (i.e. hybridization) between the correlated orbitals and the uncorrelated bath.
         lambda_c (np.ndarray): Hopping matrix of the uncorrelated sites.
         t_loc (Optional[np.ndarray]): Hopping matrix of the correlated sites.
-        int_kernel (Optional[np.ndarray]): Array :math:`I` with 1 at position :math:`i, j, k, l` where :math:`U` must be put 
+        int_kernel (Optional[np.ndarray]): Array :math:`I` with 1 at position :math:`i, j, k, l` where :math:`U` must be put
                                         (conv. for associated term: :math:`c^{\dagger}c^{\dagger}cc`). Defaults to None,
                                         in which case :math:`U` is put before terms :math:`c^{\dagger}_{2i}c^{\dagger}_{2i+1}c_{2i}c_{2i+1}, i=1..M/2` if grouping is 'clusters', :math:`c^{\dagger}_{i}c^{\dagger}_{i+M}c_{i}c_{i+M}, i=1..M/2` if grouping is 'spins'.
                                         This array must be a 4D array.  
-        grouping (Optional[str]): Defines how spin-orbitals indices are ordered (see below), defaults to 'spins'. 
+        grouping (Optional[str]): Defines how spin-orbitals indices are ordered (see below), defaults to 'spins'.
 
     Returns:
         :class:`~qat.fermion.hamiltonians.ElectronicStructureHamiltonian`

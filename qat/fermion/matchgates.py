@@ -392,7 +392,7 @@ def prepare_R_matrix_gradient(nb_fermionic_modes: int, theta: np.ndarray, slater
     M = nb_fermionic_modes
 
     if len(theta) != (2 * M**2 - M if not slater else M**2):
-        raise Exception("Theta doesn" "t have the correct length!")
+        raise Exception("Theta doesn't have the correct length!")
 
     index_pair_list = _make_index_pair_list(M, slater)
 
@@ -465,8 +465,8 @@ def find_R_angles(
         der_res = np.zeros_like(theta)
         grad_list = prepare_R_matrix_gradient(nqbits, theta, slater)
 
-        for ind in range(len(grad_list)):
-            der_res[ind] = -np.trace(r_target.T.dot(grad_list[ind])) / (2 * nqbits)
+        for idx, _ in enumerate(grad_list):
+            der_res[idx] = -np.trace(r_target.T.dot(grad_list[idx])) / (2 * nqbits)
 
         return der_res
 

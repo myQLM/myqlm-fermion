@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
-# pylint: disable=relative-beyond-top-level
+"""
+Observable generator
+"""
+
 from qat.comm.shared.ttypes import ProcessingType
 from qat.core import Job, Circuit
 from qat.core.plugins import AbstractPlugin, contains_plugin
@@ -85,10 +88,10 @@ class ObservableGenerator(AbstractPlugin, AbstractGenerator):
 
         # Check arguments
         if observable is None and name is None:
-            raise ValueError("An observable should be passed in argument (either argument " "'observable' or 'name' should be set)")
+            raise ValueError("An observable should be passed in argument (either argument 'observable' or 'name' should be set)")
 
         if observable is not None and name is not None:
-            raise ValueError("Could not build the observable (argument 'observable' and " "'name' are mutually exclusive)")
+            raise ValueError("Could not build the observable (argument 'observable' and 'name' are mutually exclusive)")
 
         # Build observable
         self.observable = observable
