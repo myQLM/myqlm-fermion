@@ -208,9 +208,8 @@ class Hamiltonian(Observable):
                         try:
                             op_list[(op, qb)] = _make_spin_op(op, qb, self.nbqbits, sparse)
 
-                        except:
-                            print(op, qb, self.nbqbits)
-                            raise
+                        except Exception as exc:
+                            raise ValueError("An error has occured during the Kronecker product.") from exc
 
         final_matrix = 0
 
@@ -462,7 +461,7 @@ def make_anderson_model(u: float, mu: float, v: np.ndarray, epsilon: np.ndarray)
         :math:`f_1` corresponds to :math:`c_{\downarrow}` (annihilation in the 'down' mode of the impurity),
         :math:`f_2` corresponds to :math:`a_{1,\uparrow}` (annihilation in the 'up' mode of the 1st bath mode),
         :math:`f_3` corresponds to :math:`a_{1,\downarrow}` (annihilation in the 'down' mode of the 1st bath mode),
-        and so on.    
+        and so on.
 
     """
 
@@ -537,7 +536,7 @@ def make_embedded_model(
         int_kernel (Optional[np.ndarray]): Array :math:`I` with 1 at position :math:`i, j, k, l` where :math:`U` must be put
                                         (conv. for associated term: :math:`c^{\dagger}c^{\dagger}cc`). Defaults to None,
                                         in which case :math:`U` is put before terms :math:`c^{\dagger}_{2i}c^{\dagger}_{2i+1}c_{2i}c_{2i+1}, i=1..M/2` if grouping is 'clusters', :math:`c^{\dagger}_{i}c^{\dagger}_{i+M}c_{i}c_{i+M}, i=1..M/2` if grouping is 'spins'.
-                                        This array must be a 4D array.  
+                                        This array must be a 4D array.
         grouping (Optional[str]): Defines how spin-orbitals indices are ordered (see below), defaults to 'spins'.
 
     Returns:

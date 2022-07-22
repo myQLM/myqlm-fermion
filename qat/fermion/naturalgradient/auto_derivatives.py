@@ -46,7 +46,7 @@ def _sanity_check_term(pauli_str: str, nqbits: int):
     else:
         for gate in pauli_str:
 
-            if not gate in valid_1qb_gates:
+            if gate not in valid_1qb_gates:
                 is_multiple_term = False
                 break
 
@@ -74,7 +74,7 @@ def _sanity_check_multirotation(pauli_str: str):
         while is_valid and ind_c < ind_max:
             g_name = next(names)
             ind_c += 1
-            if not g_name in model:
+            if g_name not in model:
                 is_valid = False
             else:
                 single_rots.append(model[g_name])
@@ -144,7 +144,7 @@ def partial_derivatives(
 
     is_og_valid = False  # Default value
     og_term_list = []
-    if not o_gate is None:
+    if o_gate is not None:
         if o_qbits is None:
             raise Exception(
                 "o_gate was given. The list of qubits the observable o_gate should be applied to must be provided. The first qubit "
@@ -158,7 +158,7 @@ def partial_derivatives(
             is_og_valid, og_term_list = _sanity_check_term(o_gate.name, len(o_qbits))
 
             if not is_og_valid:
-                if not f"C-{o_gate.name}" in job.circuit.gateDic:
+                if f"C-{o_gate.name}" not in job.circuit.gateDic:
                     ogname = o_gate.name
                     gate_def_to_add.append(GateDefinition(name=f"C-{ogname}", arity=2, nbctrls=1, subgate=ogname))
 
@@ -270,7 +270,7 @@ def partial_derivatives(
             jobs_list[ind_job][1].circuit.gateDic[gate_def_.name] = gate_def_
 
         # Add user custom gates
-        if not user_custom_gates is None:
+        if user_custom_gates is not None:
             for gate_c_key in user_custom_gates:
                 jobs_list[ind_job][1].circuit.gateDic[gate_c_key] = user_custom_gates[gate_c_key]
 
