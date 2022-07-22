@@ -298,7 +298,7 @@ class Hamiltonian(Observable):
             :class:`~qat.fermion.hamiltonians.Hamiltonian` : Hamiltonian in spin representation.
 
         """
-        # pylint: disable=import-outside-top-level
+        # pylint: disable=C0415
         from qat.fermion.transforms import (
             transform_to_jw_basis,
             transform_to_bk_basis,
