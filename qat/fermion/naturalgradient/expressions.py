@@ -16,68 +16,18 @@ def gatedef_to_expr(gatedef):
 
 def detect_linear(expression):
     """
-    Returns (True, coeff) if the expression is a linear function of a single variable.
-    else returns (False, None)
-
+    Returns the derivative coefficient (respectively None) if the expression is a linear (respectively nonlinear) function.
     """
 
     if isinstance(expression, Number):  # If it's a constant, its linear, with coefficient 0
-        return True, 0.0
+        return 0.0
 
-    if isinstance(expression, Variable):  # If it's a single variable, it's linear with coefficient 1
-        return True, 1.0
+    if len(expression.get_variables()) > 1:  # If it has more than one variables returns False
+        return None
 
-    if len(expression.get_variables()) > 1:  # If it has more than one variables returns False ### THIS COULD BE IMPROVED!
-        return False, None
+    diff = expression.differentiate(expression.get_variables()[0])
 
-    if expression.symbol.token in ["+", "-"]:
+    if isinstance(diff, Number):
+        return diff
 
-        # A +/- B is linear iff A and B are both linear
-        is_0_lin, coeff_0 = detect_linear(expression.children[0])
-        is_1_lin, coeff_1 = detect_linear(expression.children[1])
-
-        if is_0_lin and is_1_lin:
-            return True, coeff_0 + coeff_1
-
-        return False, None
-
-    if expression.symbol.token == "*":
-
-        # A * B is linear iff only one is linear and the other is constant
-        is_0_lin, coeff_0 = detect_linear(expression.children[0])
-        is_1_lin, coeff_1 = detect_linear(expression.children[1])
-
-        if is_0_lin and isinstance(expression.children[1], Number):
-            return True, coeff_0 * expression.children[1]
-
-        if is_1_lin and isinstance(expression.children[0], Number):
-            return True, coeff_1 * expression.children[0]
-
-        return False, None
-
-    if expression.symbol.token == "**":
-
-        # A ** B is never linear
-        return False, None
-
-    if expression.symbol.token == "/":
-
-        # A / B is linear iff A is linear and B is constant (this not true because we could have B = 1/C with C linear)
-        is_lin, coeff = detect_linear(expression.children[0])
-
-        if is_lin and isinstance(expression.children[1], Number):
-            return True, coeff / expression.children[1]
-
-        return False, None
-
-    if expression.symbol.token == "UMINUS":
-
-        # - A is linear iff A is linear
-        is_linear, coeff = detect_linear(expression.children[0])
-
-        coeff = None if not is_linear else -coeff
-        return is_linear, coeff
-
-    ## All other symbols are non linear (cos, sin, exp, sqrt, etc)
-
-    return False, None
+    return None

@@ -35,8 +35,8 @@ def make_trotterisation_routine(
 
             e^{-i H t} \approx \prod_{k=1}^{n} \left( \prod_{pq} e^{-i \frac{t}{n} h_{pq} c_p^\dagger c_q} \prod_{pqrs} e^{-\frac{i}{2}\frac{t}{n} h_{pqrs} e^{-i c_p^\dagger c_q^\dagger c_r c_s} } \right)
 
-          This operator is then mapped to a product of Pauli operators via a Jordan-Wigner transformation and the resulting QRoutine is
-          returned.
+          This operator is then mapped to a product of Pauli operators via a Jordan-Wigner transformation and the resulting QRoutine
+          is returned.
 
         * The QRoutine implements a first order Trotter approximation, but higher order approximations are possible.
 
@@ -73,7 +73,7 @@ def make_trotterisation_routine(
 
     else:
         raise Exception(
-            "Hamiltonian must be of type ElectronicStructureHamiltonian or Hamiltonian, got %s instead" % type(hamiltonian)
+            f"Hamiltonian must be of type ElectronicStructureHamiltonian or Hamiltonian, got {type(hamiltonian)} instead"
         )
 
 
@@ -215,8 +215,8 @@ def _number_operator_jw(hpq: np.ndarray, t: float) -> QRoutine:
 
     Qrout = QRoutine()
 
-    for i in range(len(hpq)):
-        Qrout.apply(PH((-hpq[i][i] * t)), i)
+    for idx, _ in enumerate(hpq):
+        Qrout.apply(PH((-hpq[idx][idx] * t)), idx)
 
     return Qrout
 
@@ -338,11 +338,11 @@ def _number_excitation_operator_jw(hpqrs: np.ndarray, t: float) -> QRoutine:
     """
 
     Qrout = QRoutine()
-    for p in range(len(hpqrs)):
+    for p, _ in enumerate(hpqrs):
 
         Qrout.apply(PH(0), p)
 
-        for q in range(len(hpqrs)):
+        for q, _ in enumerate(hpqrs):
 
             if p != q:
 
