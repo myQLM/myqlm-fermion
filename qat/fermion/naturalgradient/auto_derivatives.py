@@ -194,9 +194,9 @@ def partial_derivatives(
 
                         arith_expr = gatedef_to_expr(job.circuit.gateDic[op_key])
 
-                        (is_expr_valid, expr_coeff) = detect_linear(arith_expr)
+                        expr_coeff = detect_linear(arith_expr)
 
-                        if is_expr_valid:
+                        if expr_coeff is not None:
 
                             if np.isreal(expr_coeff):
                                 coeff *= np.real(expr_coeff)
