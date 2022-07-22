@@ -256,7 +256,7 @@ def make_general_hwe_circ(
 
     """
     if rotation_gates is None:
-        roration_gates = [RY]
+        rotation_gates = [RY]
 
     n_rotations = len(rotation_gates)
 

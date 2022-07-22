@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from .wrapper import MoleculeInfo, MolecularHamiltonian
-
 # Try to find other packages in other folders (with separate build directory)
 from pkgutil import extend_path
 

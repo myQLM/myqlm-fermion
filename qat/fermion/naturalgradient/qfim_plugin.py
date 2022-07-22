@@ -187,19 +187,19 @@ class GradientMinimizePlugin(Junction):
                     val_list = self.execute_weighted_jobs_list(jobs_list)
                     dkpsi = sum(val_list)  # should be a pure imaginary number
 
-                    for l in range(nb_parameters):
+                    for n_param in range(nb_parameters):
 
                         # Compute <dk|dl>
-                        jobs_list = qfim_dkdl_jobs_dict[self.parameters_index[k] + ";" + self.parameters_index[l]]
+                        jobs_list = qfim_dkdl_jobs_dict[self.parameters_index[k] + ";" + self.parameters_index[n_param]]
                         val_list = self.execute_weighted_jobs_list(jobs_list)
                         dkdl = sum(val_list)
 
                         # Compute <psi|dl>
-                        jobs_list = qfim_psidl_jobs_dict[self.parameters_index[l]]
+                        jobs_list = qfim_psidl_jobs_dict[self.parameters_index[n_param]]
                         val_list = self.execute_weighted_jobs_list(jobs_list)
                         psidl = sum(val_list)  # should be a pure imaginary number
 
-                        qfim[k][l] = 4 * (dkdl - dkpsi * psidl)
+                        qfim[k][n_param] = 4 * (dkdl - dkpsi * psidl)
 
                 # Truncate zero values
                 qfim = np.where(np.abs(qfim) < 1e-10, 0.0, qfim)
