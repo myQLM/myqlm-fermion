@@ -3,8 +3,11 @@ import numpy as np
 from qat.lang.AQASM import H, RX, RY, CNOT, QRoutine, Program
 from qat.qpus import get_default_qpu
 
+# from qat.plugins import GradientDescentOptimizer
+
 from qat.fermion.hamiltonians import make_hubbard_model
-from qat.fermion.naturalgradient.qfim_plugin import GradientMinimizePlugin
+
+from qat.fermion.naturalgradient.qfim_plugin import GradientDescentOptimizer
 from qat.fermion.matchgates import RYX, RXY
 
 
@@ -55,14 +58,13 @@ linalg_qpu = get_default_qpu()
 
 np.random.seed(1234)
 
+x0 = np.random.uniform(0, 2 * np.pi, len(circ.get_variables()))
+
 
 def test_gradient_descent():
     """Test gradient descent plugin without using natural gradients"""
 
-    variables = circ.get_variables()
-    x0 = {variable: value for variable, value in zip(variables, np.random.uniform(0, 2 * np.pi, len(variables)))}
-
-    gradient_descent = GradientMinimizePlugin(maxiter=100, lambda_step=0.2, natural_gradient=False, tol=1e-7, x0=x0)
+    gradient_descent = GradientDescentOptimizer(maxiter=100, lambda_step=0.2, natural_gradient=False, tol=1e-7, x0=x0)
     qpu = gradient_descent | linalg_qpu
     result = qpu.submit(job)
 
@@ -72,10 +74,7 @@ def test_gradient_descent():
 def test_natural_gradient_descent():
     """Test gradient descent plugin using natural gradients"""
 
-    variables = circ.get_variables()
-    x0 = {variable: value for variable, value in zip(variables, np.random.uniform(0, 2 * np.pi, len(variables)))}
-
-    gradient_descent = GradientMinimizePlugin(maxiter=100, lambda_step=0.2, natural_gradient=True, tol=1e-7, x0=x0)
+    gradient_descent = GradientDescentOptimizer(maxiter=100, lambda_step=0.2, natural_gradient=True, tol=1e-7, x0=x0)
     qpu = gradient_descent | linalg_qpu
     result = qpu.submit(job)
 
@@ -85,7 +84,7 @@ def test_natural_gradient_descent():
 def test_natural_gradient_descent_no_initialization():
     """Test gradient descent plugin with no user initialization of the parameters (random initialization)"""
 
-    gradient_descent = GradientMinimizePlugin(maxiter=100, lambda_step=0.2, natural_gradient=True, tol=1e-7)
+    gradient_descent = GradientDescentOptimizer(maxiter=100, lambda_step=0.2, natural_gradient=True, tol=1e-7)
     qpu = gradient_descent | linalg_qpu
     result = qpu.submit(job)
 
@@ -107,7 +106,7 @@ def test_natural_gradient_with_custom_RXX_gates():
 
     linalg_qpu = get_default_qpu()
 
-    gradient_descent = GradientMinimizePlugin(maxiter=100, lambda_step=0.2, natural_gradient=False, tol=1e-7)
+    gradient_descent = GradientDescentOptimizer(maxiter=100, lambda_step=0.2, natural_gradient=False, tol=1e-7)
     qpu = gradient_descent | linalg_qpu
     result = qpu.submit(job)
 
@@ -129,7 +128,7 @@ def test_natural_gradient_with_custom_RXX_gates_energy_earlystop():
 
     linalg_qpu = get_default_qpu()
 
-    gradient_descent = GradientMinimizePlugin(
+    gradient_descent = GradientDescentOptimizer(
         maxiter=100, lambda_step=0.2, natural_gradient=False, tol=1e-7, stop_crit="energy_dist"
     )
     qpu = gradient_descent | linalg_qpu

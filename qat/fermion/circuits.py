@@ -6,6 +6,7 @@ This is a container for various ansatz circuits for variational preparation of f
 
 from typing import Optional, List
 import numpy as np
+import warnings
 
 from qat.lang.AQASM import Program, CNOT, X, H, RX, RY, RZ
 from qat.core import Observable, Circuit
@@ -299,70 +300,72 @@ def make_general_hwe_circ(
     return prog.to_circ()
 
 
-try:
-    from qat.pbo import GraphCircuit, VAR
+def make_compressed_ldca_circ(
+    nb_fermionic_modes: int,
+    ncycles: int,
+    eigstate_ind: Optional[int] = 0,
+    slater: Optional[bool] = False,
+) -> Circuit:
+    """
+    Builds a compressed version of the LDCA ansatz circuit.
 
-    def make_compressed_ldca_circ(
-        nb_fermionic_modes: int,
-        ncycles: int,
-        eigstate_ind: Optional[int] = 0,
-        slater: Optional[bool] = False,
-    ) -> Circuit:
-        """
-        Builds a compressed version of the LDCA ansatz circuit.
+    The new pattern was obtained using qat.synthopline.
 
-        The new pattern was obtained using qat.synthopline.
+    Args:
+        nb_fermionic_modes (int): Number of qubits.
+        ncycles (int): Number of LDCA cycles.
+        eigstate_ind (Optional[int]): Eigenstate index. Defaults to 0.
+        slater (Optional[bool]): Whether to only include excitation-preserving rotations.
+                                Defaults to False.
 
-        Args:
-            nb_fermionic_modes (int): Number of qubits.
-            ncycles (int): Number of LDCA cycles.
-            eigstate_ind (Optional[int]): Eigenstate index. Defaults to 0.
-            slater (Optional[bool]): Whether to only include excitation-preserving rotations.
-                                    Defaults to False.
+    Return:
+    :class:`~qat.core.Circuit`
+    """
 
-        Return:
-        :class:`~qat.core.Circuit`
-        """
+    circ = make_ldca_circ(nb_fermionic_modes, ncycles, eigstate_ind=eigstate_ind, slater=slater)
 
-        circ = make_ldca_circ(nb_fermionic_modes, ncycles, eigstate_ind=eigstate_ind, slater=slater)
+    try:
+        # pylint: disable=import-outside-toplevel
+        from qat.pbo import GraphCircuit, VAR
 
-        graph = GraphCircuit()
-        graph.load_circuit(circ)
+    except ModuleNotFoundError:
+        warnings.warn("The compressed LDCA circuit is available only for the QLM. Rolling back to standard LDCA circuit")
+        return circ
 
-        a1 = VAR()
-        a2 = VAR()
-        a3 = VAR()
-        a4 = VAR()
-        a5 = VAR()
+    graph = GraphCircuit()
+    graph.load_circuit(circ)
 
-        old_pattern = [
-            ("RYY", [0, 1], a3),
-            ("RXX", [0, 1], a2),
-            ("RZZ", [0, 1], a1),
-            ("RYX", [0, 1], a5),
-            ("RXY", [0, 1], a4),
-        ]
-        new_pattern = [
-            ("CNOT", [1, 0]),
-            ("RX", [1], a2),
-            ("RY", [1], a4),
-            ("H", [1]),
-            ("CNOT", [0, 1]),
-            ("PH", [1], -a3),
-            ("PH", [0], a1),
-            ("RY", [1], -a5),
-            ("CNOT", [1, 0]),
-            ("H", [1]),
-            ("CNOT", [0, 1]),
-        ]
+    a1 = VAR()
+    a2 = VAR()
+    a3 = VAR()
+    a4 = VAR()
+    a5 = VAR()
 
-        # Replace pattern
-        while graph.replace_pattern(old_pattern, new_pattern):
-            continue
+    old_pattern = [
+        ("RYY", [0, 1], a3),
+        ("RXX", [0, 1], a2),
+        ("RZZ", [0, 1], a1),
+        ("RYX", [0, 1], a5),
+        ("RXY", [0, 1], a4),
+    ]
+    new_pattern = [
+        ("CNOT", [1, 0]),
+        ("RX", [1], a2),
+        ("RY", [1], a4),
+        ("H", [1]),
+        ("CNOT", [0, 1]),
+        ("PH", [1], -a3),
+        ("PH", [0], a1),
+        ("RY", [1], -a5),
+        ("CNOT", [1, 0]),
+        ("H", [1]),
+        ("CNOT", [0, 1]),
+    ]
 
-        compressed_circ = graph.to_circ()
+    # Replace pattern
+    while graph.replace_pattern(old_pattern, new_pattern):
+        continue
 
-        return compressed_circ
+    compressed_circ = graph.to_circ()
 
-except ModuleNotFoundError:
-    pass
+    return compressed_circ

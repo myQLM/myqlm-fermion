@@ -241,7 +241,7 @@ def _excitation_operator_jw(hpq: np.ndarray, t: float) -> QRoutine:
 
     Qrout = QRoutine()
 
-    for i in range(len(hpq)):
+    for i, _ in enumerate(hpq):
 
         Qrout.apply(PH(0), i)
 
@@ -297,7 +297,7 @@ def _coulomb_exchange_operator_jw(hpqrs: np.ndarray, t: float) -> QRoutine:
     """
 
     Qrout = QRoutine()
-    for p in range(len(hpqrs)):
+    for p, _ in enumerate(hpqrs):
 
         Qrout.apply(PH(0), p)
         for q in range(p):

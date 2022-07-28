@@ -372,6 +372,7 @@ def partial_derivatives(
                 jobs_list[ind_job][1].circuit.gateDic["_MeasShift"] = GateDefinition(
                     name="_MeasShift", arity=1, matrix=np_to_circ(rx_pi_o2), syntax=GSyntax(name="RX", parameters=[par])
                 )
+
                 jobs_list[ind_job][1].circuit.ops.append(Op(type=0, gate="_MeasShift", qbits=[0]))
 
         jobs_list[ind_job][1].observable = Observable(jobs_list[ind_job][1].circuit.nbqbits, pauli_terms=[Term(1.0, "Z", [0])])

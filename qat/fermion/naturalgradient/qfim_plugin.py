@@ -1,24 +1,21 @@
 # -*- coding: utf-8 -*-
 """
-Natural Gradient Descend Plugin
+Gradient Descend Plugin including natural gradient descent
 """
 
-import time
-from typing import Dict
+from typing import List
 import numpy as np
 
 from qat.comm.exceptions.ttypes import PluginException
-from qat.core import Result, Job
-from qat.plugins.junction import Junction
-
-from ..matchgates import gate_set
-from .auto_derivatives import (
+from qat.plugins.optimizer import Optimizer
+from qat.fermion.matchgates import gate_set
+from qat.fermion.naturalgradient.auto_derivatives import (
     auto_differentiation_gradient_dictionary,
     auto_differentiation_qfim_dictionaries,
 )
 
 
-class GradientMinimizePlugin(Junction):
+class GradientDescentOptimizer(Optimizer):
     r"""Gradient-based optimization plugin, with possibility to use natural gradients
     as described in `this publication <http://dx.doi.org/10.22331/q-2020-05-25-269>`_.
 
@@ -52,19 +49,19 @@ class GradientMinimizePlugin(Junction):
             Defaults to grad_norm.
         tol (float, optional): Tolerance for stopping criterion.
             Defaults to 1e-10.
-        x0 (dict, optional): Initial value of the parameters. If None, the initial parameters will be randomly chosen. Defaults to
-            None.
+        x0 (list, optional): Initial value of the parameters. The indexing must be the same as for the variables obtained via the
+            `.get_variables()`method. If None, the initial parameters will be randomly chosen. Defaults to None.
 
     """
 
     def __init__(
         self,
-        maxiter: int = 1000,
+        maxiter: int = 200,
         lambda_step: float = 0.2,
         natural_gradient: bool = True,
         stop_crit: str = "grad_norm",
-        tol: float = 1e-10,
-        x0: Dict[str, float] = None,
+        tol: float = 1e-3,
+        x0: List[float] = None,
         user_custom_gates=None,
     ):
 
@@ -73,7 +70,8 @@ class GradientMinimizePlugin(Junction):
 
         # Parameters values
         self.parameters_index = {}
-        self.parameters_values = x0.copy() if x0 is not None else None  # Dict for the values of the circuit parameters
+        self.initial_parameters = x0
+        self.parameters_dict = None
 
         # For stopping criterion purposes
         self.maxiter = maxiter  # Maximum number of iterations
@@ -82,14 +80,11 @@ class GradientMinimizePlugin(Junction):
         self.check_crit_val = 1.0 + self.tolerance
         self.iterations = 0
 
-        # Plugin history after instantiation
-        self.nb_use = 0
-
         # For custom gates (eg. XX)
         self.custom_gates = user_custom_gates
         self.my_gate_set = gate_set
 
-        super(GradientMinimizePlugin, self).__init__(collective=False)
+        super().__init__(collective=False)
 
     def execute_weighted_jobs_list(self, jobs_list):
         """
@@ -98,7 +93,7 @@ class GradientMinimizePlugin(Junction):
         res_weighted = []
         for coeff, my_test_job in jobs_list:
 
-            temp_job = my_test_job(gate_set=self.my_gate_set, **self.parameters_values)
+            temp_job = my_test_job(gate_set=self.my_gate_set, **self.parameters_dict)
 
             res = self.execute(temp_job)
             val = res.value
@@ -106,59 +101,48 @@ class GradientMinimizePlugin(Junction):
 
         return res_weighted
 
-    def run(self, initial_object: Job, _) -> Result:
+    def optimize(self, var_names):
         """
         The main method for the Junction plugin.
         """
 
-        start_time = time.time()
-
-        # The job and its hamiltonian observable
-        job = initial_object()
-        hamilt = job.observable
-
-        # Initial values to be explored
-        parameters = initial_object.get_variables()
-
-        if self.parameters_values is None:
+        if self.initial_parameters is None:
 
             # By default, initiate search from (0., 0., ..., 0.)
-            self.parameters_values = {
-                variable: value for variable, value in zip(parameters, np.random.uniform(0, 2 * np.pi, len(parameters)))
-            }
+            self.initial_parameters = np.random.uniform(0, 2 * np.pi, len(var_names))
 
-        else:
+        self.parameters_dict = dict(zip(var_names, self.initial_parameters))
 
-            # Begin search from the given values if the dict keys are the same (it has already been copied)
-            if list(self.parameters_values.keys()) != parameters:
+        # Begin search from the given values if the dict keys are the same (it has already been copied)
+        if list(self.parameters_dict) != var_names:
 
-                raise PluginException(
-                    message=f"Initial parameters dict keys ({list(self.parameters_values.keys())}) do not match the job parameters names. Program parameters are : {parameters}"
-                )
+            raise PluginException(
+                message=f"Initial parameters dict keys ({list(self.parameters_dict.keys())}) do not match the job parameters"
+                "names. Program parameters are : {parameters}"
+            )
 
         # Keep track of which parameter corresponds to which index in the gradient, matrix, ... (assumes dictionaries are ordered)
-        for ind, varkey in enumerate(self.parameters_values.keys()):
+        for ind, varkey in enumerate(self.parameters_dict.keys()):
             self.parameters_index[ind] = varkey
 
-        nb_parameters = len(self.parameters_values)
+        nb_parameters = len(self.parameters_dict)
 
-        energy_trace = []
-        angle_trace = []
+        angles = []
 
-        angle_trace.append([val for val in self.parameters_values.values()])  # Assumes dictionaries are ordered
+        angles.append([val for val in self.parameters_dict.values()])  # Assumes dictionaries are ordered
 
-        pristine_job = initial_object(gate_set=self.my_gate_set, **self.parameters_values)
+        pristine_job = self.job(gate_set=self.my_gate_set, **self.parameters_dict)
 
         energy = self.execute(pristine_job).value
-        energy_trace.append(energy)
+        self.trace.append(energy)
 
         gradient_jobs_dict = auto_differentiation_gradient_dictionary(
-            job, hamilt, self.parameters_values, user_custom_gates=self.custom_gates
+            self.job, self.job.observable, self.parameters_dict, user_custom_gates=self.custom_gates
         )
 
         if self.natural_gradient:
             (qfim_dkdl_jobs_dict, qfim_dkpsi_jobs_dict, qfim_psidl_jobs_dict) = auto_differentiation_qfim_dictionaries(
-                job, nb_parameters, self.parameters_index, user_custom_gates=self.custom_gates
+                self.job, nb_parameters, self.parameters_index, user_custom_gates=self.custom_gates
             )
 
         self.iterations = 0
@@ -166,9 +150,9 @@ class GradientMinimizePlugin(Junction):
 
         while self.iterations < self.maxiter and not stopping_criterion:
 
-            q_gradient = {var_key: 0.0 for var_key in self.parameters_values}
+            q_gradient = {var_key: 0.0 for var_key in self.parameters_dict}
 
-            for var_key in self.parameters_values:
+            for var_key in self.parameters_dict:
 
                 jobs_list = gradient_jobs_dict[var_key]
 
@@ -202,7 +186,8 @@ class GradientMinimizePlugin(Junction):
                         qfim[k][n_param] = 4 * (dkdl - dkpsi * psidl)
 
                 # Truncate zero values
-                qfim = np.where(np.abs(qfim) < 1e-10, 0.0, qfim)
+                # qfim = np.where(np.abs(qfim) < 1e-10, 0.0, qfim)
+                qfim[np.abs(qfim) < 1e-10] = 0
 
                 # Inverse the metric tensor
                 invqfim = np.linalg.pinv(qfim)
@@ -210,7 +195,7 @@ class GradientMinimizePlugin(Junction):
             # Perform optimization step (update parameters)
             # $\vec{\vartheta} <- \vec{\vartheta} - \lambda_step * [qfim]^{-1} * \nabla E$
 
-            cur_params = np.array([p_val for p_val in self.parameters_values.values()])
+            cur_params = np.array([p_val for p_val in self.parameters_dict.values()])
             cur_grad = np.array([grad_i for grad_i in q_gradient.values()])
 
             # Truncate zero values
@@ -228,21 +213,21 @@ class GradientMinimizePlugin(Junction):
             else:
                 cur_params = np.real(cur_params - self.lambda_step * cur_grad)
 
-            for ind_param in self.parameters_index:
-                self.parameters_values[self.parameters_index[ind_param]] = cur_params[ind_param]
+            for idx, param in self.parameters_index.items():
+                self.parameters_dict[param] = cur_params[idx]
 
             # Update Optimization Data
-            angle_trace.append([ang for ang in self.parameters_values.values()])  # Assumes dictionaries are ordered
+            angles.append([ang for ang in self.parameters_dict.values()])  # Assumes dictionaries are ordered
 
             # Temporary for XX gate
-            binded_job = initial_object(gate_set=self.my_gate_set, **self.parameters_values)
+            binded_job = self.job(gate_set=self.my_gate_set, **self.parameters_dict)
 
             energy = self.execute(binded_job).value
 
             if self.stop_crit == "energy_dist" and self.iterations > 0:
-                self.check_crit_val = np.abs(energy - energy_trace[-1])
+                self.check_crit_val = np.abs(energy - self.trace[-1])
 
-            energy_trace.append(energy)
+            self.trace.append(energy)
 
             if self.stop_crit == "grad_norm":
                 self.check_crit_val = np.linalg.norm(cur_grad)
@@ -254,25 +239,7 @@ class GradientMinimizePlugin(Junction):
 
             self.iterations += 1
 
-        end_time = time.time()
-
-        # Return Result with some meta data
-        self.nb_use += 1  # The plugin has successfully run
-
-        if self.natural_gradient:
-            title = rf"Natural Gradient descent with QFIM. $\lambda =$ {self.lambda_step}, nb_calls = {self.iterations}"
-        else:
-            title = rf"Gradient descent without QFIM. $\lambda =$ {self.lambda_step}, nb_calls = {self.iterations}"
-
-        return Result(
-            value=energy_trace[-1],  # supposing last energy is the minimum
-            meta_data={
-                "title": title,
-                "elapsed_time": str(end_time - start_time),
-                "nb_iterations": str(self.iterations),
-                "parameters": str(self.parameters_values),
-                "optimization_trace": str(energy_trace),
-                "parameters_index": str(self.parameters_index),
-                "parameters_trace": str(angle_trace),
-            },
+        return (
+            self.trace[-1],
+            self.parameters_index.values(),
         )
