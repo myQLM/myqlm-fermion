@@ -22,16 +22,6 @@ PAULI_MATS = {
     "Z": [[1, 0], [0, -1]],
 }
 
-""" Module with containers for common Hamiltonians """
-
-
-PAULI_MATS = {
-    "X": [[0, 1], [1, 0]],
-    "I": [[1, 0], [0, 1]],
-    "Y": [[0, -1j], [1j, 0]],
-    "Z": [[1, 0], [0, -1]],
-}
-
 
 class ObservableType(Enum):
     """
@@ -108,6 +98,18 @@ class Hamiltonian(Observable):
 
     def __add__(self, other):
         res = super().__add__(other)
+        return Hamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
+
+    def __radd__(self, other):
+        res = super().__radd__(other)
+        return Hamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
+
+    def __mul__(self, other):
+        res = super().__mul__(other)
+        return Hamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
+
+    def __rmul__(self, other):
+        res = super().__rmul__(other)
         return Hamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
 
     @property
