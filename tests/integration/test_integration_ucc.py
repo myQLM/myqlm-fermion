@@ -34,7 +34,8 @@ def prepare_h2(use_pyscf=False, verbose=False):
             nels,
             one_body_integrals,
             two_body_integrals,
-        ) = perform_pyscf_computation(geometry=geometry, basis=basis, spin=0, charge=0, verbose=True)
+            info,
+        ) = perform_pyscf_computation(geometry=geometry, basis=basis, spin=0, charge=0)
 
         # get NOONs from 1-RDM (computed in CISD)
         noons = list(reversed(sorted(np.linalg.eigvalsh(rdm1))))
