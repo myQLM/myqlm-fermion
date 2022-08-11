@@ -5,6 +5,7 @@ Gradient Descend Plugin including natural gradient descent
 
 from typing import List
 import numpy as np
+from itertools import product
 
 from qat.comm.exceptions.ttypes import PluginException
 from qat.plugins.optimizer import Optimizer
@@ -96,8 +97,7 @@ class GradientDescentOptimizer(Optimizer):
             temp_job = my_test_job(gate_set=self.my_gate_set, **self.parameters_dict)
 
             res = self.execute(temp_job)
-            val = res.value
-            res_weighted.append(coeff * val)
+            res_weighted.append(coeff * res.value)
 
         return res_weighted
 
@@ -162,28 +162,29 @@ class GradientDescentOptimizer(Optimizer):
             # Correct gradient with the Quantum Fisher Information Matrix as a metric tensor
             if self.natural_gradient:
 
-                qfim = np.zeros((nb_parameters, nb_parameters), dtype=float)
 
+                dkpsi, psidl = [], []
                 for k in range(nb_parameters):
 
                     # Compute <dk|psi>
                     jobs_list = qfim_dkpsi_jobs_dict[self.parameters_index[k]]
                     val_list = self.execute_weighted_jobs_list(jobs_list)
-                    dkpsi = sum(val_list)  # should be a pure imaginary number
+                    dkpsi.append(sum(val_list))  # should be a pure imaginary number
 
-                    for n_param in range(nb_parameters):
+                    # Compute <psi|dl>
+                    jobs_list = qfim_psidl_jobs_dict[self.parameters_index[k]]
+                    val_list = self.execute_weighted_jobs_list(jobs_list)
+                    psidl.append(sum(val_list))  # should be a pure imaginary number
 
-                        # Compute <dk|dl>
-                        jobs_list = qfim_dkdl_jobs_dict[self.parameters_index[k] + ";" + self.parameters_index[n_param]]
-                        val_list = self.execute_weighted_jobs_list(jobs_list)
-                        dkdl = sum(val_list)
+                qfim = np.zeros((nb_parameters, nb_parameters), dtype=float)
+                for k, l in product(range(nb_parameters), repeat=2):
 
-                        # Compute <psi|dl>
-                        jobs_list = qfim_psidl_jobs_dict[self.parameters_index[n_param]]
-                        val_list = self.execute_weighted_jobs_list(jobs_list)
-                        psidl = sum(val_list)  # should be a pure imaginary number
+                    # Compute <dk|dl>
+                    jobs_list = qfim_dkdl_jobs_dict[self.parameters_index[k] + ";" + self.parameters_index[l]]
+                    val_list = self.execute_weighted_jobs_list(jobs_list)
+                    dkdl = sum(val_list)
 
-                        qfim[k][n_param] = 4 * (dkdl - dkpsi * psidl)
+                    qfim[k][l] = 4 * (dkdl - dkpsi[k] * psidl[l])
 
                 # Truncate zero values
                 # qfim = np.where(np.abs(qfim) < 1e-10, 0.0, qfim)
