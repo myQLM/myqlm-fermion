@@ -108,7 +108,7 @@ def test_H2_molecule_adapt():
 
     result = stack.submit(job)
 
-    np.testing.assert_almost_equal(exact_energy, result.value, decimal=3)
+    np.testing.assert_almost_equal(exact_energy, result.value, decimal=2)
 
 
 def test_lih_molecule_adapt():
@@ -144,4 +144,4 @@ def test_lih_molecule_adapt():
 
     result = stack.submit(job)
 
-    np.testing.assert_almost_equal(exact_energy, result.value, decimal=3)
+    np.testing.assert_almost_equal(exact_energy, result.value, decimal=2)

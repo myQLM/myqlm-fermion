@@ -43,8 +43,8 @@ def perform_pyscf_computation(geometry: list, basis: str, spin: int, charge: int
        * (Optional) The groundstate energy using the full configuration interaction (full CI) approach.
 
     Note:
-        This function is a helper function meant to kickstart molecule studies. Its use is
-        completely optional, and using other methods or packages is entirely possible.
+        This function is a helper function meant to kickstart molecule studies. Its use is completely optional, and using other
+        methods or packages is entirely possible.
 
     Args:
         geometry (list): Defines the molecular structure. The internal format is PySCF format:
@@ -76,8 +76,11 @@ def perform_pyscf_computation(geometry: list, basis: str, spin: int, charge: int
                 optionally the Full CI energy if run_fci is set to True).
 
     """
-    # pylint: disable=import-outside-toplevel
-    from pyscf import gto, scf, fci, mp, ci
+    try:
+        # pylint: disable=import-outside-toplevel
+        from pyscf import gto, scf, fci, mp, ci
+    except ModuleNotFoundError as exc:
+        raise ModuleNotFoundError("PySCF modules could not be found. Please make sure you installed the PySCF package.") from exc
 
     # define molecule in pySCF format
     molecule = gto.Mole()
