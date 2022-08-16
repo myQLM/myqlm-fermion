@@ -1,7 +1,6 @@
 anytree
 bitstring
 numpy
-pyscf
 pytest
 scipy
 setuptools

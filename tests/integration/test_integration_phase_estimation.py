@@ -11,7 +11,6 @@ from qat.fermion.phase_estimation import (
     perform_phase_estimation,
     apply_adiabatic_state_prep,
 )
-from qat.fermion.chemistry.pyscf_tools import perform_pyscf_computation
 from qat.fermion.chemistry.ucc import convert_to_h_integrals
 from qat.qpus import get_default_qpu
 
@@ -140,22 +139,26 @@ def check_basic(t_hopping):
     )
 
 
-# Create an H2 molecule
-geometry = [("H", (0.0, 0.0, 0.0)), ("H", (0.0, 0.0, 0.7414))]
-basis = "sto-3g"
-spin = 0  # = 2 S with S total spin angular momentum = # of unpaired electrons
-charge = 0
+# Results computed with PySCF using:
+# geometry = [("H", (0.0, 0.0, 0.0)), ("H", (0.0, 0.0, 0.7414))]
+# basis = "sto-3g"
+# spin = 0
+# charge = 0
+nuclear_repulsion = 0.7137539936876182
+one_body_integrals = np.array([[-1.25246357e00, 7.40572356e-20], [-1.34086706e-16, -4.75948715e-01]])
+two_body_integrals = np.array(
+    [
+        [
+            [[6.74488766e-01, -1.38777878e-17], [0.00000000e00, 1.81288808e-01]],
+            [[0.00000000e00, 1.81288808e-01], [6.63468096e-01, 3.05311332e-16]],
+        ],
+        [
+            [[-1.38777878e-17, 6.63468096e-01], [1.81288808e-01, -5.55111512e-17]],
+            [[1.81288808e-01, -5.55111512e-17], [3.05311332e-16, 6.97393767e-01]],
+        ],
+    ]
+)
 
-# Generate the problem
-(
-    rdm1,
-    orbital_energies,
-    nuclear_repulsion,
-    nels,
-    one_body_integrals,
-    two_body_integrals,
-    info,
-) = perform_pyscf_computation(geometry=geometry, basis=basis, spin=spin, charge=charge)
 # Create the Electronic Structure Hamiltonian
 hpq, hpqrs = convert_to_h_integrals(one_body_integrals, two_body_integrals)
 H_el_structure = ElectronicStructureHamiltonian(hpq, hpqrs, nuclear_repulsion)

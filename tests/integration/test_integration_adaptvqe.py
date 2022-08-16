@@ -1,28 +1,20 @@
+from pathlib import Path
 import numpy as np
 
 from qat.lang.AQASM import Program, X
 from qat.qpus import get_default_qpu
 from qat.plugins import ScipyMinimizePlugin, AdaptVQEPlugin
 
-from qat.fermion.chemistry.pyscf_tools import perform_pyscf_computation
 from qat.fermion.chemistry import MolecularHamiltonian, MoleculeInfo
 from qat.fermion.chemistry.ucc import get_hf_ket, get_cluster_ops
 from qat.fermion.transforms import transform_to_bk_basis, recode_integer, get_bk_code
 
 
-def compute_cluster_ops(geometry: str, basis: str, charge: int, spin: int, thresholds=[0.02, 0.002]):
+def compute_cluster_ops(
+    rdm1, orbital_energies, nuclear_repulsion, n_electrons, one_body_integrals, two_body_integrals, thresholds=[0.02, 0.002]
+):
 
     threshold_1, threshold_2 = thresholds
-
-    (
-        rdm1,
-        orbital_energies,
-        nuclear_repulsion,
-        n_electrons,
-        one_body_integrals,
-        two_body_integrals,
-        _,
-    ) = perform_pyscf_computation(geometry=geometry, basis=basis, spin=spin, charge=charge)
 
     # Define the molecular hamiltonian
     mol_h = MolecularHamiltonian(one_body_integrals, two_body_integrals, nuclear_repulsion)
@@ -77,12 +69,21 @@ def compute_cluster_ops(geometry: str, basis: str, charge: int, spin: int, thres
 
 def test_H2_molecule_adapt():
 
-    geometry = [("H", (0.0, 0.0, 0.0)), ("H", (0.0, 0.0, 0.7414))]
-    charge = 0
-    spin = 0
-    basis = "sto-3g"
+    h2_data = np.load(Path.cwd() / "resources" / "h2_data.npz", allow_pickle=True)
 
-    H_sp, cluster_ops_sp, hf_init_sp = compute_cluster_ops(geometry, basis, charge, spin)
+    rdm1 = h2_data["rdm1"]
+    orbital_energies = h2_data["orbital_energies"]
+    nuclear_repulsion = h2_data["nuclear_repulsion"]
+    n_electrons = h2_data["n_electrons"]
+    one_body_integrals = h2_data["one_body_integrals"]
+    two_body_integrals = h2_data["two_body_integrals"]
+    info = h2_data["info"].tolist()
+
+    nqbits = rdm1.shape[0] * 2
+
+    H_sp, cluster_ops_sp, hf_init_sp = compute_cluster_ops(
+        rdm1, orbital_energies, nuclear_repulsion, n_electrons, one_body_integrals, two_body_integrals
+    )
 
     # Compute exact energy via diagonalization
     exact_energy = np.min(np.linalg.eigvalsh(H_sp.get_matrix()))
@@ -113,12 +114,21 @@ def test_H2_molecule_adapt():
 
 def test_lih_molecule_adapt():
 
-    geometry = [("Li", (0.0, 0.0, 0.0)), ("H", (0.0, 0.0, 1.75))]
-    basis = "6-31g"
-    spin = 0
-    charge = 0
+    lih_data = np.load(Path.cwd() / "resources" / "lih_data.npz", allow_pickle=True)
 
-    H_sp, cluster_ops_sp, hf_init_sp = compute_cluster_ops(geometry, basis, charge, spin)
+    rdm1 = lih_data["rdm1"]
+    orbital_energies = lih_data["orbital_energies"]
+    nuclear_repulsion = lih_data["nuclear_repulsion"]
+    n_electrons = lih_data["n_electrons"]
+    one_body_integrals = lih_data["one_body_integrals"]
+    two_body_integrals = lih_data["two_body_integrals"]
+    info = lih_data["info"].tolist()
+
+    nqbits = rdm1.shape[0] * 2
+
+    H_sp, cluster_ops_sp, hf_init_sp = compute_cluster_ops(
+        rdm1, orbital_energies, nuclear_repulsion, n_electrons, one_body_integrals, two_body_integrals
+    )
 
     # Compute exact energy via diagonalization
     exact_energy = np.min(np.linalg.eigvalsh(H_sp.get_matrix()))
