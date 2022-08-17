@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 import numpy as np
 
@@ -8,6 +9,8 @@ from qat.plugins import ScipyMinimizePlugin, AdaptVQEPlugin
 from qat.fermion.chemistry import MolecularHamiltonian, MoleculeInfo
 from qat.fermion.chemistry.ucc import get_hf_ket, get_cluster_ops
 from qat.fermion.transforms import transform_to_bk_basis, recode_integer, get_bk_code
+
+module_path = Path(os.path.dirname(os.path.realpath(__file__))).parents[1]
 
 
 def compute_cluster_ops(
@@ -69,7 +72,7 @@ def compute_cluster_ops(
 
 def test_H2_molecule_adapt():
 
-    h2_data = np.load(Path.cwd() / "resources" / "h2_data.npz", allow_pickle=True)
+    h2_data = np.load(module_path / "resources" / "h2_data.npz", allow_pickle=True)
 
     rdm1 = h2_data["rdm1"]
     orbital_energies = h2_data["orbital_energies"]
@@ -114,7 +117,7 @@ def test_H2_molecule_adapt():
 
 def test_lih_molecule_adapt():
 
-    lih_data = np.load(Path.cwd() / "resources" / "lih_data.npz", allow_pickle=True)
+    lih_data = np.load(module_path / "resources" / "lih_data.npz", allow_pickle=True)
 
     rdm1 = lih_data["rdm1"]
     orbital_energies = lih_data["orbital_energies"]
