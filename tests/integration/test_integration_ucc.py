@@ -7,7 +7,6 @@ from qat.qpus import get_default_qpu
 from qat.lang.AQASM import Program
 
 from qat.fermion.hamiltonians import ElectronicStructureHamiltonian
-from qat.fermion.chemistry.pyscf_tools import perform_pyscf_computation
 from qat.fermion.chemistry.ucc import (
     convert_to_h_integrals,
 )
@@ -19,52 +18,27 @@ from qat.fermion.chemistry.ucc_deprecated import (
 from qat.fermion.transforms import recode_integer, transform_to_jw_basis, get_jw_code
 
 
-def prepare_h2(use_pyscf=False, verbose=False):
+def prepare_h2(verbose=False):
 
-    if use_pyscf:
-        # geometry = [('Li', (0., 0., 0.)), ('H', (0., 0., 1.75))]
-        # basis = "6-31g"
-        geometry = [("H", (0.0, 0.0, 0.0)), ("H", (0.0, 0.0, 0.7414))]
-        basis = "sto-3g"
-
-        (
-            rdm1,
-            orbital_energies,
-            nuclear_repulsion,
-            nels,
-            one_body_integrals,
-            two_body_integrals,
-            info,
-        ) = perform_pyscf_computation(geometry=geometry, basis=basis, spin=0, charge=0)
-
-        # get NOONs from 1-RDM (computed in CISD)
-        noons = list(reversed(sorted(np.linalg.eigvalsh(rdm1))))
-        if verbose:
-            print("nels=", nels)
-            print("I1=", one_body_integrals)
-            print("I2=", two_body_integrals)
-            print("orb energies", orbital_energies)
-            print("nuc repulsion=", nuclear_repulsion)
-            print("noons=", noons)
-    else:
-        nels = 2
-        one_body_integrals = np.array([[-1.25246357, 0], [0, -0.475948715]])
-        two_body_integrals = np.array(
+    nels = 2
+    one_body_integrals = np.array([[-1.25246357, 0], [0, -0.475948715]])
+    two_body_integrals = np.array(
+        [
             [
-                [
-                    [[0.674488766, 0], [0, 0.181288808]],
-                    [[0, 0.181288808], [0.663468096, 0]],
-                ],
-                [
-                    [[0, 0.663468096], [0.181288808, 0]],
-                    [[0.181288808, 0], [0, 0.697393767]],
-                ],
-            ]
-        )
-        orbital_energies = np.array([-0.57797481, 0.66969867])
-        nuclear_repulsion = 0.7137539936876182
+                [[0.674488766, 0], [0, 0.181288808]],
+                [[0, 0.181288808], [0.663468096, 0]],
+            ],
+            [
+                [[0, 0.663468096], [0.181288808, 0]],
+                [[0.181288808, 0], [0, 0.697393767]],
+            ],
+        ]
+    )
+    orbital_energies = np.array([-0.57797481, 0.66969867])
+    nuclear_repulsion = 0.7137539936876182
 
-        noons = np.array([1.9745399697399246, 0.025460030260075376])
+    noons = np.array([1.9745399697399246, 0.025460030260075376])
+
     return (
         nels,
         one_body_integrals,
@@ -75,7 +49,7 @@ def prepare_h2(use_pyscf=False, verbose=False):
     )
 
 
-def test_basic(use_pyscf=False, verbose=False):
+def test_basic(verbose=False):
     (
         nels,
         one_body_integrals,
@@ -138,7 +112,7 @@ def test_basic(use_pyscf=False, verbose=False):
     # FCI energy is -1.1372701746609022
 
 
-def test_more_basic(use_pyscf=False, verbose=False):
+def test_more_basic(verbose=False):
     (
         nels,
         one_body_integrals,
@@ -146,7 +120,7 @@ def test_more_basic(use_pyscf=False, verbose=False):
         orbital_energies,
         nuclear_repulsion,
         noons,
-    ) = prepare_h2(use_pyscf)
+    ) = prepare_h2()
     hpq, hpqrs = convert_to_h_integrals(one_body_integrals, two_body_integrals)
     H = ElectronicStructureHamiltonian(hpq, hpqrs, constant_coeff=nuclear_repulsion)
     noons_full, orb_energies_full = [], []
