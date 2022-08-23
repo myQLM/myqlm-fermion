@@ -255,7 +255,7 @@ def _build_cluster_operator(l_ex_op: List[Tuple[int]], nqbits: int) -> List[Hami
 
     Args:
         l_ex_op (List[Tuple[int]]): The list of of (a, b, i, j) and (a, i) tuples describing the
-            excitation operators (without Hermitan conjugate, i.e. only excitation from unoccupied
+            excitation operators (without Hermitian conjugate, i.e. only excitation from unoccupied
             to  occupied orbitals) to consider among the set associated to the active orbitals.
         nqbits (int): The total number of qubits.
 
@@ -648,7 +648,10 @@ def select_excitation_operators(
 
         else:
             limit_operators = True
-
+            
+    # else:
+    #     limit_operators = False
+        
     l_ex_op = []
 
     if limit_operators:
@@ -659,7 +662,10 @@ def select_excitation_operators(
         for a, i in itertools.product(active_unoccupied_orbitals[::2], active_occupied_orbitals[::2]):
             # Considering only *singlet* (spin-preserving) single excitation
             var_noons_1e[(a, i)] = noons[a // 2] - noons[i // 2]
-            var_noons_1e[(a + 1, i + 1)] = noons[a // 2] - noons[i // 2]
+            
+            # Excitation cannot go above highest energy orbital
+            if a + 1 <= max(active_occupied_orbitals + active_unoccupied_orbitals):
+                var_noons_1e[(a + 1, i + 1)] = noons[a // 2] - noons[i // 2]
 
         for n_unocc, a in enumerate(active_unoccupied_orbitals[::1]):
             for b in active_unoccupied_orbitals[n_unocc + 1 :]:
@@ -700,7 +706,10 @@ def select_excitation_operators(
 
         for a, i in itertools.product(active_unoccupied_orbitals[::2], active_occupied_orbitals[::2]):
             var_noons_1e.append((a, i))
-            var_noons_1e.append((a + 1, i + 1))
+            
+            # Excitation cannot go above highest energy orbital
+            if a + 1 <= max(active_occupied_orbitals + active_unoccupied_orbitals):
+                var_noons_1e.append((a + 1, i + 1))
 
         for n_unocc, a in enumerate(active_unoccupied_orbitals[::1]):
             for b in active_unoccupied_orbitals[n_unocc + 1 :]:
