@@ -15,8 +15,12 @@ def compute_integrals(molecule: Union[np.ndarray, "pyscf.gto.Mole"], mo_coeff, h
     """
     For a given molecule, compute 1-body and 2-body integrals.
     """
-    # pylint: disable=import-outside-toplevel
-    from pyscf import ao2mo
+
+    try:
+        # pylint: disable=import-outside-toplevel
+        from pyscf import ao2mo
+    except ModuleNotFoundError as exc:
+        raise ModuleNotFoundError("PySCF modules could not be found. Please make sure you installed the PySCF package.") from exc
 
     # no spin dof
     one_electron_compressed = reduce(np.dot, (mo_coeff.T, hcore, mo_coeff))
