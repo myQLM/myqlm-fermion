@@ -24,7 +24,7 @@ class GradientDescentOptimizer(Optimizer):
 
     .. math::
 
-        \vec{\theta}_{k+1} = \vec{\theta}_{k} - \lambda g^{-1} \vec{\nabla} E
+        \vec{\theta}_{k+1} = \vec{\theta}_{k} - \eta g^{+} \vec{\nabla} E
 
     with :math:`E(\vec{\theta}) = \langle \psi(\vec{\theta}) | H | \psi (\vec{\theta}) \rangle`,
     :math:`\left [ \vec{\nabla} E \right ]_i = \frac{\partial E}{\partial \theta_i}` and

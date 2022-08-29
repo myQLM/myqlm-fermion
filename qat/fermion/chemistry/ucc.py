@@ -638,7 +638,7 @@ def select_excitation_operators(
             the active orbitals.
 
     """
-
+    
     limit_operators = False
 
     if max_nb_single_ex is not None and max_nb_double_ex is not None:
@@ -648,9 +648,6 @@ def select_excitation_operators(
 
         else:
             limit_operators = True
-            
-    # else:
-    #     limit_operators = False
         
     l_ex_op = []
 
@@ -662,10 +659,7 @@ def select_excitation_operators(
         for a, i in itertools.product(active_unoccupied_orbitals[::2], active_occupied_orbitals[::2]):
             # Considering only *singlet* (spin-preserving) single excitation
             var_noons_1e[(a, i)] = noons[a // 2] - noons[i // 2]
-            
-            # Excitation cannot go above highest energy orbital
-            if a + 1 <= max(active_occupied_orbitals + active_unoccupied_orbitals):
-                var_noons_1e[(a + 1, i + 1)] = noons[a // 2] - noons[i // 2]
+            var_noons_1e[(a + 1, i + 1)] = noons[a // 2] - noons[i // 2]
 
         for n_unocc, a in enumerate(active_unoccupied_orbitals[::1]):
             for b in active_unoccupied_orbitals[n_unocc + 1 :]:
@@ -706,10 +700,7 @@ def select_excitation_operators(
 
         for a, i in itertools.product(active_unoccupied_orbitals[::2], active_occupied_orbitals[::2]):
             var_noons_1e.append((a, i))
-            
-            # Excitation cannot go above highest energy orbital
-            if a + 1 <= max(active_occupied_orbitals + active_unoccupied_orbitals):
-                var_noons_1e.append((a + 1, i + 1))
+            var_noons_1e.append((a + 1, i + 1))
 
         for n_unocc, a in enumerate(active_unoccupied_orbitals[::1]):
             for b in active_unoccupied_orbitals[n_unocc + 1 :]:
@@ -829,7 +820,7 @@ def get_cluster_ops(n_electrons: int, nqbits: Optional[int] = None, noons: Optio
 
     Note:
         This function accepts as input the number of qubits or the noons. One of them is needed for the computation of the
-        cluster operators.
+        cluster operators. n_electrons and n_qbits must be pair.
 
     """
 
@@ -837,11 +828,21 @@ def get_cluster_ops(n_electrons: int, nqbits: Optional[int] = None, noons: Optio
         raise TypeError("Missing input nqbits/noons. One is needed to compute the cluster operators.")
 
     if noons is not None:
+        
         noons = _extend_list(noons)
         qbit_range = list(range(len(noons)))
 
     else:
+        
+        # Sanity check for nqbits
+        if nqbits % 2 != 0:
+            raise ValueError(f"Only pair values of nqbits are allowed.")
+        
         qbit_range = list(range(nqbits))
+        
+    # Sanity check for n_electrons
+    if n_electrons % 2 != 0:
+        raise ValueError(f"Only pair values of n_electrons are allowed.")
 
     (
         occupied_orbitals,

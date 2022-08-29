@@ -1,6 +1,6 @@
 from numbers import Number
 
-from qat.core.variables import evaluate_thrift_expression, Variable
+from qat.core.variables import evaluate_thrift_expression
 
 
 def gatedef_to_expr(gatedef):
