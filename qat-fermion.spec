@@ -159,5 +159,5 @@ tar xfz %{workspace}/%{name}-%{version}-%{platform}-%{python_rpm}%{?dist}.tar.gz
 #
 # -------------------------------------------------------------------
 %changelog
-* Thu Jul 7 2022 Jerome Pioux <jerome.pioux@atos.net>
+* Thu July 7 2022 Jerome Pioux <jerome.pioux@atos.net>
 - Initial release
