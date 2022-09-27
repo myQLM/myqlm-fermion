@@ -638,7 +638,7 @@ def select_excitation_operators(
             the active orbitals.
 
     """
-    
+
     limit_operators = False
 
     if max_nb_single_ex is not None and max_nb_double_ex is not None:
@@ -648,7 +648,7 @@ def select_excitation_operators(
 
         else:
             limit_operators = True
-        
+
     l_ex_op = []
 
     if limit_operators:
@@ -828,18 +828,18 @@ def get_cluster_ops(n_electrons: int, nqbits: Optional[int] = None, noons: Optio
         raise TypeError("Missing input nqbits/noons. One is needed to compute the cluster operators.")
 
     if noons is not None:
-        
+
         noons = _extend_list(noons)
         qbit_range = list(range(len(noons)))
 
     else:
-        
+
         # Sanity check for nqbits
         if nqbits % 2 != 0:
             raise ValueError(f"Only pair values of nqbits are allowed.")
-        
+
         qbit_range = list(range(nqbits))
-        
+
     # Sanity check for n_electrons
     if n_electrons % 2 != 0:
         raise ValueError(f"Only pair values of n_electrons are allowed.")

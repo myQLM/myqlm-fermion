@@ -162,7 +162,6 @@ class GradientDescentOptimizer(Optimizer):
             # Correct gradient with the Quantum Fisher Information Matrix as a metric tensor
             if self.natural_gradient:
 
-
                 dkpsi, psidl = [], []
                 for k in range(nb_parameters):
 

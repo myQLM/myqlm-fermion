@@ -64,7 +64,7 @@ class AdaptVQEPlugin(Junction):
         """
 
         prog = Program()
-        var = prog.new_var(float, "theta_" + str(iter_num))
+        var = prog.new_var(float, f"theta_{iter_num}")
         qbits = prog.qalloc(operator.nbqbits)
 
         if len(operator.terms) == 1 and len(operator.terms[0].qbits) == 1:
@@ -94,11 +94,11 @@ class AdaptVQEPlugin(Junction):
             # add RX(np.pi/2) for Y-gates and H for X-gates
             for current_pauli_op, current_qbit in zip(pauli_string, list_qbits):
 
-                if current_pauli_op == "Y":
-                    prog.apply(RX(np.pi / 2), qbits[current_qbit])
-
-                elif current_pauli_op == "X":
+                if current_pauli_op == "X":
                     prog.apply(H, qbits[current_qbit])
+
+                elif current_pauli_op == "Y":
+                    prog.apply(RX(np.pi / 2), qbits[current_qbit])
 
             # add CNOT gates
             for j in range(len(pauli_string) - 1):
@@ -120,11 +120,11 @@ class AdaptVQEPlugin(Junction):
             # add RX(-np.pi/2) for Y-gates and H for X-gates back
             for current_pauli_op, current_qbit in zip(pauli_string, list_qbits):
 
-                if current_pauli_op == "Y":
-                    prog.apply(RX(-np.pi / 2), qbits[current_qbit])
-
-                elif current_pauli_op == "X":
+                if current_pauli_op == "X":
                     prog.apply(H, qbits[current_qbit])
+
+                elif current_pauli_op == "Y":
+                    prog.apply(RX(-np.pi / 2), qbits[current_qbit])
 
         return prog
 
@@ -201,7 +201,7 @@ class AdaptVQEPlugin(Junction):
             # pylint: disable=eval-used
             energy_trace += eval(result.meta_data["optimization_trace"])
 
-        result.meta_data = dict()
+        result.meta_data = {}
         result.meta_data["operator_order"] = str(operator_idx)
         result.meta_data["optimization_trace"] = str(energy_trace)
 
