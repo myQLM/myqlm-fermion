@@ -15,12 +15,12 @@ class AdaptVQEPlugin(Junction):
     Adaptive ansatz plugin constructs an ansatz by selecting operators from a given pool of operators. The method is based
     on `Grimsley et al. article <https://www.nature.com/articles/s41467-019-10988-2.pdf>`_
 
-        Args:
-            operator_pool (List[Observable]): List of operators to choose from. The pool of commutators is internally constructed
-            from this list.
-            n_iterations (int, optional): Maximum number of iteration to perform. Defaults to 300.
-            commutators (List[Union[Observable, Hamiltonian]): List of commutators to use when computing the energy gradients.
-            early_stopper (float, optional): Loss value for which the run is stopped. Defaults to 1e-6.
+    Args:
+        operator_pool (List[Observable]): List of operators to choose from.
+            The pool of commutators is internally constructed from this list.
+        n_iterations (int, optional): Maximum number of iteration to perform. Defaults to 300.
+        commutators (List[Union[Observable, Hamiltonian]): List of commutators to use when computing the energy gradients.
+        early_stopper (float, optional): Loss value for which the run is stopped. Defaults to 1e-6.
     """
 
     def __init__(
