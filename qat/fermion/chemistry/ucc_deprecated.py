@@ -25,7 +25,7 @@ from .ucc import (
     convert_to_h_integrals,
     get_hf_ket,
 )
-from ..hamiltonians import Hamiltonian, ElectronicStructureHamiltonian
+from ..hamiltonians import SpinHamiltonian, FermionHamiltonian, ElectronicStructureHamiltonian
 from ..trotterisation import make_spin_hamiltonian_trotter_slice
 
 
@@ -134,7 +134,7 @@ def select_excitation_operators(
     return l_ex_op
 
 
-def build_ucc_ansatz(cluster_ops: List[Hamiltonian], ket_hf: int, n_steps: Optional[int] = 1) -> Callable:
+def build_ucc_ansatz(cluster_ops: List[SpinHamiltonian], ket_hf: int, n_steps: Optional[int] = 1) -> Callable:
     r"""Builds the parametric state preparation circuit implementing the
     provided cluster operator.
 
@@ -148,7 +148,7 @@ def build_ucc_ansatz(cluster_ops: List[Hamiltonian], ket_hf: int, n_steps: Optio
             &= e^{T(\vec{\theta})} \vert \mathrm{HF}\rangle
 
     Args:
-        cluster_ops (List[Hamiltonian]): The cluster operators iT (note the i factor)
+        cluster_ops (List[SpinHamiltonian]): The cluster operators iT (note the i factor)
         ket_hf (int): The Hartree-Fock state in integer representation
         n_steps(int): Number of trotter steps
 
@@ -216,7 +216,7 @@ def build_ucc_ansatz(cluster_ops: List[Hamiltonian], ket_hf: int, n_steps: Optio
                     terms.append(Term(coeff, term.op, term.qbits))
 
             # QRoutine implementation
-            cluster_op_obs = Hamiltonian(nqbits, terms)
+            cluster_op_obs = SpinHamiltonian(nqbits, terms)
             qrout_expt = make_spin_hamiltonian_trotter_slice(cluster_op_obs)
 
             # Approx to exp(-i O), with O = i T
@@ -231,7 +231,7 @@ def get_cluster_ops(
     active_noons: List[float],
     actives_occupied_orbitals: List[int],
     actives_unoccupied_orbitals: List[int],
-) -> List[Hamiltonian]:
+) -> List[SpinHamiltonian]:
     r"""Build the cluster operator.
 
     The UCCSD cluster operator is defined (in normal-ordered form) as:
@@ -256,7 +256,7 @@ def get_cluster_ops(
         hpqrs (np.array): The 4D array of (active) two-body integrals :math:`h_{pqrs}`.
 
     Returns:
-        List[Hamiltonian]: The list of cluster operators :math:`\{T_{a}^{i}, a \in \mathcal{I}', i \in \mathcal{O}' \} \cup \{T_{ab}^{ij}, a>b, i>j, a,b \in \mathcal{I}', i,j \in \mathcal{O}'\}`
+        List[FermionHamiltonian]: The list of cluster operators :math:`\{T_{a}^{i}, a \in \mathcal{I}', i \in \mathcal{O}' \} \cup \{T_{ab}^{ij}, a>b, i>j, a,b \in \mathcal{I}', i,j \in \mathcal{O}'\}`
     """
 
     warn(
@@ -444,7 +444,7 @@ def get_cluster_ops_and_init_guess(
     active_noons: List[float],
     active_orb_energies: List[float],
     hpqrs: np.ndarray,
-) -> Tuple[List[Hamiltonian], List[float], int]:
+) -> Tuple[List[SpinHamiltonian], List[float], int]:
     r"""Build the cluster operator and find initial guess using Møller-Plesset
     perturbation theory.
 
@@ -489,7 +489,7 @@ def get_cluster_ops_and_init_guess(
         hpqrs (np.ndarray): the 4D array of (active) two-body integrals :math:`h_{pqrs}`.
 
     Returns:
-        cluster_list (List[Hamiltonian]): List of cluster operators :math:`\{T_{a}^{i}, a
+        cluster_list (List[FermionHamiltonian]): List of cluster operators :math:`\{T_{a}^{i}, a
             \in \mathcal{I}', i \in \mathcal{O}' \} \cup \{T_{ab}^{ij}, a>b, i>j, a,b \in
             \mathcal{I}', i,j \in \mathcal{O}'\}`.
         theta_list (List[float]): List of initial coefficients :math:`\{\theta_{a}^{i}, a

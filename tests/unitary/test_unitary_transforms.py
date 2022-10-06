@@ -18,7 +18,7 @@ from qat.fermion.transforms import (
     get_bk_code,
     change_encoding,
 )
-from qat.fermion.hamiltonians import Hamiltonian
+from qat.fermion.hamiltonians import FermionHamiltonian
 
 
 nqbits = 5
@@ -28,10 +28,10 @@ test_list = [
     (transform_to_bk_basis, get_bk_code(nqbits)),
 ]
 
-H_f1 = Hamiltonian(nqbits, [Term(1.0, "C", [0])])
-H_f2 = Hamiltonian(nqbits, [Term(1.0, "C", [1])])
-H_f3 = Hamiltonian(nqbits, [Term(1.0, "CCcc", [0, 1, 1, 0]), Term(1.0, "CCcc", [1, 0, 0, 1])])
-H_f4 = Hamiltonian(
+H_f1 = FermionHamiltonian(nqbits, [Term(1.0, "C", [0])])
+H_f2 = FermionHamiltonian(nqbits, [Term(1.0, "C", [1])])
+H_f3 = FermionHamiltonian(nqbits, [Term(1.0, "CCcc", [0, 1, 1, 0]), Term(1.0, "CCcc", [1, 0, 0, 1])])
+H_f4 = FermionHamiltonian(
     nqbits,
     [
         Term(1.0, "CCcc", [0, 1, 1, 0]),

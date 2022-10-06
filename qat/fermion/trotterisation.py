@@ -5,11 +5,11 @@ import numpy as np
 import warnings
 
 from qat.lang.AQASM import QRoutine, PH, CNOT, H, RX, RZ, CustomGate, Z
-from .hamiltonians import ElectronicStructureHamiltonian, Hamiltonian
+from .hamiltonians import ElectronicStructureHamiltonian, SpinHamiltonian, FermionHamiltonian
 
 
 def make_trotterisation_routine(
-    hamiltonian: Union[Hamiltonian, ElectronicStructureHamiltonian],
+    hamiltonian: Union[SpinHamiltonian, FermionHamiltonian, ElectronicStructureHamiltonian],
     n_trotter_steps: int,
     final_time: Optional[float] = 1.0,
     method: Optional[str] = "jordan-wigner",
@@ -19,7 +19,7 @@ def make_trotterisation_routine(
     order approximation. If the Hamiltonian is fermionic, it is converted to its spin representation.
 
     Args:
-        hamiltonian (Union[Hamiltonian, ElectronicStructureHamiltonian]): Hamiltonian to trotterize.
+        hamiltonian (Union[SpinHamiltonian, FermionHamiltonian, ElectronicStructureHamiltonian]): Hamiltonian to trotterize.
         n_trotter_steps (int): Number :math:`n` of Trotter steps.
         final_time (Optional[float]): Time :math:`t` in the evolution operator.
         method (Optional[str]): Method to use for the transformation to a spin representation. Other available methods include
@@ -42,12 +42,11 @@ def make_trotterisation_routine(
 
     """
 
-    if isinstance(hamiltonian, Hamiltonian):
-
-        # Try to convert to spin representation
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            hamiltonian = hamiltonian.to_spin(method=method)
+    # Converts to spin if necessary for spin Hamiltonian trotterization
+    if isinstance(hamiltonian, FermionHamiltonian):
+        hamiltonian = hamiltonian.to_spin(method=method)
+        
+    if isinstance(hamiltonian, SpinHamiltonian):
 
         Qrout = QRoutine()
         for _ in range(n_trotter_steps):
@@ -59,6 +58,7 @@ def make_trotterisation_routine(
 
         return Qrout
 
+    # Else use Jordan-Wigner trotterization
     elif isinstance(hamiltonian, ElectronicStructureHamiltonian):
 
         Qrout = QRoutine()
@@ -73,11 +73,11 @@ def make_trotterisation_routine(
 
     else:
         raise Exception(
-            f"Hamiltonian must be of type ElectronicStructureHamiltonian or Hamiltonian, got {type(hamiltonian)} instead"
+            f"Hamiltonian must be of type SpinHamiltonian, FermionHamiltonian or ElectronicStructureHamiltonian; got {type(hamiltonian)} instead."
         )
 
 
-def make_spin_hamiltonian_trotter_slice(hamiltonian: Hamiltonian, coeff: Optional[float] = 1.0) -> QRoutine:
+def make_spin_hamiltonian_trotter_slice(hamiltonian: SpinHamiltonian, coeff: Optional[float] = 1.0) -> QRoutine:
     r"""
     Constructs the quantum routine corresponding to the first-order
     trotterization of
@@ -88,7 +88,7 @@ def make_spin_hamiltonian_trotter_slice(hamiltonian: Hamiltonian, coeff: Optiona
     where :math:`H` is a spin Hamiltonian.
 
     Args:
-        hamiltonian (Hamiltonian): Hamiltonian in spin representation.
+        hamiltonian (SpinHamiltonian): Hamiltonian in spin representation.
 
     Returns:
         QRoutine: Gates to apply to perform the time evolution.

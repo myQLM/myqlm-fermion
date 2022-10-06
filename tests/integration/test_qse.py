@@ -1,6 +1,6 @@
 import numpy as np
 from qat.core import Term
-from qat.fermion import Hamiltonian
+from qat.fermion import SpinHamiltonian
 from qat.lang.AQASM import Program, RY, CNOT, RZ
 from qat.qpus import get_default_qpu
 from qat.plugins import SeqOptim
@@ -10,7 +10,7 @@ from qat.fermion.chemistry.qse import (
 )
 
 # we instantiate the Hamiltonian we want to approximate the ground state energy of
-hamiltonian = Hamiltonian(2, [Term(1, op, [0, 1]) for op in ["XX", "YY", "ZZ"]])
+hamiltonian = SpinHamiltonian(2, [Term(1, op, [0, 1]) for op in ["XX", "YY", "ZZ"]])
 
 
 # we construct the variational circuit (ansatz)
@@ -38,11 +38,12 @@ print("E(VQE) = %s (err = %s %%)" % (result.value, 100 * abs((result.value - E_m
 e_vqe = result.value
 
 # we use the optimal parameters found by VQE
+# pylint: disable=W0123
 opt_circ = circ.bind_variables(eval(result.meta_data["parameter_map"]))
 
 expansion_operators = [
-    Hamiltonian(2, [], 1.0),
-    Hamiltonian(2, [Term(1.0, "ZZ", [0, 1])]),
+    SpinHamiltonian(2, [], 1.0),
+    SpinHamiltonian(2, [Term(1.0, "ZZ", [0, 1])]),
 ]
 
 
@@ -60,7 +61,7 @@ def test_build_linear_pauli_expansion():
         np.array([[0.0 + 0.0j, 0.0 - 1.0j], [0.0 + 1.0j, 0.0 + 0.0j]]),
         np.array([[1.0 + 0.0j, 0.0 + 0.0j], [0.0 + 0.0j, -1.0 + 0.0j]]),
         np.array([[1.0 + 0.0j, 0.0 + 0.0j], [0.0 + 0.0j, -1.0 + 0.0j]]),
-        None,
+        np.array([[1.0 + 0.0j, 0.0 + 0.0j], [0.0 + 0.0j, 1.0 + 0.0j]]),
     ]
 
     test = build_linear_pauli_expansion(["X", "Y", "Z", "Z", "I"], 1)

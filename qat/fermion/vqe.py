@@ -1,11 +1,11 @@
 from typing import Callable, List, Optional, Tuple
 import numpy as np
 from qat.lang.AQASM import Program
-from .hamiltonians import Hamiltonian
+from .hamiltonians import SpinHamiltonian
 
 
 def VQE(
-    hamiltonian: Hamiltonian,
+    hamiltonian: SpinHamiltonian,
     optimizer,
     ansatz_routine: Callable,
     theta0: np.ndarray,
@@ -18,7 +18,7 @@ def VQE(
     minimize the energy of the Hamiltonian.
 
     Args:
-        hamiltonian (Hamiltonian): Hamiltonian for which the ground state is to be estimated
+        hamiltonian (SpinHamiltonian): Hamiltonian for which the ground state is to be estimated
         optimizer (Optimizer): The optimization algorithm (a function) and its own parameters (either args or kwargs).
         ansatz_routine (Callable): Function of one list with all parameters to optimize, must return a QRoutine which
             corresponds to a ket.

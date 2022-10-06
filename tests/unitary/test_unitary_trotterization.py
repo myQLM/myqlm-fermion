@@ -12,7 +12,7 @@ from qat.fermion.trotterisation import (
     _double_excitation_operator_jw,
 )
 from qat.fermion.trotterisation import _number_operator_jw, make_trotter_slice_jw, make_spin_hamiltonian_trotter_slice
-from qat.fermion.hamiltonians import Hamiltonian, ElectronicStructureHamiltonian
+from qat.fermion.hamiltonians import SpinHamiltonian, ElectronicStructureHamiltonian
 
 TOL1 = 4
 TOL2 = 10
@@ -203,13 +203,13 @@ def check_evolution(ising_hamiltonian):
 
 def test_ZZ_term():
     theta = 0.543
-    spin_hamiltonian = Hamiltonian(2, terms=[Term(theta, "ZZ", [0, 1])])
+    spin_hamiltonian = SpinHamiltonian(2, terms=[Term(theta, "ZZ", [0, 1])])
     check_evolution(spin_hamiltonian)
 
 
 def test_XX_term():
     theta = 0.3
-    spin_hamiltonian = Hamiltonian(2, terms=[Term(theta, "XX", [0, 1])])
+    spin_hamiltonian = SpinHamiltonian(2, terms=[Term(theta, "XX", [0, 1])])
     check_evolution(spin_hamiltonian)
 
 

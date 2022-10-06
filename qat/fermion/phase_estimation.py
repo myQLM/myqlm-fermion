@@ -2,12 +2,12 @@
 # -*- coding: utf-8 -*-
 
 import inspect
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 import numpy as np
 
 import qat.comm.exceptions.ttypes as exceptions_types
 
-from .hamiltonians import ElectronicStructureHamiltonian
+from .hamiltonians import ElectronicStructureHamiltonian, SpinHamiltonian
 from .util import construct_Rk_routine
 from .transforms import (
     transform_to_jw_basis,
@@ -79,7 +79,7 @@ def perform_phase_estimation(
             If no idea take :math:`\Delta =2 E_\mathrm{max}`, with :math:`E_\mathrm{max}` an upper
             bound of the energy.
         basis_transform (Optional[str]): Transformation to go from :class:`qat.fermion.hamiltonians.ElectronicStructureHamiltonian`
-            into a :class:`qat.fermion.hamiltonians.Hamiltonian`: one can use the "jordan-wigner" (default),
+            into a :class:`qat.fermion.hamiltonians.SpinHamiltonian`: one can use the "jordan-wigner" (default),
             "bravyi-kitaev" or "parity" transformations.
         qpu (Optional[QPU]): QPU to use for computation.
 
@@ -295,7 +295,7 @@ def apply_adiabatic_state_prep(
 
 
 def build_qpe_routine_for_hamiltonian(
-    hamiltonian: Observable,
+    hamiltonian: Union[Observable, SpinHamiltonian],
     n_phase_bits: int,
     n_trotter_steps: Optional[int] = 1,
     global_phase: Optional[float] = 0,
@@ -305,7 +305,7 @@ def build_qpe_routine_for_hamiltonian(
     Construct a phase estimation routine corresponding to a given spin Hamiltonian.
 
     Args:
-        hamiltonian (Observable): Hamiltonian in the computational basis.
+        hamiltonian (Union[Observable, SpinHamiltonian]): Hamiltonian in the computational basis.
         n_phase_bits (int): The number of phase bits.
         n_trotter_steps (Optional[int]): The number of trotter steps. Defaults to 1.
         global_phase (Optional[float]): The global phase :math:`\phi` which the evolution

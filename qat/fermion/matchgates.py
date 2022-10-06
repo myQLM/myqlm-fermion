@@ -438,8 +438,7 @@ def find_R_angles(
             (in Majorana notation).
         theta0 (Optional[np.ndarray]): The initial guess for the angles.
             Defaults to None (in which case initialization to zero).
-        slater (Optional[bool]): Whether to only include excitation-preserving rotations.
-                                 Defaults to False.
+        slater (Optional[bool]): Whether to only include excitation-preserving rotations. Defaults to False.
         use_gradient (Optional[bool]): Whether to use a gradient-based optimizer.
             Defaults to False.
         method (Optional[str]): What scipy.optimize.minimize optimizer to use.
@@ -498,9 +497,9 @@ def get_nn_rotation_angles(
     verbose: Optional[bool] = False,
 ) -> Tuple[np.ndarray, float]:
     """
-    Compute the rotation angles corresponding to a quadratic Hamiltonian with
-    the constraint that the corresponding circuit has only nearest-neighbor
-    gates.
+    Compute the rotation angles corresponding to the preparation of the ground state of a quadratic Hamiltonian with Givens
+    rotations. The obtained angles can be used as initial angle values in the LDCA circuit ansatz (completed with zeros), so as to
+    generate a Slater determinant as an initial trial state for VQE.
 
     Args:
         h (np.ndarray): One-particle matrix (in p-h notation)
@@ -514,7 +513,7 @@ def get_nn_rotation_angles(
         verbose (Optional[bool]): Verbose output. Defaults to False.
 
     Returns:
-        np.ndarray, float: the angles, and distance to target total rotation
+        np.ndarray, float: The angles and distance to target total rotation
 
     """
 
@@ -524,16 +523,16 @@ def get_nn_rotation_angles(
     r_majo = np.block([[r.real, r.imag], [-r.imag, r.real]])
 
     if slater:
-        theta_init = [0.1 for _ in range(nqbits**2)]
+        theta0 = [0.1 for _ in range(nqbits**2)]
     else:
-        theta_init = [0.1 for _ in range(2 * nqbits**2 - nqbits)]
+        theta0 = [0.1 for _ in range(2 * nqbits**2 - nqbits)]
 
     if verbose:
-        print("theta0=", theta_init)
+        print("theta0=", theta0)
 
     theta, cost_res = find_R_angles(
         r_majo,
-        theta_init,
+        theta0,
         slater=slater,
         method=method,
         options=options,
@@ -551,8 +550,7 @@ def nb_params_LDCA(nb_fermionic_modes: int, ncycles: int, slater: Optional[bool]
     Args:
         nb_fermionic_modes (int): Number of qubits (=number of fermionic modes). Must be even.
         ncycles (int): Number of LDCA cycles.
-        slater (Optional[bool]): Whether to only include excitation-preserving rotations.
-                                 Defaults to False.
+        slater (Optional[bool]): Whether to only include excitation-preserving rotations. Defaults to False.
 
     Returns:
         int: Number of parameters of the associated LDCA circuit

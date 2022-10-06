@@ -10,7 +10,8 @@ from qat.core.generator import AbstractGenerator
 
 from .generator_tools import HybridResult
 from .hamiltonians import (
-    Hamiltonian,
+    SpinHamiltonian,
+    FermionHamiltonian,
     ElectronicStructureHamiltonian,
     make_hubbard_model,
     make_anderson_model,
@@ -62,7 +63,8 @@ class ObservableGenerator(AbstractPlugin, AbstractGenerator):
     Observable builder (or Hamiltonian builders) are specified by their identifier.
     These builders are:
 
-     - **hamiltonian**: Creates a :class:`~qat.fermion.hamiltonians.Hamiltonian`
+     - **spinhamiltonian**: Creates a :class:`~qat.fermion.hamiltonians.SpinHamiltonian`
+     - **fermionhamiltonian**: Creates a :class:`~qat.fermion.hamiltonians.FermionHamiltonian`
      - **electronic-structure**: Creates a :class:`~qat.fermion.hamiltonians.ElectronicStructureHamiltonian`
      - **hubbard**: Creates a Hubbard model (cf. :func:`~qat.fermion.hamiltonians.make_hubbard_model`)
      - **anderson**: Creates a Anderson model (cf. :func:`~qat.fermion.hamiltonians.make_anderson_model`)
@@ -77,7 +79,8 @@ class ObservableGenerator(AbstractPlugin, AbstractGenerator):
 
     # List of Hamiltoninian generator
     hamiltonians = {
-        "hamiltonian": Hamiltonian,
+        "spinhamiltonian": SpinHamiltonian,
+        "fermionhamiltonian": FermionHamiltonian,
         "electronic-structure": ElectronicStructureHamiltonian,
         "hubbard": make_hubbard_model,
         "anderson": make_anderson_model,

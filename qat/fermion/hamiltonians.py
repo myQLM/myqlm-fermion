@@ -4,10 +4,11 @@ Module with containers for common Hamiltonians
 """
 
 from typing import List, Optional, Union
-from enum import Enum
 from itertools import product
-import warnings
-
+from copy import deepcopy
+import itertools
+from numbers import Number
+from qat.core.variables import BaseArithmetic
 import numpy as np
 import scipy.sparse as sp
 from qat.core import Observable, Term
@@ -22,21 +23,9 @@ PAULI_MATS = {
     "Z": [[1, 0], [0, -1]],
 }
 
-
-class ObservableType(Enum):
-    """
-    Define the different types of Hamiltonian
-    """
-
-    UNDEFINED = 0
-    SPIN = 1
-    FERMION = 2
-    BOSONIC = 3
-
-
-class Hamiltonian(Observable):
+class SpinHamiltonian(Observable):
     r"""
-    Implementation of a generic hamiltonian.
+    Implementation of a spin Hamiltonian.
 
     Args:
         nqbits (int): the total number of qubits
@@ -56,12 +45,11 @@ class Hamiltonian(Observable):
         .. run-block:: python
 
             from qat.core import Term
-            from qat.fermion import Hamiltonian
+            from qat.fermion import SpinHamiltonian
 
-            hamiltonian = Hamiltonian(2, [Term(0.3, "X", [0]), Term(-0.4, "ZY", [0, 1])])
+            hamiltonian = SpinHamiltonian(2, [Term(0.3, "X", [0]), Term(-0.4, "ZY", [0, 1])])
+            
             print(f"H = {hamiltonian}")
-
-            # let us print the corresponding matrix representation:
             print(f"H matrix: {hamiltonian.get_matrix()}")
 
         Or fermionic operators :
@@ -69,9 +57,10 @@ class Hamiltonian(Observable):
         .. run-block:: python
 
             from qat.core import Term
-            from qat.fermion import Hamiltonian
+            from qat.fermion import SpinHamiltonian
 
-            hamiltonian = Hamiltonian(2, [Term(0.3, "Cc", [0, 1]), Term(1.4, "CcCc", [0, 1, 1, 0])])
+            hamiltonian = SpinHamiltonian(2, [Term(0.3, "Cc", [0, 1]), Term(1.4, "CcCc", [0, 1, 1, 0])])
+            
             print(f"H = {hamiltonian}")
             print(f"H matrix: {hamiltonian.get_matrix()}")
 
@@ -85,58 +74,70 @@ class Hamiltonian(Observable):
         do_clean_up: bool = True,
     ):
 
-        self._type = ObservableType.UNDEFINED
         self.matrix = None
         self.do_clean_up = do_clean_up
 
-        super().__init__(
+        super(SpinHamiltonian, self).__init__(
             nqbits,
             pauli_terms=terms,
             constant_coeff=constant_coeff,
             do_clean_up=do_clean_up,
         )
+        
+        # Fast consistency check on the first term inputted.
+        self._fast_consistency_check()
 
     def __add__(self, other):
         res = super().__add__(other)
-        return Hamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
+        return SpinHamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
 
     def __radd__(self, other):
         res = super().__radd__(other)
-        return Hamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
+        return SpinHamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
+    
+    def __sub__(self, other):
+        res = super().__sub__(other)
+        return SpinHamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
 
+    def __rsub__(self, other):
+        res = super().__rsub__(other)
+        return SpinHamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
+    
     def __mul__(self, other):
         res = super().__mul__(other)
-        return Hamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
+        return SpinHamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
 
     def __rmul__(self, other):
         res = super().__rmul__(other)
-        return Hamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
-
-    @property
-    def htype(self) -> ObservableType:
+        return SpinHamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
+    
+    def __or__(self, other):
+        return self * other - other * self
+    
+    def _fast_consistency_check(self):
         """
-        Check the type of the Hamiltonian (spin or fermionic).
-
-        Returns:
-            ObservableType: Type of the Hamiltonian
-
-        Warning:
-            This method should not be used if the Hamiltonian is too large.
-
+        Assert that the first term inputted does not contain fermionic operators.
+        
+        Note: To avoid large overhead, only the first term is verified.
         """
-        return self._check_hamiltonian_type()
+        
+        if self.terms:
+            for op in ["C", "c"]:
+                if op in self.terms[0].op:
+                    raise TypeError("SpinHamiltonian does not support fermionic operators. Please use FermionHamiltonian instead.")
 
-    def dag(self) -> "Hamiltonian":
+    def dag(self) -> "SpinHamiltonian":
         """Compute the conjugate transpose of the Hamiltonian.
 
         Returns:
-            Hamiltonian: Conjugate transpose of the Hamiltonian operator
+            SpinHamiltonian: Conjugate transpose of the SpinHamiltonian operator
 
         """
-        return Hamiltonian(
+        
+        return SpinHamiltonian(
             self.nbqbits,
             [Term(np.conj(term.coeff), term.op, term.qbits) for term in self.terms],
-            np.conj(self.constant_coeff),
+            np.conj(self.constant_coeff), do_clean_up=self.do_clean_up
         )
 
     def get_matrix(self, sparse: bool = False) -> np.ndarray:
@@ -148,22 +149,19 @@ class Hamiltonian(Observable):
             Defaults to False.
 
         Returns:
-            numpy.ndarray: The matrix of the Hamiltonian.
+            numpy.ndarray: The matrix of the SpinHamiltonian.
 
         Warning:
-            This method should not be used if the Hamiltonian is too large.
+            This method should not be used if the SpinHamiltonian is too large.
 
         """
 
-        if self.htype is ObservableType.SPIN:
-            return self._get_spin_op_matrix(sparse)
+        return self._get_spin_op_matrix(sparse)
 
-        elif self.htype is ObservableType.FERMION:
-            return self._get_fermion_op_matrix(sparse)
 
     def _get_spin_op_matrix(self, sparse: bool) -> Union[np.ndarray, sp.bsr.bsr_matrix]:
         """
-        Get the matrix representation of the Hamiltonian of type SPIN.
+        Get the matrix representation of the SpinHamiltonian.
         """
 
         def _make_spin_op(op: str, qb: int, nqbits: int, sparse: bool) -> Union[np.ndarray, sp.bsr.bsr_matrix]:
@@ -229,10 +227,213 @@ class Hamiltonian(Observable):
         self.matrix = final_matrix
 
         return final_matrix
+    
+    def copy(self):
+        """Deepcopy the current class.
+
+        Returns:
+            :class:`~qat.fermion.hamiltonians.SpinHamiltonian`: Copy of the SpinHamiltonian.
+        """
+        return deepcopy(self)
+
+class FermionicTerm(Term):
+    """
+    Implementation of the FermionicTerm class. This class is mostly used for overloading operations, which allows operations
+    between terms containing fermionic operators.
+    """
+    def __init__(self, coefficient, op, qbits, do_validity_check: bool = True):
+            
+        if  any(value in PAULI_MATS for value in op):
+            raise TypeError("FermionicTerm only accepts fermionic operators C and c.")
+        
+        super(FermionicTerm, self).__init__(coefficient, op, qbits, do_validity_check)
+        
+    def __mul__(self, other):
+        
+        if isinstance(other, (Number, BaseArithmetic)):
+            new_term = self.copy()
+            new_term.coeff *= other
+            return new_term
+        
+        term = self.copy()
+        term.op += other.op
+        term.qbits += other.qbits
+        term.coeff *= other.coeff
+
+        return term
+            
+    def copy(self):
+        """Deepcopy the current class.
+
+        Returns:
+            :class:`~qat.fermion.hamiltonians.FermionicTerm`: Copy of the FermionicTerm.
+        """
+        return deepcopy(self)
+    
+    @staticmethod
+    def from_term(term: Term):
+        """Converts a Term class to a FermionicTerm class.
+        
+        Args:
+            term (Term): Term.
+
+        Returns:
+            FermionicTerm
+        """
+        return FermionicTerm(term.coeff, term.op, term.qbits)
+    
+    
+class FermionHamiltonian(Observable):
+    r"""
+    Implementation of a fermionic Hamiltonian.
+
+    Args:
+        nqbits (int): the total number of qubits
+        terms (List[Term]): the list of terms
+        constant_coeff (float): constant term
+
+    Attributes:
+        nbqbits (int): the total number of qubits
+        terms (List[Term]): the list of terms
+        constant_coeff (float): constant term
+        matrix (np.ndarray): the corresponding matrix (None by default, can be set by calling get_matrix method)
+
+    Example:
+
+        One can use spin operators :
+
+        .. run-block:: python
+
+            from qat.core import Term
+            from qat.fermion import FermionHamiltonian
+
+            hamiltonian = FermionHamiltonian(2, [Term(0.3, "X", [0]), Term(-0.4, "ZY", [0, 1])])
+            print(f"H = {hamiltonian}")
+            print(f"H matrix: {hamiltonian.get_matrix()}")
+
+        Or fermionic operators :
+
+        .. run-block:: python
+
+            from qat.core import Term
+            from qat.fermion import FermionHamiltonian
+
+            hamiltonian = FermionHamiltonian(2, [Term(0.3, "Cc", [0, 1]), Term(1.4, "CcCc", [0, 1, 1, 0])])
+            print(f"H = {hamiltonian}")
+            print(f"H matrix: {hamiltonian.get_matrix()}")
+
+    """
+
+    def __init__(
+        self,
+        nqbits: int,
+        terms: List[Term],
+        constant_coeff: float = 0.0,
+        do_clean_up: bool = True,
+    ):
+
+        self.matrix = None
+        self.do_clean_up = do_clean_up
+        self.terms = terms or []
+
+        super(FermionHamiltonian, self).__init__(
+            nqbits,
+            pauli_terms=terms,
+            constant_coeff=constant_coeff,
+            do_clean_up=do_clean_up,
+        )
+        if self.terms:
+            self.terms = terms if isinstance(terms[0], FermionicTerm) else [FermionicTerm.from_term(term) for term in terms]
+
+
+    def copy(self):
+        """Deepcopy the current class.
+
+        Returns:
+            :class:`~qat.fermion.hamiltonians.FermionHamiltonian`: Copy of the FermionHamiltonian.
+        """
+        return deepcopy(self)
+
+    def __add__(self, other):
+        res = super().__add__(other)
+        return FermionHamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
+
+    def __radd__(self, other):
+        res = super().__radd__(other)
+        return FermionHamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
+    
+    def __sub__(self, other):
+        res = super().__sub__(other)
+        return FermionHamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
+
+    def __rsub__(self, other):
+        res = super().__rsub__(other)
+        return FermionHamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
+    
+    def __mul__(self, other):
+        if isinstance(other, (Number, BaseArithmetic)):
+            new_ham = self.copy()
+            for i, _ in enumerate(new_ham.terms):
+                new_ham.terms[i].coeff *= other
+            new_ham.constant_coeff *= other
+            return new_ham
+        
+        term_list = []
+        for term in self.terms:
+            term_list.append(FermionicTerm(term.coeff * other.constant_coeff, term.op, term.qbits))
+
+        for term in other.terms:
+            term_list.append(FermionicTerm(self.constant_coeff * term.coeff, term.op, term.qbits))
+
+        for term1, term2 in itertools.product(self.terms, other.terms):
+            term_list.append(term1 * term2)
+            
+        return FermionHamiltonian(self.nbqbits, terms=term_list, do_clean_up=self.do_clean_up)
+
+    def __rmul__(self, other):
+        
+        if isinstance(other, (Number, BaseArithmetic)):
+            return self * other
+                
+        terms = [term1 * term2 for term1, term2 in itertools.product(other.terms, self.terms)]
+        return FermionHamiltonian(self.nbqbits, terms, do_clean_up=self.do_clean_up)
+
+    def dag(self) -> "FermionHamiltonian":
+        """Compute the conjugate transpose of the Hamiltonian.
+
+        Returns:
+            FermionHamiltonian: Conjugate transpose of the Hamiltonian.
+
+        """
+        # pylint: disable=E1101
+        return FermionHamiltonian(
+            self.nbqbits,
+            [FermionicTerm(np.conj(term.coeff), term.op, term.qbits) for term in self.terms],
+            np.conj(self.constant_coeff),
+        )
+
+    def get_matrix(self, sparse: bool = False) -> np.ndarray:
+        r"""
+        This function returns the matrix corresponding to :math:`H` in the computational basis.
+
+        Args:
+            sparse (Optional[bool]): Whether to return in sparse representation.
+            Defaults to False.
+
+        Returns:
+            numpy.ndarray: The matrix of the FermionHamiltonian.
+
+        Warning:
+            This method should not be used if the FermionHamiltonian is too large.
+
+        """
+
+        return self._get_fermion_op_matrix(sparse)
+
 
     def _get_fermion_op_matrix(self, sparse: bool = False) -> Union[np.ndarray, sp.bsr.bsr_matrix]:
         """
-        Get the matrix representation of the Hamiltonian of type FERMION.
+        Get the matrix representation of the fermionic Hamiltonian.
         """
 
         if self.matrix is not None and sp.issparse(self.matrix) == sparse:
@@ -253,40 +454,15 @@ class Hamiltonian(Observable):
                 matrix = matrix.dot(ops[op][qb])
 
             final_matrix += term.coeff * matrix
-
+            
+        # pylint: disable=E1101
         final_matrix += self.constant_coeff * id_type(2**self.nbqbits)
         self.matrix = final_matrix
 
         return final_matrix
 
-    def _check_hamiltonian_type(self) -> ObservableType:
-        """Check the type of the Hamiltonian.
-
-        Raises:
-            NotImplementedError: Raise an error if Hamiltonian is in mixed form (i.e. contains fermionic and spin operators)
-
-        Returns:
-            ObservableType: Type of the Hamiltonian.
-        """
-
-        condition_1, condition_2 = (None,) * 2
-
-        for term in self.terms:
-            for operator in term.op:
-                condition_1 = ObservableType.SPIN if operator in PAULI_MATS else condition_1
-                condition_2 = ObservableType.FERMION if operator in {"C", "c"} else condition_2
-
-        if all((condition_1, condition_2)) is None:
-            return ObservableType.UNDEFINED
-
-        if isinstance(condition_1, ObservableType) and isinstance(condition_2, ObservableType):
-            raise NotImplementedError("Hamiltonian with mixed spin-fermion operators are not implemented.")
-
-        else:
-            return condition_1 or condition_2
-
     def to_spin(self, method: Optional[str] = "jordan-wigner"):
-        """Transform a fermionic Hamiltonian to a spin Hamiltonian.
+        """Maps the fermionic Hamiltonian to a spin Hamiltonian.
 
         Args:
             method (str, optional): Method to use for the transformation to a spin representation. Available methods are :
@@ -296,7 +472,7 @@ class Hamiltonian(Observable):
                     - "parity" : Parity transform.
 
         Returns:
-            :class:`~qat.fermion.hamiltonians.Hamiltonian` : Hamiltonian in spin representation.
+            :class:`~qat.fermion.hamiltonians.SpinHamiltonian` : Hamiltonian in spin representation.
 
         """
         # pylint: disable=C0415
@@ -312,14 +488,39 @@ class Hamiltonian(Observable):
             "parity": transform_to_parity_basis,
         }
 
-        if self.htype == ObservableType.SPIN:
-            warnings.warn("The Hamiltonian is already in spin representation.")
-            return self
-
         return transform_map[method](self)
+        
+    def to_electronic(self):
+        """Converts a fermionic Hamiltonian to a electronic-structure Hamiltonian. This can be done only if the Hamiltonian
+        contains only single and double interaction operators (i.e. only "Cc" and "CCcc" fermionic operators).
+
+        Returns:
+            :class:`~qat.fermion.hamiltonians.ElectronicStructureHamiltonian` : Electronic-structure Hamiltonian.
+
+        """
+        compatible_ops = ["Cc", "CCcc"]
+
+        nqbits = self.nbqbits
+        hpq = np.zeros((nqbits,)*2, dtype="complex")
+        hpqrs = np.zeros((nqbits,)*4, dtype="complex")
+
+        for term in self.terms:
+
+            if term.op not in compatible_ops:
+                raise TypeError("The Hamiltonian contains fermionic operators incompatible with a transformation to a electronic-structure Hamiltonian.")
+
+            indices = term.qbits
+
+            if term.op == "Cc":
+                hpq[indices[0], indices[1]] = term.coeff
+
+            if term.op == "CCcc":
+                hpqrs[indices[0], indices[1], indices[2], indices[3]] = 2 * term.coeff
+                
+        return ElectronicStructureHamiltonian(hpq, hpqrs, do_clean_up=self.do_clean_up)
 
 
-class ElectronicStructureHamiltonian(Hamiltonian):
+class ElectronicStructureHamiltonian(FermionHamiltonian):
     r"""
     A container for the electronic-structure Hamiltonian, defined as
 
@@ -374,64 +575,57 @@ class ElectronicStructureHamiltonian(Hamiltonian):
         self.hpq = hpq
         self.hpqrs = hpqrs
         self.do_clean_up = do_clean_up
+        
+        terms = self._get_fermionic_terms()
 
-        terms = []
-        for i, j in product(range(hpq.shape[0]), range(hpq.shape[1])):
-
-            if abs(hpq[i, j]) > ElectronicStructureHamiltonian.TOL:
-                terms.append(Term(hpq[i, j], "Cc", [i, j]))
-
-        for i, j, k, l in product(
-            range(hpqrs.shape[0]),
-            range(hpqrs.shape[1]),
-            range(hpqrs.shape[2]),
-            range(hpqrs.shape[3]),
-        ):
-
-            if abs(hpqrs[i, j, k, l]) > ElectronicStructureHamiltonian.TOL:
-                terms.append(Term(0.5 * hpqrs[i, j, k, l], "CCcc", [i, j, k, l]))
-
-        super().__init__(hpq.shape[0], terms, constant_coeff, do_clean_up=do_clean_up)
+        super(ElectronicStructureHamiltonian, self).__init__(self.hpq.shape[0], terms, constant_coeff, do_clean_up=do_clean_up)
 
     def __add__(self, other):
 
+        # pylint: disable=E1101
         return ElectronicStructureHamiltonian(
             self.hpq + other.hpq,
             self.hpqrs + other.hpqrs,
             self.constant_coeff + other.constant_coeff,
             do_clean_up=self.do_clean_up,
         )
+        
+    def _get_fermionic_terms(self) -> List[Term]:
+        """Get the FermionicHamiltonian terms from current ElectronicStructureHamiltonian.
 
+        Returns:
+            terms (Terms): fermionic terms of the ElectronicStructureHamiltonian
+        """
+        
+        terms = []
+        for i, j in product(range(self.hpq.shape[0]), range(self.hpq.shape[1])):
 
-class SpinHamiltonian:
-    """Ensures retrocompatibility of old SpinHamiltonian class with new Hamiltonian class"""
+            if abs(self.hpq[i, j]) > ElectronicStructureHamiltonian.TOL:
+                terms.append(Term(self.hpq[i, j], "Cc", [i, j]))
 
-    def __new__(
-        cls,
-        nqbits: int,
-        pauli_terms: List[Term],
-        constant_coeff: float = 0.0,
-        do_clean_up: bool = True,
-    ):
+        for i, j, k, l in product(
+            range(self.hpqrs.shape[0]),
+            range(self.hpqrs.shape[1]),
+            range(self.hpqrs.shape[2]),
+            range(self.hpqrs.shape[3]),
+        ):
 
-        warnings.warn(
-            "The SpinHamiltonian class is deprecated. Please use the Hamiltonian class instead.",
-            stacklevel=2,
-        )
-        return Hamiltonian(nqbits=nqbits, terms=pauli_terms, constant_coeff=constant_coeff, do_clean_up=do_clean_up)
+            if abs(self.hpqrs[i, j, k, l]) > ElectronicStructureHamiltonian.TOL:
+                terms.append(FermionicTerm(0.5 * self.hpqrs[i, j, k, l], "CCcc", [i, j, k, l]))
 
+        return terms
+    
+    def to_fermion(self) -> FermionHamiltonian:
+        """Convert current ElectronicStructureHamiltonian to a FermionHamiltonian.
 
-class FermionHamiltonian(Hamiltonian):
-    """Ensures retrocompatibility of old SpinHamiltonian class with new Hamiltonian class"""
-
-    def __new__(cls, *args, **kwargs):
-
-        warnings.warn(
-            "The FermionHamiltonian class is deprecated. Please use the Hamiltonian class instead.",
-            stacklevel=2,
-        )
-        return Hamiltonian(*args, **kwargs)
-
+        Returns:
+            FermionHamiltonian: Fermionic Hamiltonian.
+        """
+        
+        terms = self._get_fermionic_terms()
+        
+        # pylint: disable=E1101
+        return FermionHamiltonian(self.hpq.shape[0], terms, self.constant_coeff, do_clean_up=self.do_clean_up)
 
 def make_anderson_model(u: float, mu: float, v: np.ndarray, epsilon: np.ndarray) -> ElectronicStructureHamiltonian:
     r"""

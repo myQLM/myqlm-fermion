@@ -13,7 +13,7 @@ from bitstring import BitArray
 from qat.core import Term
 from qat.lang.AQASM import X, Program
 from ..trotterisation import make_spin_hamiltonian_trotter_slice
-from ..hamiltonians import Hamiltonian
+from ..hamiltonians import SpinHamiltonian, FermionHamiltonian
 from ..util import tobin
 
 
@@ -230,7 +230,7 @@ def convert_to_h_integrals(one_body_integrals: np.ndarray, two_body_integrals: n
     return one_body_coefficients, two_body_coefficients
 
 
-def _build_cluster_operator(l_ex_op: List[Tuple[int]], nqbits: int) -> List[Hamiltonian]:
+def _build_cluster_operator(l_ex_op: List[Tuple[int]], nqbits: int) -> List[FermionHamiltonian]:
     r"""
     Builds the cluster operator and reduces the trial
     parametrization to match the selected excitation operators.
@@ -260,7 +260,7 @@ def _build_cluster_operator(l_ex_op: List[Tuple[int]], nqbits: int) -> List[Hami
         nqbits (int): The total number of qubits.
 
     Returns:
-        t_opti (List[Hamiltonian]):
+        t_opti (List[FermionHamiltonian]):
             The cluster operator (times i) "iT" as a dictionary corresponding to each group of fermionic excitation operators
             parameterized identically.
 
@@ -287,13 +287,13 @@ def _build_cluster_operator(l_ex_op: List[Tuple[int]], nqbits: int) -> List[Hami
 
         current_excitation_op.append(Term(1j, op_description, indices))
         current_excitation_op.append(Term(-1j, op_description, indices_conj))
-        t_opti.append(Hamiltonian(nqbits=nqbits, terms=current_excitation_op))
+        t_opti.append(FermionHamiltonian(nqbits=nqbits, terms=current_excitation_op))
 
     return t_opti
 
 
 def construct_ucc_ansatz(
-    cluster_ops: List[Hamiltonian],
+    cluster_ops: List[SpinHamiltonian],
     ket_hf: int,
     n_steps: int = 1,
 ) -> Program:
@@ -311,7 +311,7 @@ def construct_ucc_ansatz(
             &= e^{T(\vec{\theta})} \vert \mathrm{HF}\rangle
 
     Args:
-        cluster_ops (List[Hamiltonian]): The cluster operators iT (note the i factor).
+        cluster_ops (List[SpinHamiltonian]): The cluster operators iT (note the i factor).
         ket_hf (int): The Hartree-Fock state in integer representation.
         n_steps(int): Number of trotter steps.
 
@@ -804,7 +804,7 @@ def get_hf_ket(n_electrons: int, nqbits: int) -> int:
     return hf_init
 
 
-def get_cluster_ops(n_electrons: int, nqbits: Optional[int] = None, noons: Optional[List[float]] = None) -> List[Hamiltonian]:
+def get_cluster_ops(n_electrons: int, nqbits: Optional[int] = None, noons: Optional[List[float]] = None) -> List[FermionHamiltonian]:
     r"""Compute the cluster operators.
 
     Args:
@@ -815,7 +815,7 @@ def get_cluster_ops(n_electrons: int, nqbits: Optional[int] = None, noons: Optio
             to low occupations) (doubled due to spin degeneracy).
 
     Returns:
-        List[Hamiltonian]:
+        List[FermionHamiltonian]:
             The list of cluster operators :math:`\{T_{a}^{i}, a \in \mathcal{I}', i \in \mathcal{O}' \} \cup \{T_{ab}^{ij}, a>b, i>j, a,b \in \mathcal{I}', i,j \in \mathcal{O}'\}`
 
     Note:

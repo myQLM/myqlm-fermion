@@ -13,11 +13,11 @@ from scipy.linalg import eig
 from qat.core import Term, Circuit, Observable
 from qat.core.qpu import QPUHandler
 
-from ..hamiltonians import Hamiltonian
+from ..hamiltonians import SpinHamiltonian, FermionHamiltonian
 
 
 def apply_quantum_subspace_expansion(
-    hamiltonian: Hamiltonian,
+    hamiltonian: SpinHamiltonian,
     state_prep_circ: Circuit,
     expansion_operators: List[Observable],
     qpu: QPUHandler,
@@ -56,9 +56,9 @@ def apply_quantum_subspace_expansion(
 
     Args:
 
-        hamiltonian (Hamiltonian): The Hamiltonian in its spin representation.
+        hamiltonian (SpinHamiltonian): The Hamiltonian in its spin representation.
         state_prep_circ (Circuit): The state prep circuit.
-        expansion_operators (list<Hamiltonian>): The set of operators :math:`{O_i}_i`
+        expansion_operators (list<SpinHamiltonian>): The set of operators :math:`{O_i}_i`
             generating the subspace of interest.
         qpu (QPUHandler): The QPU.
         nbshots (int, optional): The number of shots. Defaults to 0:
@@ -79,13 +79,13 @@ def apply_quantum_subspace_expansion(
 
         import numpy as np
         from qat.core import Term
-        from qat.fermion import Hamiltonian
+        from qat.fermion import SpinHamiltonian
         from qat.lang.AQASM import Program, RY, CNOT, RZ
         from qat.qpus import get_default_qpu
         from qat.plugins import SeqOptim
 
         # we instantiate the Hamiltonian we want to approximate the ground state energy of
-        hamiltonian = Hamiltonian(2, [Term(1, op, [0, 1]) for op in ["XX", "YY", "ZZ"]])
+        hamiltonian = SpinHamiltonian(2, [Term(1, op, [0, 1]) for op in ["XX", "YY", "ZZ"]])
 
         # we construct the variational circuit (ansatz)
         prog = Program()
@@ -116,8 +116,8 @@ def apply_quantum_subspace_expansion(
         # we use the optimal parameters found by VQE
         opt_circ = circ.bind_variables(eval(result.meta_data["parameter_map"]))
 
-        expansion_operators = [Hamiltonian(2, [], 1.0),
-                            Hamiltonian(2, [Term(1., "ZZ", [0, 1])])]
+        expansion_operators = [SpinHamiltonian(2, [], 1.0),
+                            SpinHamiltonian(2, [Term(1., "ZZ", [0, 1])])]
 
         from qat.fermion.chemistry.qse import apply_quantum_subspace_expansion
         e_qse = apply_quantum_subspace_expansion(hamiltonian,
@@ -147,7 +147,7 @@ def apply_quantum_subspace_expansion(
 
 
 def _build_quantum_subspace_expansion(
-    hamiltonian: Hamiltonian,
+    hamiltonian: SpinHamiltonian,
     state_prep_circ: Circuit,
     expansion_operators: List[Observable],
     qpu: QPUHandler,
@@ -178,7 +178,7 @@ def _build_quantum_subspace_expansion(
 
     Args:
 
-        hamiltonian (Hamiltonian): The Hamiltonian.
+        hamiltonian (SpinHamiltonian): The Hamiltonian.
         state_prep_circ (Circuit): The state prep circuit.
         qpu (QPUHandler): The qpu.
         expansion_operators (list(Observable)): The list of operators.
@@ -235,7 +235,7 @@ def build_linear_pauli_expansion(pauli_gates: List[str], nb_qubits: int) -> List
     expansion_operators = []
 
     for (pauli, qbit) in itertools.product(pauli_gates, range(nb_qubits)):
-        op = Hamiltonian(nb_qubits, [Term(1.0, pauli, [qbit])])
+        op = SpinHamiltonian(nb_qubits, [Term(1.0, pauli, [qbit])])
         expansion_operators.append(op)
 
     return expansion_operators

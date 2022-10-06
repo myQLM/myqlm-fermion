@@ -12,7 +12,7 @@ from anytree import Node
 import numpy as np
 from qat.core import Term
 from .util import tobin
-from .hamiltonians import Hamiltonian, ElectronicStructureHamiltonian
+from .hamiltonians import SpinHamiltonian, FermionHamiltonian, ElectronicStructureHamiltonian
 
 
 def make_fenwick_tree(n):
@@ -78,24 +78,24 @@ def make_PCU_sets(nqbits: int) -> List[Tuple]:
     return set_list
 
 
-def transform_to_jw_basis(fermion_hamiltonian: Union[Hamiltonian, ElectronicStructureHamiltonian]) -> Hamiltonian:
+def transform_to_jw_basis(fermion_hamiltonian: Union[FermionHamiltonian, ElectronicStructureHamiltonian]) -> SpinHamiltonian:
     r"""Transform to Jordan-Wigner (JW) basis.
 
     Args:
-        fermion_hamiltonian (Union[Hamiltonian, ElectronicStructureHamiltonian]): The fermionic hamiltonian.
+        fermion_hamiltonian (Union[FermionHamiltonian, ElectronicStructureHamiltonian]): The fermionic hamiltonian.
 
     Returns:
-        Hamiltonian: Hamiltonian in spin representation.
+        SpinHamiltonian: Hamiltonian in spin representation.
 
     Examples:
 
     .. run-block:: python
 
         from qat.core import Term
-        from qat.fermion import Hamiltonian
+        from qat.fermion import FermionHamiltonian
         from qat.fermion.transforms import transform_to_jw_basis
 
-        hamiltonian = Hamiltonian(
+        hamiltonian = FermionHamiltonian(
             2, [Term(0.3, "Cc", [0, 1]), Term(1.4, "CcCc", [0, 1, 1, 0])])
 
         spin_hamiltonian = transform_to_jw_basis(hamiltonian)
@@ -106,15 +106,15 @@ def transform_to_jw_basis(fermion_hamiltonian: Union[Hamiltonian, ElectronicStru
     """
 
     nqbits = fermion_hamiltonian.nbqbits
-    spin_hamiltonian = Hamiltonian(nqbits, [], constant_coeff=fermion_hamiltonian.constant_coeff, do_clean_up=False)
+    spin_hamiltonian = SpinHamiltonian(nqbits, [], constant_coeff=fermion_hamiltonian.constant_coeff, do_clean_up=False)
 
     for term in fermion_hamiltonian.terms:
 
-        cur_ham = Hamiltonian(nqbits, [], constant_coeff=term.coeff)
+        cur_ham = SpinHamiltonian(nqbits, [], constant_coeff=term.coeff)
 
         for op, qb in zip(term.op, term.qbits):
 
-            mini_ham = Hamiltonian(nqbits, [])
+            mini_ham = SpinHamiltonian(nqbits, [])
             qbits = list(range(qb + 1))
 
             st = "Z" * (qb) + "X"
@@ -133,24 +133,24 @@ def transform_to_jw_basis(fermion_hamiltonian: Union[Hamiltonian, ElectronicStru
     return spin_hamiltonian
 
 
-def transform_to_parity_basis(fermion_hamiltonian: Union[Hamiltonian, ElectronicStructureHamiltonian]) -> Hamiltonian:
+def transform_to_parity_basis(fermion_hamiltonian: Union[FermionHamiltonian, ElectronicStructureHamiltonian]) -> SpinHamiltonian:
     r"""Transform to parity basis.
 
     Args:
-        fermion_hamiltonian (Union[Hamiltonian, ElectronicStructureHamiltonian]): The fermionic hamiltonian.
+        fermion_hamiltonian (Union[FermionHamiltonian, ElectronicStructureHamiltonian]): The fermionic hamiltonian.
 
     Returns:
-        Hamiltonian: Hamiltonian in parity spin representation.
+        SpinHamiltonian: Hamiltonian in parity spin representation.
 
     Examples:
 
     .. run-block:: python
 
         from qat.core import Term
-        from qat.fermion import Hamiltonian
+        from qat.fermion import FermionHamiltonian
         from qat.fermion.transforms import transform_to_parity_basis
 
-        hamiltonian = Hamiltonian(
+        hamiltonian = FermionHamiltonian(
             2, [Term(0.3, "Cc", [0, 1]), Term(1.4, "CcCc", [0, 1, 1, 0])])
 
         spin_hamiltonian = transform_to_parity_basis(hamiltonian)
@@ -161,16 +161,16 @@ def transform_to_parity_basis(fermion_hamiltonian: Union[Hamiltonian, Electronic
     """
 
     nqbits = fermion_hamiltonian.nbqbits
-    spin_hamiltonian = Hamiltonian(nqbits, [], constant_coeff=fermion_hamiltonian.constant_coeff, do_clean_up=False)
+    spin_hamiltonian = SpinHamiltonian(nqbits, [], constant_coeff=fermion_hamiltonian.constant_coeff, do_clean_up=False)
 
     for term in fermion_hamiltonian.terms:
 
-        cur_ham = Hamiltonian(nqbits, [Term(term.coeff, "I" * nqbits, list(range(nqbits)))])
+        cur_ham = SpinHamiltonian(nqbits, [Term(term.coeff, "I" * nqbits, list(range(nqbits)))])
 
         for op, qb in zip(term.op, term.qbits):
 
             sign = -1 if op == "C" else 1
-            mini_ham = Hamiltonian(nqbits, [])
+            mini_ham = SpinHamiltonian(nqbits, [])
             qbits = list(range(qb - 1 if qb > 0 else qb, nqbits))
             st = ("Z" if qb > 0 else "") + "X" + "X" * (nqbits - qb - 1)
             mini_ham.add_term(Term(0.5, st, qbits))
@@ -188,24 +188,24 @@ def transform_to_parity_basis(fermion_hamiltonian: Union[Hamiltonian, Electronic
     return spin_hamiltonian
 
 
-def transform_to_bk_basis(fermion_hamiltonian: Union[Hamiltonian, ElectronicStructureHamiltonian]) -> Hamiltonian:
+def transform_to_bk_basis(fermion_hamiltonian: Union[FermionHamiltonian, ElectronicStructureHamiltonian]) -> SpinHamiltonian:
     r"""Transform to Bravyi-Kitaev (BK) basis.
 
     Args:
-        fermion_hamiltonian (Union[Hamiltonian, ElectronicStructureHamiltonian]): The fermionic hamiltonian.
+        fermion_hamiltonian (Union[FermionHamiltonian, ElectronicStructureHamiltonian]): The fermionic hamiltonian.
 
     Returns:
-        Hamiltonian: Hamiltonian in BK spin representation.
+        SpinHamiltonian: Hamiltonian in BK spin representation.
 
     Examples:
 
     .. run-block:: python
 
         from qat.core import Term
-        from qat.fermion import Hamiltonian
+        from qat.fermion import FermionHamiltonian
         from qat.fermion.transforms import transform_to_bk_basis
 
-        hamiltonian = Hamiltonian(
+        hamiltonian = FermionHamiltonian(
             2, [Term(0.3, "Cc", [0, 1]), Term(1.4, "CcCc", [0, 1, 1, 0])])
 
         spin_hamiltonian = transform_to_bk_basis(hamiltonian)
@@ -218,11 +218,11 @@ def transform_to_bk_basis(fermion_hamiltonian: Union[Hamiltonian, ElectronicStru
     nqbits = fermion_hamiltonian.nbqbits
     pcu_sets = make_PCU_sets(nqbits)
 
-    spin_hamiltonian = Hamiltonian(nqbits, [], constant_coeff=fermion_hamiltonian.constant_coeff, do_clean_up=False)
+    spin_hamiltonian = SpinHamiltonian(nqbits, [], constant_coeff=fermion_hamiltonian.constant_coeff, do_clean_up=False)
 
     for term in fermion_hamiltonian.terms:
 
-        cur_ham = Hamiltonian(
+        cur_ham = SpinHamiltonian(
             nqbits,
             [Term(term.coeff, "I" * nqbits, list(range(nqbits)))],
             do_clean_up=False,
@@ -231,7 +231,7 @@ def transform_to_bk_basis(fermion_hamiltonian: Union[Hamiltonian, ElectronicStru
         for op, qb in zip(term.op, term.qbits):
 
             sign = -1 if op == "C" else 1
-            mini_ham = Hamiltonian(nqbits, [], do_clean_up=False)
+            mini_ham = SpinHamiltonian(nqbits, [], do_clean_up=False)
             p_set, c_set, u_set = pcu_sets[qb]
 
             qbits = []

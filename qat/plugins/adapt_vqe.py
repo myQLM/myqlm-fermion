@@ -19,7 +19,7 @@ class AdaptVQEPlugin(Junction):
         operator_pool (List[Observable]): List of operators to choose from.
             The pool of commutators is internally constructed from this list.
         n_iterations (int, optional): Maximum number of iteration to perform. Defaults to 300.
-        commutators (List[Union[Observable, Hamiltonian]): List of commutators to use when computing the energy gradients.
+        commutators (List[Union[Observable, SpinHamiltonian]): List of commutators to use when computing the energy gradients.
         early_stopper (float, optional): Loss value for which the run is stopped. Defaults to 1e-6.
     """
 
