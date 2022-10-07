@@ -14,6 +14,7 @@ import scipy.sparse as sp
 from qat.core import Observable, Term
 
 from .util import init_creation_ops, dag
+from .fermion_algebra import normal_order_fermionic_term, order_qubits
 
 
 PAULI_MATS = {
@@ -155,6 +156,7 @@ class SpinHamiltonian(Observable):
             This method should not be used if the SpinHamiltonian is too large.
 
         """
+        #FIXME: no need to have private method anymore: remove _get_spin_op_matrix
 
         return self._get_spin_op_matrix(sparse)
 
@@ -427,6 +429,7 @@ class FermionHamiltonian(Observable):
             This method should not be used if the FermionHamiltonian is too large.
 
         """
+        #FIXME: no need to have private method anymore: remove _get_fermion_op_matrix
 
         return self._get_fermion_op_matrix(sparse)
 
@@ -498,24 +501,37 @@ class FermionHamiltonian(Observable):
             :class:`~qat.fermion.hamiltonians.ElectronicStructureHamiltonian` : Electronic-structure Hamiltonian.
 
         """
-        compatible_ops = ["Cc", "CCcc"]
-
         nqbits = self.nbqbits
         hpq = np.zeros((nqbits,)*2, dtype="complex")
         hpqrs = np.zeros((nqbits,)*4, dtype="complex")
 
+        def _fill_tensors(_term):
+            indices = _term.qbits
+
+            if _term.op == "Cc":
+                hpq[tuple(indices)] += _term.coeff
+
+            if _term.op == "CCcc":
+                hpqrs[tuple(indices)] += 2 * _term.coeff
+
         for term in self.terms:
 
-            if term.op not in compatible_ops:
-                raise TypeError("The Hamiltonian contains fermionic operators incompatible with a transformation to a electronic-structure Hamiltonian.")
+            if not ((term.op.count("C") == 1 and term.op.count("c") == 1) or \
+                    (term.op.count("C") == 2 and term.op.count("c") == 2) ):
+                raise TypeError("The Hamiltonian contains fermionic operators incompatible with"
+                                " a transformation to a electronic-structure Hamiltonian."
+                                "The terms need to have either one creation and one annihilation operator,"
+                                " or two creation and two annihilation operators")
 
-            indices = term.qbits
+            if not (term.op == "Cc" or term.op == "CCcc"):
+                no_terms = normal_order_fermionic_term(term) # normal-ordered
 
-            if term.op == "Cc":
-                hpq[indices[0], indices[1]] = term.coeff
+                for no_term in no_terms:
+                    _fill_tensors(no_term)
+            else:
+                term = order_qubits(term)
+                _fill_tensors(term)
 
-            if term.op == "CCcc":
-                hpqrs[indices[0], indices[1], indices[2], indices[3]] = 2 * term.coeff
                 
         return ElectronicStructureHamiltonian(hpq, hpqrs, do_clean_up=self.do_clean_up)
 

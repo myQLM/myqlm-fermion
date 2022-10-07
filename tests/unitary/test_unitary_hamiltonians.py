@@ -50,15 +50,30 @@ def test_to_spin_mapping():
 def test_to_electronic_conversion():
     
     compatible_hamiltonian = FermionHamiltonian(2, [Term(0.3, "Cc", [0, 1]), Term(1.4, "CCcc", [0, 1, 1, 0])])
-    non_compatible_hamiltonian = FermionHamiltonian(2, [Term(0.3, "Cc", [0, 1]), Term(1.4, "CcCc", [0, 1, 1, 0])])
-    
-    with pytest.raises(TypeError):
-        non_compatible_hamiltonian.to_electronic()
         
     elec_hamiltonian = compatible_hamiltonian.to_electronic()
     
     np.testing.assert_equal(compatible_hamiltonian.get_matrix(), elec_hamiltonian.get_matrix())
-    
+   
+
+
+
+def test_to_elec_normal_ordering():
+
+    h = FermionHamiltonian(2, terms=[Term(1, "Cc", [0, 0]), Term(1, "CcCc", [0, 1, 1, 0])])
+    h_elec = h.to_electronic()
+    print(h_elec)
+    assert(len(h.terms) == 2)
+    for t in h_elec.terms:
+        if t.op == "Cc":
+            assert(t.coeff == 2)
+            assert(t.qbits == [0, 0])
+        if t.op == "CCcc":
+            assert(t.coeff == 1)
+            assert(t.qbits == [0, 1, 0, 1])
+
+
+ 
 def test_spin_hamiltonian_compatiiblity_check():
     
     with pytest.raises(TypeError):
