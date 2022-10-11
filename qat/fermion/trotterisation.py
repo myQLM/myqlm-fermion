@@ -45,7 +45,7 @@ def make_trotterisation_routine(
     # Converts to spin if necessary for spin Hamiltonian trotterization
     if isinstance(hamiltonian, FermionHamiltonian):
         hamiltonian = hamiltonian.to_spin(method=method)
-        
+
     if isinstance(hamiltonian, SpinHamiltonian):
 
         Qrout = QRoutine()

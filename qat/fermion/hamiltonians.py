@@ -8,13 +8,14 @@ from itertools import product
 from copy import deepcopy
 import itertools
 from numbers import Number
-from qat.core.variables import BaseArithmetic
 import numpy as np
 import scipy.sparse as sp
+
 from qat.core import Observable, Term
+from qat.core.variables import BaseArithmetic
 
 from .util import init_creation_ops, dag
-from .fermion_algebra import normal_order_fermionic_term, order_qubits
+from .fermion_algebra import FermionicTerm, normal_order_fermionic_term, order_qubits
 
 
 PAULI_MATS = {
@@ -23,6 +24,7 @@ PAULI_MATS = {
     "Y": [[0, -1j], [1j, 0]],
     "Z": [[1, 0], [0, -1]],
 }
+
 
 class SpinHamiltonian(Observable):
     r"""
@@ -49,7 +51,7 @@ class SpinHamiltonian(Observable):
             from qat.fermion import SpinHamiltonian
 
             hamiltonian = SpinHamiltonian(2, [Term(0.3, "X", [0]), Term(-0.4, "ZY", [0, 1])])
-            
+
             print(f"H = {hamiltonian}")
             print(f"H matrix: {hamiltonian.get_matrix()}")
 
@@ -61,7 +63,7 @@ class SpinHamiltonian(Observable):
             from qat.fermion import SpinHamiltonian
 
             hamiltonian = SpinHamiltonian(2, [Term(0.3, "Cc", [0, 1]), Term(1.4, "CcCc", [0, 1, 1, 0])])
-            
+
             print(f"H = {hamiltonian}")
             print(f"H matrix: {hamiltonian.get_matrix()}")
 
@@ -84,7 +86,7 @@ class SpinHamiltonian(Observable):
             constant_coeff=constant_coeff,
             do_clean_up=do_clean_up,
         )
-        
+
         # Fast consistency check on the first term inputted.
         self._fast_consistency_check()
 
@@ -95,7 +97,7 @@ class SpinHamiltonian(Observable):
     def __radd__(self, other):
         res = super().__radd__(other)
         return SpinHamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
-    
+
     def __sub__(self, other):
         res = super().__sub__(other)
         return SpinHamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
@@ -103,7 +105,7 @@ class SpinHamiltonian(Observable):
     def __rsub__(self, other):
         res = super().__rsub__(other)
         return SpinHamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
-    
+
     def __mul__(self, other):
         res = super().__mul__(other)
         return SpinHamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
@@ -111,17 +113,17 @@ class SpinHamiltonian(Observable):
     def __rmul__(self, other):
         res = super().__rmul__(other)
         return SpinHamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
-    
+
     def __or__(self, other):
         return self * other - other * self
-    
+
     def _fast_consistency_check(self):
         """
         Assert that the first term inputted does not contain fermionic operators.
-        
+
         Note: To avoid large overhead, only the first term is verified.
         """
-        
+
         if self.terms:
             for op in ["C", "c"]:
                 if op in self.terms[0].op:
@@ -134,11 +136,12 @@ class SpinHamiltonian(Observable):
             SpinHamiltonian: Conjugate transpose of the SpinHamiltonian operator
 
         """
-        
+
         return SpinHamiltonian(
             self.nbqbits,
             [Term(np.conj(term.coeff), term.op, term.qbits) for term in self.terms],
-            np.conj(self.constant_coeff), do_clean_up=self.do_clean_up
+            np.conj(self.constant_coeff),
+            do_clean_up=self.do_clean_up,
         )
 
     def get_matrix(self, sparse: bool = False) -> np.ndarray:
@@ -156,42 +159,6 @@ class SpinHamiltonian(Observable):
             This method should not be used if the SpinHamiltonian is too large.
 
         """
-        #FIXME: no need to have private method anymore: remove _get_spin_op_matrix
-
-        return self._get_spin_op_matrix(sparse)
-
-
-    def _get_spin_op_matrix(self, sparse: bool) -> Union[np.ndarray, sp.bsr.bsr_matrix]:
-        """
-        Get the matrix representation of the SpinHamiltonian.
-        """
-
-        def _make_spin_op(op: str, qb: int, nqbits: int, sparse: bool) -> Union[np.ndarray, sp.bsr.bsr_matrix]:
-
-            id_type = sp.identity if sparse else np.identity
-            m_type = sp.csr_matrix if sparse else np.array
-            kron_op = sp.kron if sparse else np.kron
-
-            if qb == 0:
-                return kron_op(
-                    m_type(PAULI_MATS[op]),
-                    id_type(2 ** (nqbits - 1), dtype="complex"),
-                )
-
-            if qb == nqbits - 1:
-                return kron_op(
-                    id_type(2 ** (nqbits - 1), dtype="complex"),
-                    m_type(PAULI_MATS[op]),
-                )
-
-            kron = kron_op(
-                id_type(2**qb, dtype="complex"),
-                kron_op(
-                    m_type(PAULI_MATS[op]),
-                    id_type(2 ** (nqbits - qb - 1), dtype="complex"),
-                ),
-            )
-            return kron
 
         if self.matrix is not None and sp.issparse(self.matrix) == sparse:
             return self.matrix
@@ -208,7 +175,7 @@ class SpinHamiltonian(Observable):
 
                     if op != "I":
                         try:
-                            op_list[(op, qb)] = _make_spin_op(op, qb, self.nbqbits, sparse)
+                            op_list[(op, qb)] = self._make_spin_op(op, qb, self.nbqbits, sparse)
 
                         except Exception as exc:
                             raise ValueError("An error has occured during the Kronecker product.") from exc
@@ -230,6 +197,45 @@ class SpinHamiltonian(Observable):
 
         return final_matrix
     
+    @staticmethod
+    def _make_spin_op(op: str, qb: int, nqbits: int, sparse: bool) -> Union[np.ndarray, sp.bsr.bsr_matrix]:
+        """Build spin operator.
+
+        Args:
+            op (str): Pauli string.
+            qb (int): Target qubit.
+            nqbits (int): Number of qubits.
+            sparse (bool): If a sparse matrix should be returned.
+
+        Returns:
+            Union[np.ndarray, sp.bsr.bsr_matrix]: _description_
+        """
+
+        id_type = sp.identity if sparse else np.identity
+        m_type = sp.csr_matrix if sparse else np.array
+        kron_op = sp.kron if sparse else np.kron
+
+        if qb == 0:
+            return kron_op(
+                m_type(PAULI_MATS[op]),
+                id_type(2 ** (nqbits - 1), dtype="complex"),
+            )
+
+        if qb == nqbits - 1:
+            return kron_op(
+                id_type(2 ** (nqbits - 1), dtype="complex"),
+                m_type(PAULI_MATS[op]),
+            )
+
+        kron = kron_op(
+            id_type(2**qb, dtype="complex"),
+            kron_op(
+                m_type(PAULI_MATS[op]),
+                id_type(2 ** (nqbits - qb - 1), dtype="complex"),
+            ),
+        )
+        return kron
+        
     def copy(self):
         """Deepcopy the current class.
 
@@ -238,53 +244,7 @@ class SpinHamiltonian(Observable):
         """
         return deepcopy(self)
 
-class FermionicTerm(Term):
-    """
-    Implementation of the FermionicTerm class. This class is mostly used for overloading operations, which allows operations
-    between terms containing fermionic operators.
-    """
-    def __init__(self, coefficient, op, qbits, do_validity_check: bool = True):
-            
-        if  any(value in PAULI_MATS for value in op):
-            raise TypeError("FermionicTerm only accepts fermionic operators C and c.")
-        
-        super(FermionicTerm, self).__init__(coefficient, op, qbits, do_validity_check)
-        
-    def __mul__(self, other):
-        
-        if isinstance(other, (Number, BaseArithmetic)):
-            new_term = self.copy()
-            new_term.coeff *= other
-            return new_term
-        
-        term = self.copy()
-        term.op += other.op
-        term.qbits += other.qbits
-        term.coeff *= other.coeff
 
-        return term
-            
-    def copy(self):
-        """Deepcopy the current class.
-
-        Returns:
-            :class:`~qat.fermion.hamiltonians.FermionicTerm`: Copy of the FermionicTerm.
-        """
-        return deepcopy(self)
-    
-    @staticmethod
-    def from_term(term: Term):
-        """Converts a Term class to a FermionicTerm class.
-        
-        Args:
-            term (Term): Term.
-
-        Returns:
-            FermionicTerm
-        """
-        return FermionicTerm(term.coeff, term.op, term.qbits)
-    
-    
 class FermionHamiltonian(Observable):
     r"""
     Implementation of a fermionic Hamiltonian.
@@ -299,6 +259,7 @@ class FermionHamiltonian(Observable):
         terms (List[Term]): the list of terms
         constant_coeff (float): constant term
         matrix (np.ndarray): the corresponding matrix (None by default, can be set by calling get_matrix method)
+        normal_order (bool): If the fermionic terms should be normal (or Wick) ordered.
 
     Example:
 
@@ -332,21 +293,29 @@ class FermionHamiltonian(Observable):
         terms: List[Term],
         constant_coeff: float = 0.0,
         do_clean_up: bool = True,
+        normal_order: bool = True,
     ):
 
         self.matrix = None
         self.do_clean_up = do_clean_up
         self.terms = terms or []
 
-        super(FermionHamiltonian, self).__init__(
+        super().__init__(
             nqbits,
             pauli_terms=terms,
             constant_coeff=constant_coeff,
             do_clean_up=do_clean_up,
         )
+        
         if self.terms:
+            
+            # Converts to FermionicTerm if needed
             self.terms = terms if isinstance(terms[0], FermionicTerm) else [FermionicTerm.from_term(term) for term in terms]
-
+            
+            # Ensure normal ordering of the fermionic terms
+            if normal_order:
+                self.transform_to_normal_order()
+            
 
     def copy(self):
         """Deepcopy the current class.
@@ -356,6 +325,23 @@ class FermionHamiltonian(Observable):
         """
         return deepcopy(self)
 
+    def transform_to_normal_order(self):
+        
+        # Initialize empty hamiltonian
+        ordered_hamiltonian = FermionHamiltonian(self.nbqbits, terms=[])
+        
+        # Add ordered terms to Hamiltonian
+        for term in self.terms:
+            new_term = normal_order_fermionic_term(term)
+
+            for element in new_term:
+
+                if new_term:
+                    ordered_hamiltonian += FermionHamiltonian(self.nbqbits, terms=[element], normal_order=False)
+                    
+        self.terms = ordered_hamiltonian.terms
+
+        
     def __add__(self, other):
         res = super().__add__(other)
         return FermionHamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
@@ -363,7 +349,7 @@ class FermionHamiltonian(Observable):
     def __radd__(self, other):
         res = super().__radd__(other)
         return FermionHamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
-    
+
     def __sub__(self, other):
         res = super().__sub__(other)
         return FermionHamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
@@ -371,7 +357,7 @@ class FermionHamiltonian(Observable):
     def __rsub__(self, other):
         res = super().__rsub__(other)
         return FermionHamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
-    
+
     def __mul__(self, other):
         if isinstance(other, (Number, BaseArithmetic)):
             new_ham = self.copy()
@@ -379,26 +365,32 @@ class FermionHamiltonian(Observable):
                 new_ham.terms[i].coeff *= other
             new_ham.constant_coeff *= other
             return new_ham
-        
+
         term_list = []
         for term in self.terms:
             term_list.append(FermionicTerm(term.coeff * other.constant_coeff, term.op, term.qbits))
 
         for term in other.terms:
+
             term_list.append(FermionicTerm(self.constant_coeff * term.coeff, term.op, term.qbits))
 
         for term1, term2 in itertools.product(self.terms, other.terms):
             term_list.append(term1 * term2)
-            
-        return FermionHamiltonian(self.nbqbits, terms=term_list, do_clean_up=self.do_clean_up)
+
+        fermionic_hamiltonian = FermionHamiltonian(self.nbqbits, terms=term_list, do_clean_up=self.do_clean_up, normal_order=True)
+        fermionic_hamiltonian.clean_up()
+        
+        return fermionic_hamiltonian
+    
+    def __or__(self, other):
+        return self * other - other * self
 
     def __rmul__(self, other):
-        
+
         if isinstance(other, (Number, BaseArithmetic)):
             return self * other
-                
-        terms = [term1 * term2 for term1, term2 in itertools.product(other.terms, self.terms)]
-        return FermionHamiltonian(self.nbqbits, terms, do_clean_up=self.do_clean_up)
+
+        return other * self
 
     def dag(self) -> "FermionHamiltonian":
         """Compute the conjugate transpose of the Hamiltonian.
@@ -429,16 +421,6 @@ class FermionHamiltonian(Observable):
             This method should not be used if the FermionHamiltonian is too large.
 
         """
-        #FIXME: no need to have private method anymore: remove _get_fermion_op_matrix
-
-        return self._get_fermion_op_matrix(sparse)
-
-
-    def _get_fermion_op_matrix(self, sparse: bool = False) -> Union[np.ndarray, sp.bsr.bsr_matrix]:
-        """
-        Get the matrix representation of the fermionic Hamiltonian.
-        """
-
         if self.matrix is not None and sp.issparse(self.matrix) == sparse:
             return self.matrix
 
@@ -457,7 +439,7 @@ class FermionHamiltonian(Observable):
                 matrix = matrix.dot(ops[op][qb])
 
             final_matrix += term.coeff * matrix
-            
+
         # pylint: disable=E1101
         final_matrix += self.constant_coeff * id_type(2**self.nbqbits)
         self.matrix = final_matrix
@@ -492,7 +474,7 @@ class FermionHamiltonian(Observable):
         }
 
         return transform_map[method](self)
-        
+
     def to_electronic(self):
         """Converts a fermionic Hamiltonian to a electronic-structure Hamiltonian. This can be done only if the Hamiltonian
         contains only single and double interaction operators (i.e. only "Cc" and "CCcc" fermionic operators).
@@ -501,11 +483,13 @@ class FermionHamiltonian(Observable):
             :class:`~qat.fermion.hamiltonians.ElectronicStructureHamiltonian` : Electronic-structure Hamiltonian.
 
         """
+        
         nqbits = self.nbqbits
-        hpq = np.zeros((nqbits,)*2, dtype="complex")
-        hpqrs = np.zeros((nqbits,)*4, dtype="complex")
+        hpq = np.zeros((nqbits,) * 2, dtype="complex")
+        hpqrs = np.zeros((nqbits,) * 4, dtype="complex")
 
         def _fill_tensors(_term):
+            
             indices = _term.qbits
 
             if _term.op == "Cc":
@@ -516,23 +500,24 @@ class FermionHamiltonian(Observable):
 
         for term in self.terms:
 
-            if not ((term.op.count("C") == 1 and term.op.count("c") == 1) or \
-                    (term.op.count("C") == 2 and term.op.count("c") == 2) ):
-                raise TypeError("The Hamiltonian contains fermionic operators incompatible with"
-                                " a transformation to a electronic-structure Hamiltonian."
-                                "The terms need to have either one creation and one annihilation operator,"
-                                " or two creation and two annihilation operators")
+            if not ((term.op.count("C") == 1 and term.op.count("c") == 1) or (term.op.count("C") == 2 and term.op.count("c") == 2)):
+                raise TypeError(
+                    "The Hamiltonian contains fermionic operators incompatible with"
+                    " a transformation to a electronic-structure Hamiltonian."
+                    "The terms need to have either one creation and one annihilation operator,"
+                    " or two creation and two annihilation operators"
+                )
 
             if not (term.op == "Cc" or term.op == "CCcc"):
-                no_terms = normal_order_fermionic_term(term) # normal-ordered
+                no_terms = normal_order_fermionic_term(term)  # normal-ordered
 
                 for no_term in no_terms:
                     _fill_tensors(no_term)
+                    
             else:
                 term = order_qubits(term)
                 _fill_tensors(term)
 
-                
         return ElectronicStructureHamiltonian(hpq, hpqrs, do_clean_up=self.do_clean_up)
 
 
@@ -591,7 +576,7 @@ class ElectronicStructureHamiltonian(FermionHamiltonian):
         self.hpq = hpq
         self.hpqrs = hpqrs
         self.do_clean_up = do_clean_up
-        
+
         terms = self._get_fermionic_terms()
 
         super(ElectronicStructureHamiltonian, self).__init__(self.hpq.shape[0], terms, constant_coeff, do_clean_up=do_clean_up)
@@ -605,14 +590,14 @@ class ElectronicStructureHamiltonian(FermionHamiltonian):
             self.constant_coeff + other.constant_coeff,
             do_clean_up=self.do_clean_up,
         )
-        
+
     def _get_fermionic_terms(self) -> List[Term]:
         """Get the FermionicHamiltonian terms from current ElectronicStructureHamiltonian.
 
         Returns:
             terms (Terms): fermionic terms of the ElectronicStructureHamiltonian
         """
-        
+
         terms = []
         for i, j in product(range(self.hpq.shape[0]), range(self.hpq.shape[1])):
 
@@ -630,18 +615,19 @@ class ElectronicStructureHamiltonian(FermionHamiltonian):
                 terms.append(FermionicTerm(0.5 * self.hpqrs[i, j, k, l], "CCcc", [i, j, k, l]))
 
         return terms
-    
+
     def to_fermion(self) -> FermionHamiltonian:
         """Convert current ElectronicStructureHamiltonian to a FermionHamiltonian.
 
         Returns:
             FermionHamiltonian: Fermionic Hamiltonian.
         """
-        
+
         terms = self._get_fermionic_terms()
-        
+
         # pylint: disable=E1101
         return FermionHamiltonian(self.hpq.shape[0], terms, self.constant_coeff, do_clean_up=self.do_clean_up)
+
 
 def make_anderson_model(u: float, mu: float, v: np.ndarray, epsilon: np.ndarray) -> ElectronicStructureHamiltonian:
     r"""

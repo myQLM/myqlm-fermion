@@ -804,7 +804,9 @@ def get_hf_ket(n_electrons: int, nqbits: int) -> int:
     return hf_init
 
 
-def get_cluster_ops(n_electrons: int, nqbits: Optional[int] = None, noons: Optional[List[float]] = None) -> List[FermionHamiltonian]:
+def get_cluster_ops(
+    n_electrons: int, nqbits: Optional[int] = None, noons: Optional[List[float]] = None
+) -> List[FermionHamiltonian]:
     r"""Compute the cluster operators.
 
     Args:
