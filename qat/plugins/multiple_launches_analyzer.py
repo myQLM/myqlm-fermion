@@ -88,8 +88,8 @@ class MultipleLaunchesAnalyzer(AbstractPlugin):
 
             var = np.var(vals_for_job)
             res_to_keep = batch_result[pos_in_batch]
-            res_to_keep.meta_data["optimal_values_variance"] = var
-            res_to_keep.meta_data["reached_values"] = vals_for_job
+            res_to_keep.meta_data["optimal_values_variance"] = str(var)
+            res_to_keep.meta_data["reached_values"] = str(vals_for_job.tolist())
             best_results.results.append(res_to_keep)
 
         return best_results
