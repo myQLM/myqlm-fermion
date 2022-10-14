@@ -1,10 +1,14 @@
-import numpy as np
+# -*- coding: utf-8 -*-
+"""
+Integration test for MultipleLaunchesAnalyzer plugin
+"""
 
-from qat.plugins import MultipleLaunchesAnalyzer
+import numpy as np
 
 from qat.core import Observable, Term
 from qat.lang.AQASM import Program, RX
 from qat.qpus import get_default_qpu
+from qat.plugins import MultipleLaunchesAnalyzer
 
 
 def test_keep_min():

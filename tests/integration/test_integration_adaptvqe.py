@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+Test for ADAPT-VQE plugin
+"""
+
 import os
 from pathlib import Path
 import numpy as np

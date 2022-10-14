@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+Differential expressions
+"""
+
 from numbers import Number
 
 from qat.core.variables import evaluate_thrift_expression

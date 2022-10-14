@@ -1,10 +1,15 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+Integration test for phase estimation methods
+"""
+
 import pytest
 import numpy as np
 from itertools import product
 from qat.lang.AQASM import H, X, QRoutine, Program
 from qat.lang.AQASM.gates import AbstractGate
+from qat.qpus import get_default_qpu
+
 from qat.fermion.hamiltonians import ElectronicStructureHamiltonian, make_hubbard_model
 from qat.fermion.transforms import transform_to_jw_basis
 from qat.fermion.phase_estimation import (
@@ -12,7 +17,6 @@ from qat.fermion.phase_estimation import (
     apply_adiabatic_state_prep,
 )
 from qat.fermion.chemistry.ucc import convert_to_h_integrals
-from qat.qpus import get_default_qpu
 
 
 def make_hubbard_dimer(U, t_hopping):
@@ -242,7 +246,6 @@ def test_adiabatic_state_prep():
     assert computations_are_right
 
 
-@pytest.mark.skip(reason="Phase estimation initialized with QRoutine not working with PyLinalg for now.")
 def test_hubbard_molecule__from_notebook():
     """
     A test for the Hubbard molecule which we present in the qpe_hubbard_molecule notebook

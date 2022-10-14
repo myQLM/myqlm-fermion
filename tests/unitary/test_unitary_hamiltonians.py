@@ -1,12 +1,13 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Testing Hamiltonians
+Unitary tests for Hamiltonians
 """
+
 import pytest
 import numpy as np
 
 from qat.core import Observable, Term
+
 from qat.fermion.hamiltonians import SpinHamiltonian, FermionHamiltonian
 
 
@@ -212,7 +213,8 @@ def test_get_matrix_changes():
     matrix2 = spin_hamiltonian.get_matrix()
 
     # Check array are different
-    assert not np.all(np.equal(matrix1,matrix2))
+    assert not np.all(np.equal(matrix1, matrix2))
+
 
 def test_get_matrix_sparse_spin():
 

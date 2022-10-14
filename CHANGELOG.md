@@ -1,28 +1,32 @@
 Changelog
 ---------
 
-Various improvements have been made in `MyQLM-fermion`.
+Various improvements have been made in `MyQLM-fermion`. This includes new features, as well as many optimizations, bugfixes and
+quality of life improvements.
 
 ### Main updates
 
 *   The module is now called `qat.fermion` (replaces `qat.dqs`).
 *   The `qchem` submodule has been renamed `chemistry` (`qat.fermion.chemistry`).
 *   `qat.fermion` is fully compatible with PySCF 2.0 version.
-*   The `SpinHamiltonian` and `FermionHamiltonian`classes are now deprecated. They have been replaced by the flexible class `Hamiltonian` which can be in both spin or fermionic representation. The `Hamiltonian` class contains new methods:
-    *   The `.htype` method allows to check the current representation of the `Hamiltonian`,
-    *   The `.to_spin()` method allows for the direct conversion of a fermionic type `Hamiltonian` to a `Hamiltonian` in spin representation.
+*   The `SpinHamiltonian` and `FermionHamiltonian`classes have been rewritten:
+    - `FermionHamiltonian` now has a `to_spin()` method.
+    - Fermionic algebraic operations are now possible between `FermionHamiltonian` and/or `ElectronicStructureHamiltonian`.
+    - Wick ordering and subsequent simplifications are now automatic for fermionic Hamiltonians.
+    - It is now possible to cast `FermionHamiltonian` to an `ElectronicStructureHamiltonian`, using the `FermionHamiltonian.to_electronic()` method.
 
-> Note : See `spin_fermion_transforms.ipynb` in `myqlm-fermion/doc/notebooks/` for more informations on this new `Hamiltonian` class.
+> Note : Since the `ElectronicStructureHamiltonian` inherits from `FermionHamiltonian`, any method available for `FermionHamiltonian` is available for `ElectronicStructureHamiltonian`.
 
-*   The `ElectronicStructureHamiltonian` inherits from the `Hamiltonian` class. The above methods are also valid for `ElectronicStructureHamiltonian`.
-*   Many improvements have been made to the UCC submodule.
-*   New classes specific to atomic and molecular studies have been added:
-    *   the class `MolecularHamiltonian` has been added. It allows for easier basis changes and active space selection.
+*   Many improvements have been made to the chemistry module:
+    *   the class `MolecularHamiltonian` has been added. It allows for easier basis changes and active space selection. It is also useful for easier transformation into `ElectronicStructureHamiltonian`.
     *   the class `MoleculeInfo` has been added to help with atomic and molecular computations.
 
-* A new plugin `GradientMinimizerPlugin` has been added, which allows gradient descent optimization using natural gradients.
+A set of new plugins is now available:
 
-> For more information on the UCC changes and the new helper classes, see Jupyter notebook `vqe_ucc_example_1_h2.ipynb` and `vqe_ucc_example_2_lih.ipynb` in `myqlm-fermion/doc/notebooks/`.
+* AdaptVQEPlugin: This plugin implements the ADAPT-VQE algorithm, to efficiently build an ansatz from a pool of operators; 
+* GradientDescentOptimizer: Allows for natural gradient descent-based optimizations; 
+* SequentialOptimizer: An implementation of the quantum-classical hybrid sequential minimal optimization method introduced by (Nakanashi et. al.)[https://journals.aps.org/prresearch/abstract/10.1103/PhysRevResearch.2.043158] has been added; 
+* ZeroNoiseExtrapolator: A plugin helping with multiqubit gate noise mitigation.
 
 ### Other improvements
 

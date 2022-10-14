@@ -1,9 +1,10 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Testing fermion_algebra.py
+Unitary tests for fermionic algebraic operations
 """
+
 import pytest
+
 from qat.fermion.fermion_algebra import FermionicTerm, normal_order_fermionic_term
 
 

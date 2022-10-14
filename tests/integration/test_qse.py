@@ -1,9 +1,16 @@
+# -*- coding: utf-8 -*-
+"""
+Integration test for quantum subspace expansion
+"""
+
 import numpy as np
+
 from qat.core import Term
-from qat.fermion import SpinHamiltonian
 from qat.lang.AQASM import Program, RY, CNOT, RZ
 from qat.qpus import get_default_qpu
 from qat.plugins import SeqOptim
+
+from qat.fermion import SpinHamiltonian
 from qat.fermion.chemistry.qse import (
     apply_quantum_subspace_expansion,
     build_linear_pauli_expansion,

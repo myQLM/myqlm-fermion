@@ -1,18 +1,17 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Testing transforms
+Unitary tests for spin-fermion transformations
 """
+
 import pytest
 import numpy as np
 
 from qat.core import Term
+
 from qat.fermion.transforms import (
     transform_to_jw_basis,
     transform_to_parity_basis,
     transform_to_bk_basis,
-)
-from qat.fermion.transforms import (
     get_jw_code,
     get_parity_code,
     get_bk_code,

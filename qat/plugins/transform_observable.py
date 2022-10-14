@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+"""
+TransformObservable plugin
+"""
+
 from qat.core.plugins import AbstractPlugin
 from qat.fermion.transforms import transform_to_jw_basis, transform_to_bk_basis, transform_to_parity_basis
 

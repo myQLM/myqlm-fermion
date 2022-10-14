@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-This is a container for various ansatz circuits for variational preparation of fermionic states.
+Container for various ansatz circuits for variational preparation of fermionic states.
 """
 
 from typing import Optional, List
 import numpy as np
 import warnings
 
-from qat.lang.AQASM import Program, CNOT, X, H, RX, RY, RZ
 from qat.core import Observable, Circuit
+from qat.lang.AQASM import Program, CNOT, X, H, RX, RY, RZ
 from qat.lang.AQASM.gates import Gate
 
 from .matchgates import nb_params_LDCA, LDCA_routine

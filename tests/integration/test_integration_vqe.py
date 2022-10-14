@@ -1,13 +1,19 @@
+# -*- coding: utf-8 -*-
+"""
+Integration test for VQE
+"""
+
 import random
 import numpy as np
 import unittest
 
 from qat.lang.AQASM import QRoutine, RY, RX
 from qat.qpus import get_default_qpu
+from qat.vsolve.optimize.spsa_algorithm import spsa_minimize
+
 from qat.fermion.transforms import transform_to_jw_basis
 from qat.fermion.hamiltonians import ElectronicStructureHamiltonian
 from qat.fermion.vqe import VQE
-from qat.vsolve.optimize.spsa_algorithm import spsa_minimize
 
 
 def simple_circuit(x):

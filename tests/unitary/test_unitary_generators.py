@@ -1,9 +1,14 @@
 # -*- coding: utf-8 -*-
+"""
+Unitary tests for generators
+"""
 
 import pytest
 import numpy as np
+
 from qat.qpus import QPUHandler
 from qat.core import Result, Job, Observable
+
 from qat.fermion.circuits import make_shallow_circ
 from qat.fermion.hamiltonians import make_embedded_model
 

@@ -1,8 +1,12 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+Integration test for fermionic Hamiltonians algebraic operations
+"""
+
 import os
 from pathlib import Path
 import numpy as np
+
 from qat.fermion.chemistry import MolecularHamiltonian, MoleculeInfo
 from qat.fermion.chemistry.ucc import get_cluster_ops
 

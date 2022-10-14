@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 """
 Deprecated UCC tools
 """
@@ -7,7 +6,6 @@ Deprecated UCC tools
 from warnings import warn
 from typing import Callable, List, Optional, Tuple, Dict
 import itertools
-
 from bitstring import BitArray
 import numpy as np
 

@@ -1,11 +1,16 @@
+# -*- coding: utf-8 -*-
+"""
+Integration test for sequential optimization plugin
+"""
+
 import numpy as np
 
 from qat.plugins import SeqOptim
+from qat.qpus import get_default_qpu
+
 from qat.fermion.circuits import make_shallow_circ
 from qat.fermion.hamiltonians import ElectronicStructureHamiltonian
 from qat.fermion.transforms import transform_to_jw_basis
-
-from qat.qpus import get_default_qpu
 
 
 def test_VQE_SeqOptim_emb_4qb():

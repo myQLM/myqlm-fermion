@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
-
 """
 Quantum Subspace Expansion (QSE)
 """
 
 import itertools
 from typing import List, Tuple, Optional
-
 import numpy as np
 from scipy.linalg import eig
 

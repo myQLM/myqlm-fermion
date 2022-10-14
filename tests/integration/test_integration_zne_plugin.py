@@ -1,11 +1,17 @@
+# -*- coding: utf-8 -*-
+"""
+Integration test for the zero noise extrapolator
+"""
+
 import numpy as np
 
 from qat.plugins import ZeroNoiseExtrapolator
+from qat.qpus import get_default_qpu
+
 from qat.fermion.circuits import make_shallow_circ
 from qat.fermion.transforms import transform_to_jw_basis
 from qat.fermion.hamiltonians import ElectronicStructureHamiltonian
 
-from qat.qpus import get_default_qpu
 
 np.random.seed(0)
 eps1 = 0.0016

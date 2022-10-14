@@ -1,6 +1,10 @@
-# Custom gate set
+# -*- coding: utf-8 -*-
+"""
+Custom gate sets
+"""
 
 import numpy as np
+
 from qat.core import default_gate_set
 from qat.lang.AQASM import AbstractGate
 

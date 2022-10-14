@@ -1,7 +1,6 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-Zero Noise Extrapolation plugin. The extrapolation can be either linear or exponential.
+Zero Noise (linear or exponential) Extrapolation plugin.
 """
 
 from typing import List, Optional

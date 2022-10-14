@@ -1,10 +1,15 @@
-""" Functions for first-order Trotterization with Jordan-Wigner"""
+# -*- coding: utf-8 -*-
+"""
+Functions for first-order Trotterization
+"""
+
 from math import pi
 from typing import List, Optional, Union
 import numpy as np
 import warnings
 
 from qat.lang.AQASM import QRoutine, PH, CNOT, H, RX, RZ, CustomGate, Z
+
 from .hamiltonians import ElectronicStructureHamiltonian, SpinHamiltonian, FermionHamiltonian
 
 

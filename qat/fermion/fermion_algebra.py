@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+Fermionic algebra tools
+"""
+
 from numbers import Number
 from copy import deepcopy
 from typing import List, Optional, Union

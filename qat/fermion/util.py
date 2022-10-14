@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+Utility functions
+"""
+
 import numpy as np
 import scipy.sparse as sp
 from itertools import product
@@ -5,22 +10,9 @@ from typing import Callable, Optional, List, Union
 
 from qat.core.variables import ArithExpression, Variable
 from qat.core import default_gate_set
-from qat.lang.AQASM import Program, QRoutine, AbstractGate, X, RX, RY, RZ, H, CNOT
 from qat.core.simutil import wavefunction
-
+from qat.lang.AQASM import Program, QRoutine, AbstractGate, X, RX, RY, RZ, H, CNOT
 from qat.qpus import get_default_qpu
-
-
-def copy_doc(copy_func: Callable) -> Callable:
-    """
-    Copy docstring from one function or class to another.
-    """
-
-    def wrapper(func: Callable) -> Callable:
-        func.__doc__ = copy_func.__doc__
-        return func
-
-    return wrapper
 
 
 def fSim_gen(theta, phi):

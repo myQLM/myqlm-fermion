@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+"""
+Init
+"""
 
 # Try to find other packages in other folders (with separate build directory)
 from pkgutil import extend_path

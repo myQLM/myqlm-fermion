@@ -1,17 +1,23 @@
+# -*- coding: utf-8 -*-
+"""
+Unitary tests for trotterization
+"""
+
 import numpy as np
 import scipy as sp
+
 from qat.core import Observable, Term
 
 from qat.fermion.util import get_unitary_from_circuit
 from qat.fermion.trotterisation import (
+    _number_operator_jw,
+    make_trotter_slice_jw,
+    make_spin_hamiltonian_trotter_slice,
     _excitation_operator_jw,
     _coulomb_exchange_operator_jw,
-)
-from qat.fermion.trotterisation import (
     _number_excitation_operator_jw,
     _double_excitation_operator_jw,
 )
-from qat.fermion.trotterisation import _number_operator_jw, make_trotter_slice_jw, make_spin_hamiltonian_trotter_slice
 from qat.fermion.hamiltonians import SpinHamiltonian, ElectronicStructureHamiltonian
 
 TOL1 = 4

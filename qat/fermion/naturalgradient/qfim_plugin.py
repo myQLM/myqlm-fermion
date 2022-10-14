@@ -4,13 +4,14 @@ Gradient Descend Plugin including natural gradient descent
 """
 
 from typing import List
-import numpy as np
 from itertools import product
+import numpy as np
 
 from qat.comm.exceptions.ttypes import PluginException
 from qat.plugins.optimizer import Optimizer
-from qat.fermion.matchgates import gate_set
-from qat.fermion.naturalgradient.auto_derivatives import (
+
+from ..matchgates import gate_set
+from .auto_derivatives import (
     auto_differentiation_gradient_dictionary,
     auto_differentiation_qfim_dictionaries,
 )

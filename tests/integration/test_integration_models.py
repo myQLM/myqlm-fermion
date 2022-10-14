@@ -1,13 +1,13 @@
-#!/usr/bin/env/python
 # coding: utf-8
-
-import numpy as np
-from numpy import conj, dot
-from scipy.sparse.linalg import eigsh
+"""
+Integration test for Hamiltonian model construction
+"""
 import itertools
+import numpy as np
+from scipy.sparse.linalg import eigsh
 
-from qat.fermion.util import init_creation_ops, dag
 from qat.fermion.hamiltonians import make_embedded_model, make_anderson_model
+from qat.fermion.util import init_creation_ops, dag
 
 
 def test_anderson():
@@ -75,14 +75,14 @@ def test_risb_embedding():
     )
 
     non_int_term = (
-        sum([lambda_c[i, j] * dot(d[M + j], d_dag[M + i]) for i, j in itertools.product(list(range(M)), list(range(M)))])
+        sum([lambda_c[i, j] * np.dot(d[M + j], d_dag[M + i]) for i, j in itertools.product(list(range(M)), list(range(M)))])
         + sum(
             [
-                D[i, j] * dot(d_dag[i], d[M + j]) + conj(D[i, j]) * dot(d_dag[M + j], d[i])
+                D[i, j] * np.dot(d_dag[i], d[M + j]) + np.conj(D[i, j]) * np.dot(d_dag[M + j], d[i])
                 for i, j in itertools.product(list(range(M)), list(range(M)))
             ]
         )
-        + sum([t_pm[i, j] * dot(d_dag[i], d[j]) for i, j in itertools.product(range(M), repeat=2)])
+        + sum([t_pm[i, j] * np.dot(d_dag[i], d[j]) for i, j in itertools.product(range(M), repeat=2)])
         - mu * sum([d_dag[i].dot(d[i]) for i in range(M)])
     )
 

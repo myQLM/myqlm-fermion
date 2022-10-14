@@ -1,6 +1,13 @@
+# -*- coding: utf-8 -*-
+"""
+VQE function for backward compatibility
+"""
+
 from typing import Callable, List, Optional, Tuple
 import numpy as np
+
 from qat.lang.AQASM import Program
+
 from .hamiltonians import SpinHamiltonian
 
 
@@ -39,6 +46,7 @@ def VQE(
         This high-level function is there just to maintain backward compatibility.
 
     """
+
     if n_shots is None:
         n_shots = [0, 0]
 

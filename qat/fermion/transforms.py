@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 Fermion-spin transforms
@@ -10,7 +9,9 @@ from typing import Tuple, List, Union
 from bitstring import BitArray
 from anytree import Node
 import numpy as np
+
 from qat.core import Term
+
 from .util import tobin
 from .hamiltonians import SpinHamiltonian, FermionHamiltonian, ElectronicStructureHamiltonian
 

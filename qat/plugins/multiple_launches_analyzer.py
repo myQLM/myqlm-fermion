@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+MultipleLaunchesAnalyzer plugin
+"""
+
 from typing import Optional
 import numpy as np
 import copy

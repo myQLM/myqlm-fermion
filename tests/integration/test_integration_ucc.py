@@ -1,10 +1,13 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+Integration test for Unitary Coupled Cluster methods
+"""
+
 import scipy
 import numpy as np
 
-from qat.qpus import get_default_qpu
 from qat.lang.AQASM import Program
+from qat.qpus import get_default_qpu
 
 from qat.fermion.hamiltonians import ElectronicStructureHamiltonian
 from qat.fermion.chemistry.ucc import (

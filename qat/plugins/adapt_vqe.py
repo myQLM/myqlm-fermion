@@ -1,19 +1,22 @@
-"""ADAPT-VQE Plugin"""
+# -*- coding: utf-8 -*-
+"""
+ADAPT-VQE Plugin
+"""
 
 import warnings
 from typing import List
 from tqdm.auto import tqdm
 import numpy as np
+
 from qat.plugins import Junction
 from qat.core import Result, Observable, Job
 from qat.lang.AQASM import Program, RX, RY, RZ, H, CNOT
 
 
 class AdaptVQEPlugin(Junction):
-
     r"""
-    Adaptive ansatz plugin constructs an ansatz by selecting operators from a given pool of operators. The method is based
-    on `Grimsley et al. article <https://www.nature.com/articles/s41467-019-10988-2.pdf>`_
+    Plugin implementation of the ADAPT-VQE algorithm, which builds ansatze by selecting operators from a given pool of operators.
+    The method is based on `Grimsley et al. article <https://www.nature.com/articles/s41467-019-10988-2.pdf>`_.
 
     Args:
         operator_pool (List[Observable]): List of operators to choose from.
@@ -21,6 +24,7 @@ class AdaptVQEPlugin(Junction):
         n_iterations (int, optional): Maximum number of iteration to perform. Defaults to 300.
         commutators (List[Union[Observable, SpinHamiltonian]): List of commutators to use when computing the energy gradients.
         early_stopper (float, optional): Loss value for which the run is stopped. Defaults to 1e-6.
+
     """
 
     def __init__(
@@ -91,7 +95,7 @@ class AdaptVQEPlugin(Junction):
             list_qbits = operator.terms[i].qbits
             coeff = operator.terms[i].coeff.real
 
-            # add RX(np.pi/2) for Y-gates and H for X-gates
+            # Add RX(np.pi/2) for Y-gates and H for X-gates
             for current_pauli_op, current_qbit in zip(pauli_string, list_qbits):
 
                 if current_pauli_op == "X":
@@ -100,24 +104,24 @@ class AdaptVQEPlugin(Junction):
                 elif current_pauli_op == "Y":
                     prog.apply(RX(np.pi / 2), qbits[current_qbit])
 
-            # add CNOT gates
+            # Add CNOT gates
             for j in range(len(pauli_string) - 1):
 
                 current_qbit = list_qbits[j]
                 next_qbit = list_qbits[j + 1]
                 prog.apply(CNOT, qbits[current_qbit], qbits[next_qbit])
 
-            # add RZ-gate
+            # Add RZ-gate
             prog.apply(RZ(2 * coeff * var), qbits[next_qbit])
 
-            # add CNOT gates back
+            # Add CNOT gates back
             for j in range(len(pauli_string) - 1, 0, -1):
 
                 current_qbit = list_qbits[j]
                 previous_qbit = list_qbits[j - 1]
                 prog.apply(CNOT, qbits[previous_qbit], qbits[current_qbit])
 
-            # add RX(-np.pi/2) for Y-gates and H for X-gates back
+            # Add RX(-np.pi/2) for Y-gates and H for X-gates back
             for current_pauli_op, current_qbit in zip(pauli_string, list_qbits):
 
                 if current_pauli_op == "X":
@@ -140,6 +144,7 @@ class AdaptVQEPlugin(Junction):
 
         # Get circuit
         circuit = job.circuit
+
         # Initialize Result container
         result = Result()
 

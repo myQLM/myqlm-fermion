@@ -6,12 +6,13 @@ Autoderivation tools for Natural gradient descent
 import copy
 from typing import TYPE_CHECKING
 import numpy as np
+
 from qat.core import Observable, Term
 from qat.core.variables import Variable, ArithExpression
-from qat.core.circuit_builder.matrix_util import get_predef_generator
-from qat.lang.AQASM import X, Y, Z, Program, AbstractGate  # Quantum gates we want to use
-from qat.core.circuit_builder.matrix_util import np_to_circ
+from qat.core.circuit_builder.matrix_util import get_predef_generator, np_to_circ
+from qat.lang.AQASM import X, Y, Z, Program, AbstractGate
 from qat.comm.datamodel.ttypes import GateDefinition, Op, GSyntax, Param
+
 from .expressions import gatedef_to_expr, detect_linear
 
 if TYPE_CHECKING:

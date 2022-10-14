@@ -1,17 +1,16 @@
 # -*- coding: utf-8 -*-
-
 """
 UCC tools
 """
 
 import itertools
 from typing import Any, List, Tuple, Optional, Dict
-
-import numpy as np
 from bitstring import BitArray
+import numpy as np
 
 from qat.core import Term
 from qat.lang.AQASM import X, Program
+
 from ..trotterisation import make_spin_hamiltonian_trotter_slice
 from ..hamiltonians import SpinHamiltonian, FermionHamiltonian
 from ..util import tobin

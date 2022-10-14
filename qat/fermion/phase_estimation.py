@@ -1,11 +1,17 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+Phase estimation functions
+"""
 
 import inspect
 from typing import Optional, Tuple, Union
 import numpy as np
 
 import qat.comm.exceptions.ttypes as exceptions_types
+from qat.lang.AQASM import Program, X, QRoutine, H, PH, QInt
+from qat.lang.AQASM.qftarith import IQFT
+from qat.qpus import get_default_qpu
+from qat.core import Observable
 
 from .hamiltonians import ElectronicStructureHamiltonian, SpinHamiltonian
 from .util import construct_Rk_routine
@@ -14,11 +20,6 @@ from .transforms import (
     transform_to_bk_basis,
     transform_to_parity_basis,
 )
-
-from qat.lang.AQASM import Program, X, QRoutine, H, PH, QInt
-from qat.lang.AQASM.qftarith import IQFT
-from qat.qpus import get_default_qpu
-from qat.core import Observable
 
 
 def perform_phase_estimation(

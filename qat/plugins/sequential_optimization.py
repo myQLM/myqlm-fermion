@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+SequentialOptimizer plugin
+"""
+
 from typing import Optional
 import numpy as np
 import math

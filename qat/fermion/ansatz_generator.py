@@ -5,6 +5,7 @@ Ansatz generator
 
 from qat.core.plugins import AbstractPlugin, contains_plugin
 from qat.core.generator import AbstractGenerator
+
 from .generator_tools import HybridResult
 from .circuits import (
     make_mrep_circ,

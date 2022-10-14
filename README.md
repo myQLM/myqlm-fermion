@@ -5,11 +5,15 @@ MyQLM fermion module
 
 This module contains tools specific to spin and fermionic systems. It includes, among other things:
 - various objects to describe fermionic and spin Hamiltonians,
+- objects to describe molecular systems,
 - various transformations between fermionic and spin representations,
 - a variational quantum eigensolver (VQE),
 - a trotterization module,
 - a quantum phase estimation module,
-- various tools for electronic structure study,
+- a natural gradient-based optimizer,
+- a sequential optimizer,
+- a multiqubit gate noise mitigation plugin,
+- an ADAPT-VQE plugin implementation,
 - ...
 
 Installation

@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
-
 """
 Chemistry wrapper classes
 """
 
 from typing import Dict, Optional, Tuple, Union, List
 from copy import deepcopy
-
 import numpy as np
 
 from .ucc import (

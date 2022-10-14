@@ -1,14 +1,16 @@
+# -*- coding: utf-8 -*-
+"""
+Integration test for gradient descent and natural gradient descent optimizer
+"""
+
 import numpy as np
 
 from qat.lang.AQASM import H, RX, RY, CNOT, QRoutine, Program
 from qat.qpus import get_default_qpu
 
-# from qat.plugins import GradientDescentOptimizer
-
 from qat.fermion.hamiltonians import make_hubbard_model
-
-from qat.fermion.naturalgradient.qfim_plugin import GradientDescentOptimizer
 from qat.fermion.matchgates import RYX, RXY
+from qat.fermion.naturalgradient.qfim_plugin import GradientDescentOptimizer
 
 
 def ansatz_circuit(theta):

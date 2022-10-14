@@ -1,5 +1,6 @@
+# -*- coding: utf-8 -*-
 """
-Define nearest-neighbour matchgates as custom gates
+Nearest-neighbour matchgates custom gate definition
 """
 
 from typing import List, Optional, Tuple

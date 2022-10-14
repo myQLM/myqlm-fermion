@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Module with containers for common Hamiltonians
+Hamiltonian wrappers and constructors
 """
 
 from typing import List, Optional, Union
-from itertools import product
 from copy import deepcopy
 import itertools
 from numbers import Number
@@ -603,12 +602,12 @@ class ElectronicStructureHamiltonian(FermionHamiltonian):
         """
 
         terms = []
-        for i, j in product(range(self.hpq.shape[0]), range(self.hpq.shape[1])):
+        for i, j in itertools.product(range(self.hpq.shape[0]), range(self.hpq.shape[1])):
 
             if abs(self.hpq[i, j]) > ElectronicStructureHamiltonian.TOL:
                 terms.append(Term(self.hpq[i, j], "Cc", [i, j]))
 
-        for i, j, k, l in product(
+        for i, j, k, l in itertools.product(
             range(self.hpqrs.shape[0]),
             range(self.hpqrs.shape[1]),
             range(self.hpqrs.shape[2]),
@@ -867,7 +866,7 @@ def make_hubbard_model(t_mat: np.ndarray, U: float, mu: float) -> ElectronicStru
 
     hpq = np.zeros((nqbit, nqbit))
 
-    for i, j in product(range(t_mat.shape[0]), range(t_mat.shape[1])):
+    for i, j in itertools.product(range(t_mat.shape[0]), range(t_mat.shape[1])):
 
         for sig in [0, 1]:
             hpq[2 * i + sig, 2 * j + sig] = t_mat[i, j]
