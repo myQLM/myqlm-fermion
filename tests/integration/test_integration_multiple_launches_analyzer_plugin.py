@@ -24,4 +24,4 @@ def test_keep_min():
     stack = MultipleLaunchesAnalyzer() | qpu
     res = stack.submit(job)
 
-    np.testing.assert_equal(res.value, min(res.meta_data["reached_values"]))
+    np.testing.assert_equal(res.value, min(eval(res.meta_data["reached_values"])))
