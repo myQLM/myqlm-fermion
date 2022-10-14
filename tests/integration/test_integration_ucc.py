@@ -75,8 +75,6 @@ def test_basic(verbose=False):
 
     cluster_ops, theta_0, hf_init = get_cluster_ops_and_init_guess(nb_active_els, active_noons, active_orb_energies, H_active.hpqrs)
 
-    # transform, code = transform_to_parity_basis, get_parity_code
-    # transform, code = transform_to_bk_basis, get_bk_code
     transform, code = transform_to_jw_basis, get_jw_code
 
     H_active_sp = transform(H_active)
@@ -109,7 +107,6 @@ def test_basic(verbose=False):
         options={"maxiter": 1000},
     )
     np.testing.assert_almost_equal(res.fun, -1.1372701746609022, decimal=8)
-    # FCI energy is -1.1372701746609022
 
 
 def test_more_basic(verbose=False):
@@ -159,4 +156,3 @@ def test_more_basic(verbose=False):
         options={"maxiter": 1000},
     )
     np.testing.assert_almost_equal(res.fun, -1.1372701746609022, decimal=8)
-    # FCI energy is -1.1372701746609022

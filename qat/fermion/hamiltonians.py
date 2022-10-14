@@ -160,9 +160,6 @@ class SpinHamiltonian(Observable):
 
         """
 
-        if self.matrix is not None and sp.issparse(self.matrix) == sparse:
-            return self.matrix
-
         id_type = sp.identity if sparse else np.identity
 
         # Precompute needed spin ops
@@ -196,7 +193,7 @@ class SpinHamiltonian(Observable):
         self.matrix = final_matrix
 
         return final_matrix
-    
+
     @staticmethod
     def _make_spin_op(op: str, qb: int, nqbits: int, sparse: bool) -> Union[np.ndarray, sp.bsr.bsr_matrix]:
         """Build spin operator.
@@ -235,7 +232,7 @@ class SpinHamiltonian(Observable):
             ),
         )
         return kron
-        
+
     def copy(self):
         """Deepcopy the current class.
 
@@ -306,16 +303,9 @@ class FermionHamiltonian(Observable):
             constant_coeff=constant_coeff,
             do_clean_up=do_clean_up,
         )
-        
+
         if self.terms:
-            
-            # Converts to FermionicTerm if needed
-            self.terms = terms if isinstance(terms[0], FermionicTerm) else [FermionicTerm.from_term(term) for term in terms]
-            
-            # Ensure normal ordering of the fermionic terms
-            if normal_order:
-                self.transform_to_normal_order()
-            
+            self._preprocess_terms(terms, normal_order)
 
     def copy(self):
         """Deepcopy the current class.
@@ -326,10 +316,13 @@ class FermionHamiltonian(Observable):
         return deepcopy(self)
 
     def transform_to_normal_order(self):
-        
+        """
+        Transform fermionic terms of a FermionHamiltonian to normally ordered fermionic terms.
+        """
+
         # Initialize empty hamiltonian
         ordered_hamiltonian = FermionHamiltonian(self.nbqbits, terms=[])
-        
+
         # Add ordered terms to Hamiltonian
         for term in self.terms:
             new_term = normal_order_fermionic_term(term)
@@ -338,10 +331,23 @@ class FermionHamiltonian(Observable):
 
                 if new_term:
                     ordered_hamiltonian += FermionHamiltonian(self.nbqbits, terms=[element], normal_order=False)
-                    
+
         self.terms = ordered_hamiltonian.terms
 
-        
+    def _preprocess_terms(self, terms, normal_order):
+        """Preprocess input terms into FermionicTerms with or without normal ordering.
+
+        Args:
+            terms (List[Term]): List of fermionic terms.
+            normal_order (bool): If the FermionicTerms sould be normally ordered.
+        """
+        # Converts to FermionicTerm if needed
+        self.terms = terms if isinstance(terms[0], FermionicTerm) else [FermionicTerm.from_term(term) for term in terms]
+
+        # Ensure normal ordering of the fermionic terms
+        if normal_order:
+            self.transform_to_normal_order()
+
     def __add__(self, other):
         res = super().__add__(other)
         return FermionHamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
@@ -379,9 +385,9 @@ class FermionHamiltonian(Observable):
 
         fermionic_hamiltonian = FermionHamiltonian(self.nbqbits, terms=term_list, do_clean_up=self.do_clean_up, normal_order=True)
         fermionic_hamiltonian.clean_up()
-        
+
         return fermionic_hamiltonian
-    
+
     def __or__(self, other):
         return self * other - other * self
 
@@ -421,8 +427,6 @@ class FermionHamiltonian(Observable):
             This method should not be used if the FermionHamiltonian is too large.
 
         """
-        if self.matrix is not None and sp.issparse(self.matrix) == sparse:
-            return self.matrix
 
         ops = {}
         ops["C"] = init_creation_ops(self.nbqbits, sparse=sparse)
@@ -483,13 +487,13 @@ class FermionHamiltonian(Observable):
             :class:`~qat.fermion.hamiltonians.ElectronicStructureHamiltonian` : Electronic-structure Hamiltonian.
 
         """
-        
+
         nqbits = self.nbqbits
         hpq = np.zeros((nqbits,) * 2, dtype="complex")
         hpqrs = np.zeros((nqbits,) * 4, dtype="complex")
 
         def _fill_tensors(_term):
-            
+
             indices = _term.qbits
 
             if _term.op == "Cc":
@@ -513,7 +517,7 @@ class FermionHamiltonian(Observable):
 
                 for no_term in no_terms:
                     _fill_tensors(no_term)
-                    
+
             else:
                 term = order_qubits(term)
                 _fill_tensors(term)

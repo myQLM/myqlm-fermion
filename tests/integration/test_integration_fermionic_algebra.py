@@ -30,25 +30,32 @@ cluster_ops = get_cluster_ops(n_electrons, nqbits=nqbits)
 H = mol_h.get_electronic_hamiltonian()
 H_sp = H.to_spin()
 
+
 def test_h2_elec_to_fermion():
-    
+
     expected = sorted(np.linalg.eigvals(H.get_matrix()))
     test = sorted(np.linalg.eigvals(H.to_fermion().get_matrix()))
-    
+
     np.testing.assert_almost_equal(expected, test)
-    
+
+
 def test_h2_fermionic_commutation():
-    
+
     for c_op in cluster_ops:
 
         commutator_fermion = (H | c_op).get_matrix()
-        commutator_spin = (H_sp | c_op.to_spin()).get_matrix()
-        
-        fermion_eigvals = np.linalg.eigvals(commutator_fermion)
-        spin_eigvals = np.linalg.eigvals(commutator_spin)
+        commutator_spin1 = (H_sp | c_op.to_spin()).get_matrix()
+        commutator_spin2 = (H.to_spin("jordan-wigner") | c_op.to_spin("jordan-wigner")).get_matrix()
+        commutator_spin3 = (H.to_spin("bravyi-kitaev") | c_op.to_spin("bravyi-kitaev")).get_matrix()
+        commutator_spin4 = (H.to_spin("parity") | c_op.to_spin("parity")).get_matrix()
 
-        np.testing.assert_almost_equal(sorted(np.real(fermion_eigvals)), sorted(np.real(spin_eigvals)))
-        np.testing.assert_almost_equal(sorted(np.imag(fermion_eigvals)), sorted(np.imag(spin_eigvals)))
+        for commutator_spin in [commutator_spin1, commutator_spin2, commutator_spin3, commutator_spin4]:
+            fermion_eigvals = np.linalg.eigvals(commutator_fermion)
+            spin_eigvals = np.linalg.eigvals(commutator_spin)
+
+            np.testing.assert_almost_equal(sorted(np.real(fermion_eigvals)), sorted(np.real(spin_eigvals)))
+            np.testing.assert_almost_equal(sorted(np.imag(fermion_eigvals)), sorted(np.imag(spin_eigvals)))
+
 
 ### LiH test
 lih_data = np.load(lih_data_path, allow_pickle=True)
@@ -87,21 +94,26 @@ H_sp = H.to_spin()
 
 
 def test_lih_elec_to_fermion():
-    
+
     expected = sorted(np.linalg.eigvals(H.get_matrix()))
     test = sorted(np.linalg.eigvals(H.to_fermion().get_matrix()))
-    
+
     np.testing.assert_almost_equal(expected, test)
-    
-def test_lih_fermionic_commutation():
-    
+
+
+def test_lih_fermionic_commutations():
+
     for c_op in cluster_ops:
 
         commutator_fermion = (H | c_op).get_matrix()
-        commutator_spin = (H_sp | c_op.to_spin()).get_matrix()
-        
-        fermion_eigvals = np.linalg.eigvals(commutator_fermion)
-        spin_eigvals = np.linalg.eigvals(commutator_spin)
+        commutator_spin1 = (H_sp | c_op.to_spin()).get_matrix()
+        commutator_spin2 = (H.to_spin("jordan-wigner") | c_op.to_spin("jordan-wigner")).get_matrix()
+        commutator_spin3 = (H.to_spin("bravyi-kitaev") | c_op.to_spin("bravyi-kitaev")).get_matrix()
+        commutator_spin4 = (H.to_spin("parity") | c_op.to_spin("parity")).get_matrix()
 
-        np.testing.assert_almost_equal(sorted(np.real(fermion_eigvals)), sorted(np.real(spin_eigvals)))
-        np.testing.assert_almost_equal(sorted(np.imag(fermion_eigvals)), sorted(np.imag(spin_eigvals)))
+        for commutator_spin in [commutator_spin1, commutator_spin2, commutator_spin3, commutator_spin4]:
+            fermion_eigvals = np.linalg.eigvals(commutator_fermion)
+            spin_eigvals = np.linalg.eigvals(commutator_spin)
+
+            np.testing.assert_almost_equal(sorted(np.real(fermion_eigvals)), sorted(np.real(spin_eigvals)))
+            np.testing.assert_almost_equal(sorted(np.imag(fermion_eigvals)), sorted(np.imag(spin_eigvals)))
