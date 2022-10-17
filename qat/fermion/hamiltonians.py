@@ -552,13 +552,52 @@ class ElectronicStructureHamiltonian(FermionHamiltonian):
         if hpqrs is None:
             hpqrs = np.zeros((hpq.shape[0], hpq.shape[0], hpq.shape[0], hpq.shape[0]))
 
-        self.hpq = hpq
-        self.hpqrs = hpqrs
+        self._hpq = hpq
+        self._hpqrs = hpqrs
         self.do_clean_up = do_clean_up
 
         terms = self._get_fermionic_terms()
 
-        super(ElectronicStructureHamiltonian, self).__init__(self.hpq.shape[0], terms, constant_coeff, do_clean_up=do_clean_up)
+        super(ElectronicStructureHamiltonian, self).__init__(self._hpq.shape[0], terms, constant_coeff, do_clean_up=do_clean_up)
+        
+    @property
+    def hpq(self):
+        """hpq getter.
+
+        Returns:
+            np.ndarray: hpq matrix
+        """
+        return self._hpq
+    
+    @hpq.setter
+    def hpq(self, value):
+        """
+        hpq setter.
+        """
+        self._hpq = value
+        terms = self._get_fermionic_terms()
+        # pylint: disable=E1101
+        super(ElectronicStructureHamiltonian, self).__init__(self._hpq.shape[0], terms, self.constant_coeff, do_clean_up=self.do_clean_up)
+
+    @property
+    def hpqrs(self):
+        """hpqs getter.
+
+        Returns:
+            np.ndarray: hpqrs matrix
+        """
+        return self._hpqrs
+    
+    @hpqrs.setter
+    def hpqrs(self, value):
+        """
+        hpqrs getter.
+        """
+        self._hpqrs = value
+        terms = self._get_fermionic_terms()
+        # pylint: disable=E1101
+        super(ElectronicStructureHamiltonian, self).__init__(self._hpq.shape[0], terms, self.constant_coeff, do_clean_up=self.do_clean_up)
+
 
     def __add__(self, other):
 
@@ -578,20 +617,20 @@ class ElectronicStructureHamiltonian(FermionHamiltonian):
         """
 
         terms = []
-        for i, j in itertools.product(range(self.hpq.shape[0]), range(self.hpq.shape[1])):
+        for i, j in itertools.product(range(self._hpq.shape[0]), range(self._hpq.shape[1])):
 
-            if abs(self.hpq[i, j]) > ElectronicStructureHamiltonian.TOL:
-                terms.append(Term(self.hpq[i, j], "Cc", [i, j]))
+            if abs(self._hpq[i, j]) > ElectronicStructureHamiltonian.TOL:
+                terms.append(Term(self._hpq[i, j], "Cc", [i, j]))
 
         for i, j, k, l in itertools.product(
-            range(self.hpqrs.shape[0]),
-            range(self.hpqrs.shape[1]),
-            range(self.hpqrs.shape[2]),
-            range(self.hpqrs.shape[3]),
+            range(self._hpqrs.shape[0]),
+            range(self._hpqrs.shape[1]),
+            range(self._hpqrs.shape[2]),
+            range(self._hpqrs.shape[3]),
         ):
 
-            if abs(self.hpqrs[i, j, k, l]) > ElectronicStructureHamiltonian.TOL:
-                terms.append(FermionicTerm(0.5 * self.hpqrs[i, j, k, l], "CCcc", [i, j, k, l]))
+            if abs(self._hpqrs[i, j, k, l]) > ElectronicStructureHamiltonian.TOL:
+                terms.append(FermionicTerm(0.5 * self._hpqrs[i, j, k, l], "CCcc", [i, j, k, l]))
 
         return terms
 

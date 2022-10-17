@@ -187,7 +187,7 @@ def test_hamiltonian_multiplication():
     assert (term.coeff, term.op, term.qbits, h.constant_coeff) == ((1 + 2j), "CCcc", [0, 1, 0, 1], 0.0)
 
 
-def test_get_matrix_changes():
+def test_get_matrix_changes_spin():
 
     obs = Observable(
         2,
@@ -214,6 +214,39 @@ def test_get_matrix_changes():
 
     # Check array are different
     assert not np.all(np.equal(matrix1, matrix2))
+
+def test_get_matrix_changes_fermion():
+
+    H_fermion = FermionHamiltonian(2, [Term(1.0, "Cc", [0, 1]), Term(0.5, "CCcc", [0, 1, 0, 1])])
+
+    matrix1 = H_fermion.get_matrix()
+
+    H_fermion.terms = [Term(0.2, "Cc", [0, 1]), Term(2, "CCcc", [0, 1, 1, 0])]
+
+    matrix2 = H_fermion.get_matrix()
+
+    # Check array are different
+    assert not np.all(np.equal(matrix1, matrix2))
+    
+def test_get_matrix_change_electronic():
+    
+    H_fermion = FermionHamiltonian(2, [Term(1.0, "Cc", [0, 1]), Term(0.5, "CCcc", [0, 1, 0, 1])])
+    H_elec = H_fermion.to_electronic()
+
+    matrix1 = H_elec.get_matrix()
+
+    H_elec.hpqrs = np.zeros(H_elec.hpqrs.shape)
+
+    matrix2 = H_elec.get_matrix()
+
+    # Check array are different
+    assert not np.all(np.equal(matrix1, matrix2))
+
+    H_elec.constant_coeff += 3
+    matrix3 = H_elec.get_matrix()
+
+    assert np.all(np.equal(matrix3, matrix2 + 3*np.eye(4,4)))
+
 
 
 def test_get_matrix_sparse_spin():
