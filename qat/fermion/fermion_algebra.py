@@ -55,7 +55,7 @@ class FermionicTerm(Term):
         return deepcopy(self)
 
     @staticmethod
-    def from_term(term: Term):
+    def from_term(term: Term) -> "FermionicTerm":
         """Converts a Term class to a FermionicTerm class.
 
         Args:
@@ -68,7 +68,7 @@ class FermionicTerm(Term):
         return FermionicTerm(term.coeff, term.op, term.qbits)
 
 
-def permute_fermionic_operator(fermionic_term, ind):
+def permute_fermionic_operator(fermionic_term, ind) -> List[Term]:
     """
     Perform the permutation of the two operators in index ind and ind + 1 in a fermionic Term pauli string
 
@@ -77,7 +77,7 @@ def permute_fermionic_operator(fermionic_term, ind):
         ind (int): the lower index of the two consecutive creation or annihilation operators we seek to permute
 
     Returns:
-        list_terms (list<Term>): the list of fermionic terms resulting of the permutation
+        list_terms (List[Term]): the list of fermionic terms resulting of the permutation
     """
 
     coeff = fermionic_term.coeff
@@ -102,61 +102,7 @@ def permute_fermionic_operator(fermionic_term, ind):
         return [FermionicTerm(coefficient=-coeff, op=permuted_pauli_op, qbits=permuted_qbits)]
 
 
-# def order_qubits(fermionic_term):
-#     """
-#     Takes a fermionic term whose pauli_op is supposed to be normal-ordered, and reorder it increasing qbit numbers
-
-#     Args:
-#         fermionic_term (Term): the term to reorder (it is already normal-ordered)
-
-#     Returns:
-#         ordered_term (Term): the reordered term
-#     """
-
-#     coeff = fermionic_term.coeff
-#     pauli_op = fermionic_term.op
-#     qbits = fermionic_term.qbits
-
-#     ind_c = pauli_op.index("c")
-#     qbits_C = qbits[:ind_c]
-#     qbits_c = qbits[ind_c:]
-
-#     new_qbits = []
-#     for qbits_op in [qbits_C, qbits_c]:
-
-#         qbits_temp = qbits_op[:]
-#         ordered = False
-
-#         while not ordered:
-
-#             ind = 0
-#             while ind < len(qbits_temp) - 1 and qbits_temp[ind] <= qbits_temp[ind + 1]:
-
-#                 if qbits_temp[ind] == qbits_temp[ind + 1]:
-#                     return
-#                 ind += 1
-
-#             if ind < len(qbits_temp) - 1:
-
-#                 ind += 1
-#                 new_ind = 0
-
-#                 while qbits_temp[new_ind] < qbits_temp[ind]:
-#                     new_ind += 1
-
-#                 elt_not_in_order = qbits_temp.pop(ind)
-#                 qbits_temp.insert(new_ind, elt_not_in_order)
-#                 coeff *= (-1) ** (ind - new_ind)
-
-#             else:
-#                 ordered = True
-
-#         new_qbits += qbits_temp
-
-#     return FermionicTerm(coefficient=coeff, op=pauli_op, qbits=new_qbits)
-
-
-def order_qubits(fermionic_term):
+def order_qubits(fermionic_term) -> Term:
     """
     Takes a fermionic term whose pauli_op is supposed to be normal-ordered, and reorder it increasing qbit numbers
 
@@ -217,38 +163,7 @@ def order_qubits(fermionic_term):
     return FermionicTerm(coefficient=coeff, op=pauli_op, qbits=new_qbits)
 
 
-# def normal_order_fermionic_ops(fermionic_term):
-#     """
-#     Order the operators list of a fermionic_term by putting the creations operators
-#     on the left and the annihilation operators on the right, with respect to the fermionic anticommutation relations.
-
-#     Args:
-#         fermionic_term (Term): the term to order
-
-#     Returns:
-#         ordered_fermionic_terms (list<Term>): the list of ordered fermionic terms
-#     """
-
-#     pauli_op = fermionic_term.op
-
-#     # Sanity check
-#     ind_c = pauli_op.index("c")
-
-#     try:
-#         ind_C = pauli_op[ind_c:].index("C") + ind_c
-
-#     except ValueError:
-#         new_terms = [fermionic_term]
-
-#     else:
-#         new_terms = []
-#         for new_fermionic_term in permute_fermionic_operator(fermionic_term, ind_C - 1):
-#             new_terms += normal_order_fermionic_term(new_fermionic_term)
-
-#     return new_terms
-
-
-def normal_order_fermionic_ops(fermionic_term):
+def normal_order_fermionic_ops(fermionic_term) -> List[Term]:
     """
     Order the operators list of a fermionic_term by putting the creations operators
     on the left and the annihilation operators on the right, with respect to the fermionic anticommutation relations.
@@ -257,7 +172,7 @@ def normal_order_fermionic_ops(fermionic_term):
         fermionic_term (Term): the term to order
 
     Returns:
-        ordered_fermionic_terms (list<Term>): the list of ordered fermionic terms
+        ordered_fermionic_terms (List[Term]): The list of ordered fermionic terms
     """
 
     pauli_op = fermionic_term.op
@@ -311,61 +226,7 @@ def are_term_ops_ordered(term):
     return True, None
 
 
-# def normal_order_fermionic_ops(fermionic_term):
-#     """
-#     Order the operators list of a fermionic_term by putting the creations operators
-#     on the left and the annihilation operators on the right, with respect to the fermionic anticommutation relations.
-
-#     Args:
-#         fermionic_term (Term): the term to order
-
-#     Returns:
-#         ordered_fermionic_terms (list<Term>): the list of ordered fermionic terms
-#     """
-
-#     condition, index = are_term_ops_ordered(fermionic_term)
-#     # Main loop : continue till term is normally ordered
-
-#     if condition:
-#         return [fermionic_term]
-
-#     else:
-
-#         new_terms = []
-#         for new_fermionic_term in permute_fermionic_operator(fermionic_term, index):
-#             new_terms += normal_order_fermionic_term(new_fermionic_term)
-
-#     return new_terms
-
-# def normal_order_fermionic_ops(fermionic_term):
-#     """
-#     Order the operators list of a fermionic_term by putting the creations operators
-#     on the left and the annihilation operators on the right, with respect to the fermionic anticommutation relations.
-
-#     Args:
-#          fermionic_term (Term): the term to order
-
-#     Returns:
-#         ordered_fermionic_terms (list<Term>): the list of ordered fermionic terms
-#     """
-#     coeff = fermionic_term.coeff
-#     pauli_op = fermionic_term.op
-#     qbits = fermionic_term.qbits
-
-#     ind_c = pauli_op.index('c')
-#     try:
-#         ind_C = pauli_op[ind_c:].index('C') + ind_c
-#     except ValueError:
-#         new_terms = [fermionic_term]
-#         ordered_pauli_op = True
-#     else:
-#         new_terms = []
-#         for new_fermionic_term in permute_fermionic_operator(fermionic_term, ind_C - 1):
-#             new_terms += normal_order_fermionic_term(new_fermionic_term)
-#     return new_terms
-
-
-def normal_order_fermionic_term(fermionic_term):
+def normal_order_fermionic_term(fermionic_term) -> List[Term]:
     """
     Order any fermionic term by putting the creation operators on the left,
     ordered by increasing qubit numbers, and the annihilation operators on the right,
@@ -375,7 +236,7 @@ def normal_order_fermionic_term(fermionic_term):
         fermionic_term (Term): the term to order
 
     Returns:
-        ordered_fermionic_terms (list<Term>): the list of ordered fermionic terms
+        ordered_fermionic_terms (List[Term]): the list of ordered fermionic terms
     """
 
     new_terms = normal_order_fermionic_ops(fermionic_term)

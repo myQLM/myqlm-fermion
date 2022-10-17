@@ -4,7 +4,7 @@ Autoderivation tools for Natural gradient descent
 """
 
 import copy
-from typing import TYPE_CHECKING, Tuple
+from typing import TYPE_CHECKING, Tuple, List
 import numpy as np
 
 from qat.core import Observable, Term

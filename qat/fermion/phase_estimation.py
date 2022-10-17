@@ -252,8 +252,8 @@ def perform_phase_estimation(
         probs[sample.state.value[0]] = sample.probability
 
     if verbose:
-        # Print the first 5 states (sorted by decreasing probabilities)
 
+        # Print the first 5 states (sorted by decreasing probabilities)
         for ind, (prob, state) in enumerate(reversed(sorted(list_states, key=lambda x: x[0]))):
 
             if ind < 5:
@@ -286,12 +286,10 @@ def apply_adiabatic_state_prep(
 
         pea_routine = build_qpe_routine_for_hamiltonian(H_current, nqbits_adiab, global_phase=0, n_trotter_steps=n_trotter_steps)
 
-        # use only the first nqbits_adiab of all the n_phase_bits
+        # Use only the first nqbits_adiab of all the n_phase_bits
         prog.apply(pea_routine, phase_reg[:nqbits_adiab], data_reg)
 
-        # Reset the qubits used for the adiabatic step to be ready for
-        # the actual QPE afterwards
-
+        # Reset the qubits used for the adiabatic step to be ready for the actual QPE afterwards
         prog.reset(phase_reg[:nqbits_adiab])
 
 
@@ -330,7 +328,7 @@ def build_qpe_routine_for_hamiltonian(
     # Controlled unitaries along with a global phase application
     for j_ind in range(n_phase_bits):
 
-        # happens before the trotterization
+        # Happens before the trotterization
         routine.apply(PH(global_phase * 2**j_ind), phase_reg[j_ind])
         for _ in range(n_trotter_steps):
             for term in hamiltonian.terms:
@@ -348,7 +346,7 @@ def build_qpe_routine_for_hamiltonian(
                     [data_reg[qb] for qb in term.qbits],
                 )
 
-    # now apply inverse QFT
+    # Now apply inverse QFT
     routine.apply(IQFT(n_phase_bits), phase_reg)
 
     return routine

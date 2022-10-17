@@ -21,10 +21,8 @@ from .hamiltonians import (
 
 class ObservableGenerator(AbstractPlugin, AbstractGenerator):
     """
-    This ObservableGenerator class inherit from both
-    :class:`~qat.core.generator.AbstractGenerator` and
-    :class:`~qat.core.plugins.AbstractPlugin` and is designed
-    to work with :class:`~qat.fermion.ansatz_generator.AnsatzGenerator`
+    This ObservableGenerator class inherit from both :class:`~qat.core.generator.AbstractGenerator` and
+    :class:`~qat.core.plugins.AbstractPlugin` and is designed to work with :class:`~qat.fermion.ansatz_generator.AnsatzGenerator`.
 
     .. run-block:: python
 

@@ -9,12 +9,12 @@ from qat.comm.shared.ttypes import PostProcessedResult, ParsedPostProcessedResul
 class HybridResult(PostProcessedResult, ParsedPostProcessedResult):
     """
     Result which is, at the same time, the output of Plugin.post_process
-    but also BatchGenerator.post_process
+    but also BatchGenerator.post_process.
 
-    Result is not parsed
+    Result is not parsed.
 
     Args:
-        batch_result (:class:`~qat.core.BatchResult`): wrapped result
+        batch_result (:class:`~qat.core.BatchResult`): Wrapped result
     """
 
     def __init__(self, batch_result):

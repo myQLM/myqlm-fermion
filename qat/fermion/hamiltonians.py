@@ -42,26 +42,12 @@ class SpinHamiltonian(Observable):
 
     Example:
 
-        One can use spin operators :
-
         .. run-block:: python
 
             from qat.core import Term
             from qat.fermion import SpinHamiltonian
 
             hamiltonian = SpinHamiltonian(2, [Term(0.3, "X", [0]), Term(-0.4, "ZY", [0, 1])])
-
-            print(f"H = {hamiltonian}")
-            print(f"H matrix: {hamiltonian.get_matrix()}")
-
-        Or fermionic operators :
-
-        .. run-block:: python
-
-            from qat.core import Term
-            from qat.fermion import SpinHamiltonian
-
-            hamiltonian = SpinHamiltonian(2, [Term(0.3, "Cc", [0, 1]), Term(1.4, "CcCc", [0, 1, 1, 0])])
 
             print(f"H = {hamiltonian}")
             print(f"H matrix: {hamiltonian.get_matrix()}")
@@ -152,7 +138,7 @@ class SpinHamiltonian(Observable):
             Defaults to False.
 
         Returns:
-            numpy.ndarray: The matrix of the SpinHamiltonian.
+            np.ndarray: The matrix of the SpinHamiltonian.
 
         Warning:
             This method should not be used if the SpinHamiltonian is too large.
@@ -204,7 +190,7 @@ class SpinHamiltonian(Observable):
             sparse (bool): If a sparse matrix should be returned.
 
         Returns:
-            Union[np.ndarray, sp.bsr.bsr_matrix]: _description_
+            Union[np.ndarray, sp.bsr.bsr_matrix]: Matrix of the spin operator.
         """
 
         id_type = sp.identity if sparse else np.identity
@@ -257,20 +243,10 @@ class FermionHamiltonian(Observable):
         matrix (np.ndarray): the corresponding matrix (None by default, can be set by calling get_matrix method)
         normal_order (bool): If the fermionic terms should be normal (or Wick) ordered.
 
+    Note:
+        Fermionic Hamiltonians are automatically normally ordered.
+
     Example:
-
-        One can use spin operators :
-
-        .. run-block:: python
-
-            from qat.core import Term
-            from qat.fermion import FermionHamiltonian
-
-            hamiltonian = FermionHamiltonian(2, [Term(0.3, "X", [0]), Term(-0.4, "ZY", [0, 1])])
-            print(f"H = {hamiltonian}")
-            print(f"H matrix: {hamiltonian.get_matrix()}")
-
-        Or fermionic operators :
 
         .. run-block:: python
 
@@ -598,7 +574,7 @@ class ElectronicStructureHamiltonian(FermionHamiltonian):
         """Get the FermionicHamiltonian terms from current ElectronicStructureHamiltonian.
 
         Returns:
-            terms (Terms): fermionic terms of the ElectronicStructureHamiltonian
+            terms (List[Term]): Fermionic terms of the ElectronicStructureHamiltonian
         """
 
         terms = []
@@ -669,7 +645,7 @@ def make_anderson_model(u: float, mu: float, v: np.ndarray, epsilon: np.ndarray)
     # number of bath modes
     n_b = len(v)
     if len(epsilon) != n_b:
-        raise Exception("Error : The bath modes energies vector must be the same size as the tunneling energies vector.")
+        raise Exception("Error: The bath modes energies vector must be the same size as the tunneling energies vector.")
 
     # number of fermionic (annihilation) operators f
     fermop_number = 2 * n_b + 2

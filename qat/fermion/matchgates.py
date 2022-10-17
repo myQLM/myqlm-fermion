@@ -13,8 +13,7 @@ from qat.core.circuit_builder.matrix_util import gen_x, gen_y, gen_z
 
 
 def generalized_pauli_gate(pauli_str: str):
-    """Generate an AbstractGate corresponding to the input Pauli string,
-    and add it to the default gate set.
+    """Generate an AbstractGate corresponding to the input Pauli string, and add it to the default gate set.
 
     Args:
         pauli_str (str): Pauli rotation the gate should perform.
@@ -383,11 +382,11 @@ def prepare_R_matrix(nb_fermionic_modes: int, theta: np.ndarray, slater: Optiona
 
 
 def prepare_R_matrix_gradient(nb_fermionic_modes: int, theta: np.ndarray, slater: Optional[bool] = False) -> List[np.ndarray]:
-    """
+    r"""
     Routine to compute gradient of product :math:`R = prod_i r_i(\\theta_i)`
 
     Returns:
-        list<np.array>: list of :math:`2Mx2M` matrices
+        List[np.ndarray]: List of :math:`2Mx2M` matrices
     """
 
     M = nb_fermionic_modes
@@ -449,7 +448,7 @@ def find_R_angles(
         verbose (Optional[bool]): For verbose output. Defaults to False.
 
     Returns:
-        np.array, float: the list of angles and the value of the objective function
+        np.ndarray, float: The list of angles and the value of the objective function
 
     """
     nqbits = r_target.shape[0] // 2
@@ -514,7 +513,7 @@ def get_nn_rotation_angles(
         verbose (Optional[bool]): Verbose output. Defaults to False.
 
     Returns:
-        np.ndarray, float: The angles and distance to target total rotation
+        Tuple[np.ndarray, float]: The angles and distance to target total rotation
 
     """
 
