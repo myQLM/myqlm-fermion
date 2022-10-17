@@ -4,7 +4,7 @@ Autoderivation tools for Natural gradient descent
 """
 
 import copy
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Tuple
 import numpy as np
 
 from qat.core import Observable, Term
@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from qat.lang.AQASM.gates import Gate
 
 
-def _sanity_check_term(pauli_str: str, nqbits: int):
+def _sanity_check_term(pauli_str: str, nqbits: int) -> Tuple[bool, List[str]]:
     """
     Checks if a multiple-gate observable term corresponds to input number of qubits.
 
@@ -163,27 +163,35 @@ def partial_derivatives(
                     ogname = o_gate.name
                     gate_def_to_add.append(GateDefinition(name=f"C-{ogname}", arity=2, nbctrls=1, subgate=ogname))
 
-    p_list = []  # A list to store the differentiable gates generators
-    coeff_list = []  # A list to store post process coefficients that arise from differentiation
+    # List to store the differentiable gates generators
+    p_list = []
+
+    # A list to store post process coefficients that arise from differentiation
+    coeff_list = []
 
     if braket_side == "none":
 
         # Adding one dummy Pauli operator
         raise Exception("No differentiation side has been given. Please set it to 'bra' or 'ket'.")
 
-    else:  # braket_side is "bra" or "ket"
+    # braket_side is "bra" or "ket"
+    else:  
 
         # Doing a first circuit review to get the Pauli generator and the number of gates for each parameter
         for (op_op, (ind, (opname, params, qubits))) in zip(job.circuit.ops, enumerate(job.circuit.iterate_simple())):
             op_key = op_op.gate
 
             if len(params) == 0:
-                continue  # This is not a parameterized gate, so we skip it
+                # This is not a parameterized gate, so we skip it
+                continue
+
             elif len(params) == 1:
+
                 var_test1 = isinstance(params[0], Variable)
                 arith_test1 = isinstance(params[0], ArithExpression)
+
                 if not (var_test1 or arith_test1):
-                    # Case of an binded gate
+                    # Case of a binded gate
                     continue
                 param_key = next(iter(params[0].get_variables()))
 
@@ -204,9 +212,6 @@ def partial_derivatives(
 
                             else:
                                 raise Exception("For now, only supporting real coefficient in front of parameters!")
-                                # Could be improved in shifting the ancilla qubits to (|0>+e^(i\alpha)|1>)/\sqrt(2)) at the
-                                # beginning of the Hadamard tests if the operation is e^{-i/2.\lambda.\vartheta.\sigma_gen} where
-                                # \lambda = |\lamdba|.e^{i\alpha}...
 
                         else:
                             raise Exception(
@@ -244,7 +249,7 @@ def partial_derivatives(
 
     jobs_list = {
         ind_job: [0.0, copy.copy(job)] for ind_job in range(len(p_list))
-    }  # the float is to store the coefficient that comes from differentiation
+    } # the float is to store the coefficient that comes from differentiation
 
     # To be able to modify circuits one by one, me must copy them
     for ind_job in jobs_list:
@@ -339,17 +344,18 @@ def partial_derivatives(
 
             update_coeff = process_coeff
 
-        # For the hamiltonian gate...
+        # For the hamiltonian gate
         if o_gate is not None:
 
-            # assume add_ancilla is true
+            # Assume add_ancilla is true
             if is_og_valid:
 
                 # We use the list (ex. ["X", "X", "X"]
-                # Assume the XXYYZ (eg) term is for different qubits...
+                # Assume the XXYYZ (eg) term is for different qubits
                 it_qb = iter(o_qbits)
                 for g_name in og_term_list:
-                    # g_name is expected to be something like 'X', 'Y' or 'Z'
+
+                    # g_name is expected to be a list of 'X', 'Y' or 'Z'
                     jobs_list[ind_job][1].circuit.ops.append(Op(type=0, gate=f"C-{g_name}", qbits=[0, 1 + next(it_qb)]))
 
             else:
@@ -488,7 +494,7 @@ def hamiltonian_gradient_param_imag_part(job, hamiltonian, partial_key, user_cus
 
     for _, term in enumerate(hamiltonian.terms):
 
-        # first, construct operator corresponding to O_j
+        # First, construct operator corresponding to O_j
         is_og_valid, _ = _sanity_check_term(term.op, len(term.qbits))
 
         if is_og_valid:
@@ -499,7 +505,7 @@ def hamiltonian_gradient_param_imag_part(job, hamiltonian, partial_key, user_cus
             op_gate_matrix = get_predef_generator()[term.op[0]]
             if len(term.op) > 1:
 
-                # assumes term.qbits is sorted in ascending order
+                # Assumes term.qbits is sorted in ascending order
                 for op in term.op[1:]:
                     op_gate_matrix = np.kron(op_gate_matrix, get_predef_generator()[op])
 
@@ -575,7 +581,7 @@ def auto_differentiation_qfim_dictionaries(job, nb_parameters, parameters_index,
             Syntax: {gate_name (string) : GateDefinition (GateDefinition)}. NOT SUPPORTING CUSTOM PARAMETERISED GATES YET.
 
     Returns :
-        A three-dictionary tuple. The jobs inside are PARAMETRIC
+        Tuple[dict, dict, dict]: Variational jobs.
 
     """
 

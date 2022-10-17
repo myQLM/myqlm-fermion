@@ -19,10 +19,9 @@ from .circuits import (
 
 class AnsatzGenerator(AbstractPlugin, AbstractGenerator):
     """
-    This AnsatzGenerator class inherit from both
-    :class:`~qat.core.generator.AbstractGenerator` and
-    :class:`~qat.core.plugins.AbstractPlugin` and is designed
-    to work with :class:`~qat.fermion.observable_generator.ObservableGenerator`
+    This AnsatzGenerator class inherit from both :class:`~qat.core.generator.AbstractGenerator` and
+    :class:`~qat.core.plugins.AbstractPlugin` and is designed to work with
+    :class:`~qat.fermion.observable_generator.ObservableGenerator`
 
     .. run-block:: python
 

@@ -86,7 +86,7 @@ def perform_pyscf_computation(geometry: list, basis: str, spin: int, charge: int
     except ModuleNotFoundError as exc:
         raise ModuleNotFoundError("PySCF modules could not be found. Please make sure you installed the PySCF package.") from exc
 
-    # define molecule in pySCF format
+    # Define molecule in pySCF format
     molecule = gto.Mole()
     molecule.atom = geometry
     molecule.basis = basis
@@ -95,7 +95,7 @@ def perform_pyscf_computation(geometry: list, basis: str, spin: int, charge: int
     molecule.symmetry = False
     molecule.build()
 
-    # Run SCF.
+    # Run SCF
     scf_worker = scf.ROHF(molecule) if molecule.spin else scf.RHF(molecule)
     scf_worker.verbose = 0
     scf_worker.run()
@@ -112,7 +112,7 @@ def perform_pyscf_computation(geometry: list, basis: str, spin: int, charge: int
     cisd.run()
     rdm1 = cisd.make_rdm1()
 
-    # Run MP2.
+    # Run MP2
     # note: molecule.spin must be 0
     mp2 = mp.MP2(scf_worker)
     mp2.verbose = 0

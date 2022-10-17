@@ -376,7 +376,7 @@ class FermionHamiltonian(Observable):
             term_list.append(FermionicTerm(term.coeff * other.constant_coeff, term.op, term.qbits))
 
         for term in other.terms:
-
+            # pylint: disable=E1101
             term_list.append(FermionicTerm(self.constant_coeff * term.coeff, term.op, term.qbits))
 
         for term1, term2 in itertools.product(self.terms, other.terms):

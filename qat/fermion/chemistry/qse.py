@@ -82,10 +82,10 @@ def apply_quantum_subspace_expansion(
         from qat.qpus import get_default_qpu
         from qat.plugins import SeqOptim
 
-        # we instantiate the Hamiltonian we want to approximate the ground state energy of
+        # We instantiate the Hamiltonian we want to approximate the ground state energy of
         hamiltonian = SpinHamiltonian(2, [Term(1, op, [0, 1]) for op in ["XX", "YY", "ZZ"]])
 
-        # we construct the variational circuit (ansatz)
+        # We construct the variational circuit (ansatz)
         prog = Program()
         reg = prog.qalloc(2)
         theta = [prog.new_var(float, '\\theta_%s'%i) for i in range(3)]
@@ -95,23 +95,23 @@ def apply_quantum_subspace_expansion(
         CNOT(reg[0], reg[1])
         circ = prog.to_circ()
 
-        # construct a (variational) job with the variational circuit and the observable
+        # Construct a (variational) job with the variational circuit and the observable
         job = circ.to_job(observable=hamiltonian,
                         nbshots=0)
 
-        # we now build a stack that can handle variational jobs
+        # We now build a stack that can handle variational jobs
         qpu = get_default_qpu()
 
         optimizer = SeqOptim(ncycles=10, x0=[0, 0.5, 0])
         stack = optimizer | qpu
 
-        # we submit the job and print the optimized variational energy (the exact GS energy is -3)
+        # We submit the job and print the optimized variational energy (the exact GS energy is -3)
         result = stack.submit(job)
         E_min = -3
         print("E(VQE) = %s (err = %s %%)"%(result.value, 100*abs((result.value-E_min)/E_min)))
         e_vqe = result.value
 
-        # we use the optimal parameters found by VQE
+        # We use the optimal parameters found by VQE
         opt_circ = circ.bind_variables(eval(result.meta_data["parameter_map"]))
 
         expansion_operators = [SpinHamiltonian(2, [], 1.0),
@@ -179,7 +179,7 @@ def _build_quantum_subspace_expansion(
         hamiltonian (SpinHamiltonian): The Hamiltonian.
         state_prep_circ (Circuit): The state prep circuit.
         qpu (QPUHandler): The qpu.
-        expansion_operators (list(Observable)): The list of operators.
+        expansion_operators (List[Observable]): The list of operators.
             generating the subspace of interest.
         nbshots (int, optional): The number of shots.
         threshold (float, optional): The numerical threshold.
