@@ -309,3 +309,9 @@ def test_get_matrix_sparse_electronic():
 
     np.testing.assert_equal(H_elec.get_matrix(), expected)
     np.testing.assert_equal(H_elec.get_matrix(sparse=True).toarray(), expected)
+
+def test_electronic_hamiltonian_dag():
+    H_fermion = FermionHamiltonian(2, [Term(1.0j, "Cc", [0, 1]), Term(0.5j, "CCcc", [0, 1, 0, 1])])
+    H_elec = H_fermion.to_electronic()
+    
+    np.testing.assert_equal(np.conj(H_elec.get_matrix()), H_elec.dag().get_matrix())

@@ -232,16 +232,19 @@ class FermionHamiltonian(Observable):
     Implementation of a fermionic Hamiltonian.
 
     Args:
-        nqbits (int): the total number of qubits
-        terms (List[Term]): the list of terms
-        constant_coeff (float): constant term
+        nqbits (int): The total number of qubits
+        terms (List[Term]): The list of terms
+        constant_coeff (float): Constant term
+        do_clean_up (bool, optional): If the terms should be simplified. Default to True.
+        normal_order (bool, optional): If the fermionic terms should be normal (or Wick) ordered. Default to True. True is
+            recommended always.
 
     Attributes:
-        nbqbits (int): the total number of qubits
-        terms (List[Term]): the list of terms
-        constant_coeff (float): constant term
-        matrix (np.ndarray): the corresponding matrix (None by default, can be set by calling get_matrix method)
-        normal_order (bool): If the fermionic terms should be normal (or Wick) ordered.
+        nbqbits (int): The total number of qubits
+        terms (List[Term]): The list of terms
+        constant_coeff (float): Constant term.
+        matrix (np.ndarray): The corresponding matrix (None by default, can be set by calling get_matrix method).
+        normal_order (bool): If the fermionic terms should be normal (or Wick) ordered. 
 
     Note:
         Fermionic Hamiltonians are automatically normally ordered.
@@ -598,7 +601,24 @@ class ElectronicStructureHamiltonian(FermionHamiltonian):
         # pylint: disable=E1101
         super(ElectronicStructureHamiltonian, self).__init__(self._hpq.shape[0], terms, self.constant_coeff, do_clean_up=self.do_clean_up)
 
+    def dag(self) -> "ElectronicStructureHamiltonian":
+        """Compute the conjugate transpose of the Hamiltonian.
 
+        Returns:
+            ElectronicStructureHamiltonian: Conjugate transpose of the Hamiltonian.
+
+        """
+        # pylint: disable=E1101
+        return ElectronicStructureHamiltonian(np.conj(self.hpq), np.conj(self.hpqrs), np.conj(self.constant_coeff))
+    
+    def copy(self):
+        """Deepcopy the current class.
+
+        Returns:
+            :class:`~qat.fermion.hamiltonians.ElectronicStructureHamiltonian`: Copy of the ElectronicStructureHamiltonian.
+        """
+        return deepcopy(self)
+    
     def __add__(self, other):
 
         # pylint: disable=E1101
