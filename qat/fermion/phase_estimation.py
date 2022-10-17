@@ -31,7 +31,7 @@ def perform_phase_estimation(
     E_target: Optional[float] = 0,
     size_interval: Optional[float] = 2.0,
     basis_transform: Optional[str] = "jordan-wigner",
-    qpu=get_default_qpu(),
+    qpu=None,
     n_shots: Optional[int] = 0,
     verbose: Optional[bool] = False,
 ) -> Tuple[float, float]:
@@ -82,7 +82,7 @@ def perform_phase_estimation(
         basis_transform (Optional[str]): Transformation to go from :class:`qat.fermion.hamiltonians.ElectronicStructureHamiltonian`
             into a :class:`qat.fermion.hamiltonians.SpinHamiltonian`: one can use the "jordan-wigner" (default),
             "bravyi-kitaev" or "parity" transformations.
-        qpu (Optional[QPU]): QPU to use for computation.
+        qpu (Optional[QPU]): QPU to use for computation. Will use by default the default installed QPU.
 
     Returns:
         Tuple[float, float]:
@@ -100,6 +100,9 @@ def perform_phase_estimation(
         but it is misleading.
 
     """
+
+    if qpu is None:
+        qpu = get_default_qpu()
 
     # A check for nqbits_adiab to be set if n_adiab_steps
     H_qbasis = None
