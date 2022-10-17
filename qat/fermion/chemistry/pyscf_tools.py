@@ -34,7 +34,8 @@ def compute_integrals(molecule: Union[np.ndarray, "pyscf.gto.Mole"], mo_coeff, h
 
 
 def perform_pyscf_computation(geometry: list, basis: str, spin: int, charge: int, run_fci: bool = False):
-    r"""Perform various calculations using PySCF.
+    r"""Perform various calculations using PySCF. This function is a helper function meant to kickstart molecule studies. Its use is
+    completely optional, and using other methods or packages is entirely possible.
 
     This function will compute:
 
@@ -47,8 +48,7 @@ def perform_pyscf_computation(geometry: list, basis: str, spin: int, charge: int
        * (Optional) The groundstate energy using the full configuration interaction (full CI) approach.
 
     Note:
-        This function is a helper function meant to kickstart molecule studies. Its use is completely optional, and using other
-        methods or packages is entirely possible.
+        - The FCI computation is very expensive for big molecules. Enable it only for small molecules !
 
     Args:
         geometry (list): Defines the molecular structure. The internal format is PySCF format:
