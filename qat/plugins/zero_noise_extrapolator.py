@@ -96,7 +96,7 @@ def perform_extrapolation(
     n_ins: int,
     extrap_method: Optional[str] = "linear",
     asymptot: Optional[float] = 0,
-) -> float:
+):
     r"""
     Perform an extrapolation to zero noise.
 
@@ -273,7 +273,7 @@ class ZeroNoiseExtrapolator(AbstractPlugin):
             if result_to_fix.value is not None:
 
                 values_for_fit = extract_values(batch_result, self.n_ins, n_jobs_init, i)
-                result_to_fix.meta_data["values_for_ZNE"] = values_for_fit
+                result_to_fix.meta_data["values_for_ZNE"] = str(values_for_fit)
                 extrapolated_results.results[i].value, a, b = perform_extrapolation(
                     values_for_fit,
                     self.n_ins,
@@ -281,6 +281,6 @@ class ZeroNoiseExtrapolator(AbstractPlugin):
                     asymptot=self.asymptots[i],
                 )
 
-                result_to_fix.meta_data["ZNE_fit_parameters"] = {"a": a, "b": b}
+                result_to_fix.meta_data["ZNE_fit_parameters"] = {"a": str(a), "b": str(b)}
 
         return extrapolated_results
