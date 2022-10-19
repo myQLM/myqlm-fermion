@@ -281,6 +281,6 @@ class ZeroNoiseExtrapolator(AbstractPlugin):
                     asymptot=self.asymptots[i],
                 )
 
-                result_to_fix.meta_data["ZNE_fit_parameters"] = {"a": str(a), "b": str(b)}
+                result_to_fix.meta_data["ZNE_fit_parameters"] = str({"a": a, "b": b})
 
         return extrapolated_results
