@@ -240,7 +240,11 @@ class GradientDescentOptimizer(Optimizer):
 
             self.iterations += 1
 
+        # Generate (angle, energy) tuple for optimizer trace metadata
+        angle_energy = [(angles[idx], self.trace[idx]) for idx in range(len(self.trace))]
+
         return (
             self.trace[-1],
-            self.parameters_index.values(),
+            self.parameters_dict.values(),
+            {"iterations": self.iterations, "energies": angle_energy}
         )
