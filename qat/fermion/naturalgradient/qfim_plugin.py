@@ -65,6 +65,7 @@ class GradientDescentOptimizer(Optimizer):
         tol: float = 1e-3,
         x0: List[float] = None,
         user_custom_gates=None,
+        collective: bool = False,
     ):
 
         self.lambda_step = lambda_step
@@ -86,7 +87,11 @@ class GradientDescentOptimizer(Optimizer):
         self.custom_gates = user_custom_gates
         self.my_gate_set = gate_set
 
-        super().__init__(collective=False)
+        # TODO: Implement collective=True
+        if collective:
+            raise NotImplementedError("GradientDescentOptimizer is currently only compatible with collective=False.")
+
+        super().__init__(collective=collective)
 
     def execute_weighted_jobs_list(self, jobs_list):
         """

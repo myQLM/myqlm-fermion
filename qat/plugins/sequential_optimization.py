@@ -87,12 +87,13 @@ class SeqOptim(Optimizer):
         coeff: Optional[float] = 1,
         x0: Optional[np.ndarray] = None,
         verbose: Optional[bool] = False,
+        collective: bool = False,
     ):
         self.ncycles_roto = ncycles
         self.coeff = coeff
         self.x0 = x0
         self.verbose = verbose
-        super(SeqOptim, self).__init__(collective=False)
+        super(SeqOptim, self).__init__(collective=collective)
 
     def evaluate_aux(self, params):
 
