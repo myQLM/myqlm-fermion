@@ -8,7 +8,7 @@ import numpy as np
 import math
 import copy
 
-from qat.plugins.optimizer import Optimizer
+from qat.core.optimizer import Optimizer
 from qat.comm.exceptions.ttypes import PluginException
 
 

@@ -8,7 +8,7 @@ from itertools import product
 import numpy as np
 
 from qat.comm.exceptions.ttypes import PluginException
-from qat.plugins.optimizer import Optimizer
+from qat.core.optimizer import Optimizer
 
 from ..matchgates import gate_set
 from .auto_derivatives import (

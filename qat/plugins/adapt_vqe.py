@@ -8,7 +8,7 @@ from typing import List
 from tqdm.auto import tqdm
 import numpy as np
 
-from qat.plugins import Junction
+from qat.core.junction import Junction
 from qat.core import Result, Observable, Job
 from qat.lang.AQASM import Program, RX, RY, RZ, H, CNOT
 
