@@ -264,7 +264,7 @@ class ZeroNoiseExtrapolator(AbstractPlugin):
         number_of_jobs_involved = self.n_ins + 1
         n_jobs_init = len(batch_result) // (number_of_jobs_involved)
 
-        extrapolated_results = BatchResult()
+        extrapolated_results = BatchResult(meta_data=batch_result.meta_data)
         for i in range(n_jobs_init):
 
             result_to_fix = batch_result.results[i]
