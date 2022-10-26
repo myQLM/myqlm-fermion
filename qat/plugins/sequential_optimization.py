@@ -61,7 +61,7 @@ class SeqOptim(Optimizer):
     several times through all of them, leveraging the parameter shift rule to find a local minimum
     with three measurements of the cost function.
 
-    Such a method can be used only if all parametrized gates are of the form :math:`\exp(-ic\\theta P/2)` where :math:`P`
+    Such a method can be used only if all parametrized gates are of the form :math:`\exp(-i c \theta P/2)` where :math:`P`
     is a tensor product of Pauli matrices and :math:`c` a number that must be entered in the 'coeff'
     field of the plugin (e.g. for rotation matrices :math:`RX`, :math:`RY`, :math:`RZ`, :math:`c=1`).
 

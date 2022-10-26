@@ -76,8 +76,7 @@ def perform_pyscf_computation(geometry: list, basis: str, spin: int, charge: int
             - nels (int): Number of electrons.
             - one_body_integrals (np.ndarray): One-body integral.
             - two_body_integrals (np.ndarray): Two-body integral.
-            - info (dict): Dictionary containing the Hartree-Fock and 2nd order Möller-Plesset computed ground state energies (and
-                optionally the Full CI energy if run_fci is set to True).
+            - info (dict): Dictionary containing the Hartree-Fock and 2nd order Möller-Plesset computed ground state energies (and optionally the Full CI energy if run_fci is set to True).
 
     """
     try:

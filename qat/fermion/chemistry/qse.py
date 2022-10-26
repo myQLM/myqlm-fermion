@@ -55,21 +55,21 @@ def apply_quantum_subspace_expansion(
     Args:
 
         hamiltonian (SpinHamiltonian): The Hamiltonian in its spin representation.
-        state_prep_circ (Circuit): The state prep circuit.
+        state_prep_circ (Circuit): The state preparation circuit.
         expansion_operators (list<SpinHamiltonian>): The set of operators :math:`{O_i}_i`
             generating the subspace of interest.
         qpu (QPUHandler): The QPU.
         nbshots (int, optional): The number of shots. Defaults to 0:
             infinite number of shots.
         threshold (float, optional): The numerical threshold.
-        return_matrices (bool, optional): If set to ``True``, the
+        return_matrices (bool, optional): If set to :code:`True`, the
             function returns the matrices :math:`H^{(s)}` and :math:`S`. Defaults to False.
 
     Returns:
 
         e_qse (float):  Improved energy provided by the QSE procedure.
-        matrix_h (Optional[np.ndarray]): The subspace Hamiltonian :math:`H^{(s)}`. Only if `return_matrices` is True.
-        matrix_s (Optional[np.ndarray]): The overlap matrix :math:`S`.  Only if `return_matrices` is True.
+        matrix_h (Optional[np.ndarray]): The subspace Hamiltonian :math:`H^{(s)}`. Only if :code:`return_matrices` is True.
+        matrix_s (Optional[np.ndarray]): The overlap matrix :math:`S`.  Only if :code:`return_matrices` is True.
 
     Example:
 

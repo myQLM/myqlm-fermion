@@ -247,7 +247,7 @@ class FermionHamiltonian(Observable):
         normal_order (bool): If the fermionic terms should be normal (or Wick) ordered. 
 
     Note:
-        Fermionic Hamiltonians are automatically normally ordered.
+        Fermionic Hamiltonians are by default automatically normally ordered.
 
     Example:
 
@@ -402,7 +402,7 @@ class FermionHamiltonian(Observable):
             numpy.ndarray: The matrix of the FermionHamiltonian.
 
         Warning:
-            This method should not be used if the FermionHamiltonian is too large.
+            This method should not be used if the Hamiltonian is too large.
 
         """
 

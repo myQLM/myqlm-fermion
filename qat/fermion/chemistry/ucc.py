@@ -305,9 +305,7 @@ def construct_ucc_ansatz(
 
     .. math::
 
-        Q \vert \vec{0} \rangle
-            &= \vert \mathrm{UCC} (\vec{\theta}) \rangle \\
-            &= e^{T(\vec{\theta})} \vert \mathrm{HF}\rangle
+        Q \vert \vec{0} \rangle = \vert \mathrm{UCC} (\vec{\theta}) \rangle = e^{T(\vec{\theta})} \vert \mathrm{HF}\rangle
 
     Args:
         cluster_ops (List[SpinHamiltonian]): The cluster operators iT (note the i factor).
@@ -821,7 +819,7 @@ def get_cluster_ops(
 
     Note:
         This function accepts as input the number of qubits or the noons. One of them is needed for the computation of the
-        cluster operators. n_electrons and n_qbits must be pair.
+        cluster operators. :code:`n_electrons` and :code:`n_qbits` must be pair.
 
     """
 

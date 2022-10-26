@@ -25,7 +25,7 @@ class MolecularHamiltonian(object):
 
     ..  math::
 
-        H=\sum_{uv\sigma}I_{uv}c^{\dagger}_{u\sigma}c_{v\sigma}+\\frac{1}{2}\sum_{uvwx}\sum_{\sigma \sigma'} I_{uvwx}c^{\dagger}_{u\sigma}c^{\dagger}_{v\sigma'}c_{w\sigma'}c_{x\sigma}+r\mathbb{I}
+        H=\sum_{uv\sigma}I_{uv}c^{\dagger}_{u\sigma}c_{v\sigma}+\frac{1}{2}\sum_{uvwx}\sum_{\sigma \sigma'} I_{uvwx}c^{\dagger}_{u\sigma}c^{\dagger}_{v\sigma'}c_{w\sigma'}c_{x\sigma}+r\mathbb{I}
 
     with :math:`r` the core repulsion constant, and with :math:`I_{uv}` and :math:`I_{uvwx}` the one- and two-body integrals defined
     by:
