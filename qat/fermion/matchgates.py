@@ -496,10 +496,37 @@ def get_nn_rotation_angles(
     use_gradient: Optional[bool] = False,
     verbose: Optional[bool] = False,
 ) -> Tuple[np.ndarray, float]:
-    """
+    r"""
     Compute the rotation angles corresponding to the preparation of the ground state of a quadratic Hamiltonian with Givens
     rotations. The obtained angles can be used as initial angle values in the LDCA circuit ansatz (completed with zeros), so as to
     generate a Slater determinant as an initial trial state for VQE.
+        
+    The ground state of a non-interacting (=quadratic) Hamiltonian :math:`H=\sum \limits_{pq} h_{pq} c^{\dagger}_p c_q` belongs to
+    the class of so-called *gaussian states*. Such states are similar to the well-known Slater determinants, except that they are not
+    bound to have a fixed number of particles.
+
+    Similarly to Slater determinants, they can be prepared easily as computational basis states by carrying out a suitable
+    single-particle orbital rotation, namely a transformation :math:`\mathcal{R}(\boldsymbol{\theta}) \in SO(2M)` acting on the
+    Majorana operators (with :math:`M` the number of fermionic modes):
+    :math:`\boldsymbol{\gamma'} = \mathcal{R}(\boldsymbol{\theta}) \boldsymbol{\gamma}` with
+    :math:`\boldsymbol{\theta} \in \mathbb{R}^d` the rotation's parameters and :math:`\boldsymbol{\gamma}`
+    the vector of :code:`2M` Majorana operators:
+
+    .. math::
+
+        \gamma_k = c^{\dagger}_k + c_k ; \gamma_{k+M} = -i(c^{\dagger}_k - c_k) ; 0 \leq k \leq M-1.
+
+    The rotation :math:`\mathcal{R}` can be decomposed into *Givens rotations* that only act either on local modes or on
+    nearest-neighbor modes:
+
+    .. math::
+
+        \mathcal{R}(\boldsymbol{\theta}) =\prod \limits_{j=1}^d r_j(\theta_j)
+
+    which yield a circuit well-suited for linear qubit topology. The target ground state can thus be obtained with a quantum routine as
+    :math:`|\psi_0\rangle = U_{\mathcal{R}(\boldsymbol{\theta})} |\psi_{\mathrm{ref}}\rangle`.
+
+    This function computes the Givens rotations' angles associated with to ground state of the non-interacting Hamiltonian.
 
     Args:
         h (np.ndarray): One-particle matrix (in p-h notation)
