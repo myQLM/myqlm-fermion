@@ -882,12 +882,13 @@ def make_hubbard_model(t_mat: np.ndarray, U: float, mu: float) -> ElectronicStru
     r"""Constructs Hubbard model
 
     .. math::
-        H = \sum_{ij,\sigma} t_{ij} c^\dagger_i c_j + U \sum_i n_{i\uparrow} n_{i \downarrow} - \mu \sum_i n_i
+        H = \sum_{ij,\sigma} (t_{ij} -  mu \delta_{ij}) c^\dagger_i c_j + U \sum_i n_{i\uparrow} n_{i \downarrow} 
 
     Args:
-        t_mat (np.ndarray): Hopping matrix (n_sites x n_sites).
+        t_mat (np.ndarray): Hopping matrix (n_sites x n_sites). t_mat may have diagonal terms contributing 
+                            to the chemical potential on each site.
         U (float): Hubbard U.
-        mu (float): Chemical potential.
+        mu (float): Reference chemical potential.
 
     Returns:
         ElectronicStructureHamiltonian: The Hubbard Hamiltonian.
@@ -909,7 +910,7 @@ def make_hubbard_model(t_mat: np.ndarray, U: float, mu: float) -> ElectronicStru
     for i in range(t_mat.shape[0]):
 
         for sig in [0, 1]:
-            hpq[2 * i + sig, 2 * i + sig] = -mu
+            hpq[2 * i + sig, 2 * i + sig] += -mu
 
     hpqrs = np.zeros((nqbit, nqbit, nqbit, nqbit))
 
