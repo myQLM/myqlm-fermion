@@ -206,9 +206,10 @@ def build_ucc_ansatz(cluster_ops: List[SpinHamiltonian], ket_hf: int, n_steps: O
                 for term in cluster_op.terms:
                     assert isinstance(term.coeff, (float, complex))
 
+                    coeff = term.coeff
                     if isinstance(term.coeff, complex):
                         assert term.coeff.imag < 1e-13
-                        term.coeff = term.coeff.real
+                        coeff = term.coeff.real
 
                     coeff = angle * term.coeff
                     terms.append(Term(coeff, term.op, term.qbits))

@@ -204,11 +204,11 @@ def test_get_matrix_changes_spin():
     matrix1 = spin_hamiltonian.get_matrix()
 
     # Set new terms
-    spin_hamiltonian.terms = [
+    spin_hamiltonian.set_terms([
         Term(0.5, "Z", [0]),
         Term(0.5, "X", [1]),
-        Term(1.0, "XX", [0, 1]),
-    ]
+        Term(1.0, "XX", [0, 1])
+    ])
 
     matrix2 = spin_hamiltonian.get_matrix()
 
@@ -221,7 +221,7 @@ def test_get_matrix_changes_fermion():
 
     matrix1 = H_fermion.get_matrix()
 
-    H_fermion.terms = [Term(0.2, "Cc", [0, 1]), Term(2, "CCcc", [0, 1, 1, 0])]
+    H_fermion.set_terms([Term(0.2, "Cc", [0, 1]), Term(2, "CCcc", [0, 1, 1, 0])])
 
     matrix2 = H_fermion.get_matrix()
 
