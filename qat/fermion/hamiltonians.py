@@ -25,6 +25,41 @@ PAULI_MATS = {
 }
 
 
+def _transform_to_normal_order(terms, nbqbits):
+    """
+    Transform fermionic terms of a FermionHamiltonian to normally ordered fermionic terms.
+    """
+
+    # Initialize empty hamiltonian
+    ordered_hamiltonian = FermionHamiltonian(nbqbits, terms=[])
+
+    # Add ordered terms to Hamiltonian
+    for term in terms:
+        new_term = normal_order_fermionic_term(term)
+
+        for element in new_term:
+
+            if new_term:
+                ordered_hamiltonian += FermionHamiltonian(nbqbits, terms=[element], normal_order=False)
+
+    return ordered_hamiltonian.terms
+
+
+def _preprocess_terms(terms, nbqbits, normal_order):
+    """Preprocess input terms into FermionicTerms with or without normal ordering.
+
+    Args:
+        terms (List[Term]): List of fermionic terms.
+        nbqbits (int): Number of qbits of the hamiltonian which terms are being processed
+        normal_order (bool): If the FermionicTerms sould be normally ordered.
+    """
+    # Converts to FermionicTerm if needed
+    terms = terms if isinstance(terms[0], FermionicTerm) else [FermionicTerm.from_term(term) for term in terms]
+
+    # Ensure normal ordering of the fermionic terms
+    return _transform_to_normal_order(terms, nbqbits) if normal_order else terms
+
+
 class SpinHamiltonian(Observable):
     r"""
     Implementation of a spin Hamiltonian.
@@ -244,7 +279,7 @@ class FermionHamiltonian(Observable):
         terms (List[Term]): The list of terms
         constant_coeff (float): Constant term.
         matrix (np.ndarray): The corresponding matrix (None by default, can be set by calling get_matrix method).
-        normal_order (bool): If the fermionic terms should be normal (or Wick) ordered. 
+        normal_order (bool): If the fermionic terms should be normal (or Wick) ordered.
 
     Note:
         Fermionic Hamiltonians are by default automatically normally ordered.
@@ -273,7 +308,9 @@ class FermionHamiltonian(Observable):
 
         self.matrix = None
         self.do_clean_up = do_clean_up
-        self.terms = terms or []
+
+        if terms:
+            terms = _preprocess_terms(terms, nqbits, normal_order)
 
         super().__init__(
             nqbits,
@@ -282,9 +319,6 @@ class FermionHamiltonian(Observable):
             do_clean_up=do_clean_up,
         )
 
-        if self.terms:
-            self._preprocess_terms(terms, normal_order)
-
     def copy(self):
         """Deepcopy the current class.
 
@@ -292,39 +326,6 @@ class FermionHamiltonian(Observable):
             :class:`~qat.fermion.hamiltonians.FermionHamiltonian`: Copy of the FermionHamiltonian.
         """
         return deepcopy(self)
-
-    def transform_to_normal_order(self):
-        """
-        Transform fermionic terms of a FermionHamiltonian to normally ordered fermionic terms.
-        """
-
-        # Initialize empty hamiltonian
-        ordered_hamiltonian = FermionHamiltonian(self.nbqbits, terms=[])
-
-        # Add ordered terms to Hamiltonian
-        for term in self.terms:
-            new_term = normal_order_fermionic_term(term)
-
-            for element in new_term:
-
-                if new_term:
-                    ordered_hamiltonian += FermionHamiltonian(self.nbqbits, terms=[element], normal_order=False)
-
-        self.terms = ordered_hamiltonian.terms
-
-    def _preprocess_terms(self, terms, normal_order):
-        """Preprocess input terms into FermionicTerms with or without normal ordering.
-
-        Args:
-            terms (List[Term]): List of fermionic terms.
-            normal_order (bool): If the FermionicTerms sould be normally ordered.
-        """
-        # Converts to FermionicTerm if needed
-        self.terms = terms if isinstance(terms[0], FermionicTerm) else [FermionicTerm.from_term(term) for term in terms]
-
-        # Ensure normal ordering of the fermionic terms
-        if normal_order:
-            self.transform_to_normal_order()
 
     def __add__(self, other):
         res = super().__add__(other)
@@ -344,9 +345,13 @@ class FermionHamiltonian(Observable):
 
     def __mul__(self, other):
         if isinstance(other, (Number, BaseArithmetic)):
+            # double deepcopy of the terms, could be reduced to one by creating a new observable instead
+            # of copying the existing one
             new_ham = self.copy()
-            for i, _ in enumerate(new_ham.terms):
-                new_ham.terms[i].coeff *= other
+            terms = [*map(deepcopy, self.terms)]
+            for term in terms:
+                term.coeff *= other
+            new_ham.set_terms(terms)
             new_ham.constant_coeff *= other
             return new_ham
 
@@ -359,10 +364,9 @@ class FermionHamiltonian(Observable):
             term_list.append(FermionicTerm(self.constant_coeff * term.coeff, term.op, term.qbits))
 
         for term1, term2 in itertools.product(self.terms, other.terms):
-            term_list.append(term1 * term2)
+            term_list.append(term1._term * term2._term)
 
         fermionic_hamiltonian = FermionHamiltonian(self.nbqbits, terms=term_list, do_clean_up=self.do_clean_up, normal_order=True)
-        fermionic_hamiltonian.clean_up()
 
         return fermionic_hamiltonian
 

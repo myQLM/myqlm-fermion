@@ -129,8 +129,6 @@ def transform_to_jw_basis(fermion_hamiltonian: Union[FermionHamiltonian, Electro
 
         spin_hamiltonian += cur_ham
 
-    spin_hamiltonian.clean_up()
-
     return spin_hamiltonian
 
 
@@ -183,8 +181,6 @@ def transform_to_parity_basis(fermion_hamiltonian: Union[FermionHamiltonian, Ele
             cur_ham = cur_ham * mini_ham
 
         spin_hamiltonian += cur_ham
-
-    spin_hamiltonian.clean_up()
 
     return spin_hamiltonian
 
@@ -258,8 +254,6 @@ def transform_to_bk_basis(fermion_hamiltonian: Union[FermionHamiltonian, Electro
             cur_ham = cur_ham * mini_ham
 
         spin_hamiltonian += cur_ham
-
-    spin_hamiltonian.clean_up()
 
     return spin_hamiltonian
 
