@@ -77,7 +77,6 @@ setup(
         "anytree",
         "bitstring",
         "numpy",
-        "pytest",
         "scipy",
         "tqdm",
     ],
