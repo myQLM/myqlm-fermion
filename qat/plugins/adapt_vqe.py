@@ -149,9 +149,10 @@ class AdaptVQEPlugin(Junction):
         result = Result()
 
         # Initialize registers
-        energy_trace = []
+        energy_trace = [] # final energies of each optimization
         operator_idx = []
-
+        optimization_traces = [] # full ansatz optimization traces for each adapt step
+        
         # Compute commutators
         commutators = self._compute_commutators(job.observable)
 
@@ -172,6 +173,7 @@ class AdaptVQEPlugin(Junction):
             # If all energy gradients are equal, pick randomly from the pool one of the operators
             energies_are_equal = all(item == energy_gradients[0] for item in energy_gradients)
 
+            # Determine which operator to add to the circuit
             if energies_are_equal:
 
                 # # If we have converged, energy gradient will remain at zero for all values
@@ -179,35 +181,46 @@ class AdaptVQEPlugin(Junction):
                     warnings.warn(
                         "All energy gradients are equal to zero for given operator pool. Ending calculation.", stacklevel=2
                     )
-                    break
-
-                # If energy gradients are equal, pick randomly one of them
-                op_ind = np.random.choice(np.arange(0, len(commutators) - 1))
+                    op_ind = None
+   
+                else:
+                    # If energy gradients are equal, pick randomly one of them
+                    op_ind = np.random.choice(np.arange(0, len(commutators) - 1))
 
             # Else pick the one which changes energy the most (if 2 or more are equal, pick the first one)
             else:
                 op_ind = np.argmax(np.abs(energy_gradients))
 
-            operator_idx.append(op_ind)
+            if op_ind is not None:
+                operator_idx.append(op_ind)
+                # Grow ansatz
+                pbar.set_description("Growing ansatz...")
 
-            # Grow ansatz
-            pbar.set_description("Growing ansatz...")
+                current_ansatz = self._grow_ansatz(self.pool[op_ind], 1)
+                circuit += current_ansatz.to_circ()
 
-            current_ansatz = self._grow_ansatz(self.pool[op_ind], 1)
-            circuit += current_ansatz.to_circ()
-
-            # Define the variational Job to optimize
-            job = circuit.to_job(observable=job.observable)
-
-            # Optimize the parameters
-            result = self.execute(circuit.to_job(observable=job.observable))
-
-            # Store current energy
+                # Optimize the parameters (the job's circuit was updated)
+                result = self.execute(job)
+                # Store optimization results
+                energy_trace.append(result.value) # the optimal energy
+                optimization_traces += eval(result.meta_data["optimization_trace"]) # the whole trace
+                
             # pylint: disable=eval-used
-            energy_trace += eval(result.meta_data["optimization_trace"])
+            if not len(operator_idx): # empty list, meaning the circuit was never grown
+                warnings.warn(
+                        "Optimizing the initial circuit.", stacklevel=2
+                    )
+                # Optimize the parameters of the untouched circuit
+                result = self.execute(job)
+                # Store optimization results
+                energy_trace.append(result.value) # the optimal energy
+                if len(job.circuit.var_dic): # initial circuit is indeed variational
+                    optimization_traces += eval(result.meta_data["optimization_trace"]) # the whole trace
+                break
 
         result.meta_data = {}
         result.meta_data["operator_order"] = str(operator_idx)
-        result.meta_data["optimization_trace"] = str(energy_trace)
+        result.meta_data["energy_trace"] = str(energy_trace)
+        result.meta_data["optimization_traces"] = str(optimization_traces)
 
         return result
