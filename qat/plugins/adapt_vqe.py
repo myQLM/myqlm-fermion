@@ -151,7 +151,8 @@ class AdaptVQEPlugin(Junction):
         # Initialize registers
         energy_trace = [] # final energies of each optimization
         operator_idx = []
-        optimization_traces = [] # full ansatz optimization traces for each adapt step
+        optimization_trace = [] # full ansatz optimization traces for each adapt step
+        n_iters_optim = [] # number of optimization steps for each current circuit
         
         # Compute commutators
         commutators = self._compute_commutators(job.observable)
@@ -203,7 +204,8 @@ class AdaptVQEPlugin(Junction):
                 result = self.execute(job)
                 # Store optimization results
                 energy_trace.append(result.value) # the optimal energy
-                optimization_traces += eval(result.meta_data["optimization_trace"]) # the whole trace
+                n_iters_optim.append(len(eval(result.meta_data["optimization_trace"])))
+                optimization_trace += eval(result.meta_data["optimization_trace"]) # the whole trace
                 
             # pylint: disable=eval-used
             if not len(operator_idx): # empty list, meaning the circuit was never grown
@@ -215,12 +217,14 @@ class AdaptVQEPlugin(Junction):
                 # Store optimization results
                 energy_trace.append(result.value) # the optimal energy
                 if len(job.circuit.var_dic): # initial circuit is indeed variational
-                    optimization_traces += eval(result.meta_data["optimization_trace"]) # the whole trace
+                    n_iters_optim.append(len(eval(result.meta_data["optimization_trace"])))
+                    optimization_trace += eval(result.meta_data["optimization_trace"]) # the whole trace
                 break
 
         result.meta_data = {}
         result.meta_data["operator_order"] = str(operator_idx)
         result.meta_data["energy_trace"] = str(energy_trace)
-        result.meta_data["optimization_traces"] = str(optimization_traces)
-
+        result.meta_data["optimization_trace"] = str(optimization_trace)
+        result.meta_data["n_iters_optim"] = str(n_iters_optim)
+        
         return result
