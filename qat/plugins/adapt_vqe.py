@@ -23,7 +23,6 @@ class AdaptVQEPlugin(Junction):
             The pool of commutators is internally constructed from this list.
         n_iterations (int, optional): Maximum number of iteration to perform. Defaults to 300.
         commutators (List[Union[Observable, SpinHamiltonian]): List of commutators to use when computing the energy gradients.
-        early_stopper (float, optional): Loss value for which the run is stopped. Defaults to 1e-6.
 
     """
 
@@ -31,12 +30,10 @@ class AdaptVQEPlugin(Junction):
         self,
         operator_pool: List[Observable],
         n_iterations: int = 300,
-        early_stopper: float = 1e-6,
     ):
 
         self.pool = operator_pool
         self.n_iterations = n_iterations
-        self.early_stopper = early_stopper
         self.commutators = None
 
         super().__init__(collective=False)
@@ -167,7 +164,6 @@ class AdaptVQEPlugin(Junction):
             # Loop over operator pool and find the one with biggest energy gradient
             pbar.set_description("Computing energy gradients...")
             for commutator in commutators:
-
                 val = self.execute(circuit.to_job(observable=commutator)).value
                 energy_gradients.append(val)
 
@@ -219,6 +215,9 @@ class AdaptVQEPlugin(Junction):
                 if len(job.circuit.var_dic): # initial circuit is indeed variational
                     n_iters_optim.append(len(eval(result.meta_data["optimization_trace"])))
                     optimization_trace += eval(result.meta_data["optimization_trace"]) # the whole trace
+                break
+               
+            if op_ind is None:
                 break
 
         result.meta_data = {}
