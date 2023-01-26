@@ -20,35 +20,43 @@ class AdaptVQEPlugin(Junction):
 
     Args:
         operator_pool (List[Observable]): List of operators to choose from.
-            The pool of commutators is internally constructed from this list.
-        n_iterations (int, optional): Maximum number of iteration to perform. Defaults to 300.
-        commutators (List[Union[Observable, SpinHamiltonian]): List of commutators to use when computing the energy gradients.
-
+            The pool of commutators is either given by the user or internally constructed from this list.
+        n_iterations (int, optional): Maximum number of iterations to perform. Defaults to 300.
+        tol_vanishing_grad (float, optional): threshold value of the norm-2 of the gradient vector under which 
+        to stop the computation. Defaults to 1e-3.
+        commutators (List[Observable], optional): List of commutators between the observable and an operator from 
+        the pool, whose expectation values yield the gradient. Defaults to None, in which case it is constructed
+        when the plugin is run.
     """
 
     def __init__(
         self,
         operator_pool: List[Observable],
         n_iterations: int = 300,
+        tol_vanishing_grad : float = 1e-3,
+        commutators = None
     ):
 
         self.pool = operator_pool
         self.n_iterations = n_iterations
-        self.commutators = None
+        self.tol_vanishing_grad = tol_vanishing_grad
+        self.commutators = commutators
 
         super().__init__(collective=False)
 
-    def _compute_commutators(self, observable: Observable):
+    @staticmethod
+    def _compute_commutators(observable: Observable, pool:List[Observable]):
         """Compute commutators between pool operators and the observable.
 
         Args:
-            job (Job): Job.
-
+            observable (Observable): The Observable whose expectation value is to be minimized.
+            pool (List[Observable]): the pool of operators to compute the commutator with
+            
         Returns:
             list: List of Observable
         """
 
-        return [observable | op for op in tqdm(self.pool, desc="Computing commutators...")]
+        return [observable | op for op in tqdm(pool, desc="Computing commutators...")]
 
     @staticmethod
     def _grow_ansatz(operator: Observable, iter_num: int) -> Program:
@@ -152,7 +160,8 @@ class AdaptVQEPlugin(Junction):
         n_iters_optim = [] # number of optimization steps for each current circuit
         
         # Compute commutators
-        commutators = self._compute_commutators(job.observable)
+        if self.commutators is None:
+            self.commutators = self._compute_commutators(job.observable, self.pool)
 
         pbar = tqdm(range(self.n_iterations))
         # Iterate over number of input number of iterations
@@ -163,26 +172,17 @@ class AdaptVQEPlugin(Junction):
 
             # Loop over operator pool and find the one with biggest energy gradient
             pbar.set_description("Computing energy gradients...")
-            for commutator in commutators:
+            for commutator in self.commutators:
                 val = self.execute(circuit.to_job(observable=commutator)).value
                 energy_gradients.append(val)
 
-            # If all energy gradients are equal, pick randomly from the pool one of the operators
-            energies_are_equal = all(item == energy_gradients[0] for item in energy_gradients)
-
-            # Determine which operator to add to the circuit
-            if energies_are_equal:
-
-                # # If we have converged, energy gradient will remain at zero for all values
-                if energy_gradients[0] == 0:
-                    warnings.warn(
-                        "All energy gradients are equal to zero for given operator pool. Ending calculation.", stacklevel=2
+            grad_vec_norm = np.linalg.norm(energy_gradients) 
+            
+            if grad_vec_norm < self.tol_vanishing_grad:
+                warnings.warn(
+                        "Norm of the energy gradient is below the set threshold. Ending calculation.", stacklevel=2
                     )
-                    op_ind = None
-   
-                else:
-                    # If energy gradients are equal, pick randomly one of them
-                    op_ind = np.random.choice(np.arange(0, len(commutators) - 1))
+                op_ind = None
 
             # Else pick the one which changes energy the most (if 2 or more are equal, pick the first one)
             else:
