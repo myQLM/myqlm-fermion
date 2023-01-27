@@ -6,6 +6,7 @@ ADAPT-VQE Plugin
 import warnings
 from typing import List
 from tqdm.auto import tqdm
+import copy
 import numpy as np
 
 from qat.core.junction import Junction
@@ -150,6 +151,9 @@ class AdaptVQEPlugin(Junction):
         # Get circuit
         circuit = job.circuit
 
+        # Initialize bound circuit for gradient evaluation
+        bound_circuit = copy.copy(circuit)
+
         # Initialize Result container
         result = Result()
 
@@ -162,10 +166,10 @@ class AdaptVQEPlugin(Junction):
         # Compute commutators
         if self.commutators is None:
             self.commutators = self._compute_commutators(job.observable, self.pool)
-
+            
         pbar = tqdm(range(self.n_iterations))
         # Iterate over number of input number of iterations
-        for _ in pbar:
+        for iter_num in pbar:
 
             # Step energy register
             energy_gradients = []
@@ -173,9 +177,9 @@ class AdaptVQEPlugin(Junction):
             # Loop over operator pool and find the one with biggest energy gradient
             pbar.set_description("Computing energy gradients...")
             for commutator in self.commutators:
-                val = self.execute(circuit.to_job(observable=commutator)).value
+                val = -1j*self.execute(bound_circuit.to_job(observable=commutator)).value
                 energy_gradients.append(val)
-
+            
             grad_vec_norm = np.linalg.norm(energy_gradients) 
             
             if grad_vec_norm < self.tol_vanishing_grad:
@@ -193,11 +197,15 @@ class AdaptVQEPlugin(Junction):
                 # Grow ansatz
                 pbar.set_description("Growing ansatz...")
 
-                current_ansatz = self._grow_ansatz(self.pool[op_ind], 1)
+                current_ansatz = self._grow_ansatz(self.pool[op_ind], iter_num)
                 circuit += current_ansatz.to_circ()
 
                 # Optimize the parameters (the job's circuit was updated)
                 result = self.execute(job)
+
+                # Update bound circuit
+                bound_circuit = circuit(**result.parameter_map)
+
                 # Store optimization results
                 energy_trace.append(result.value) # the optimal energy
                 n_iters_optim.append(len(eval(result.meta_data["optimization_trace"])))
