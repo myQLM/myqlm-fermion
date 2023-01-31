@@ -16,18 +16,20 @@ from qat.lang.AQASM import Program, RX, RY, RZ, H, CNOT
 
 class AdaptVQEPlugin(Junction):
     r"""
-    Plugin implementation of the ADAPT-VQE algorithm, which builds ansatze by selecting operators from a given pool of operators.
-    The method is based on `Grimsley et al. article <https://www.nature.com/articles/s41467-019-10988-2.pdf>`_.
+    Plugin implementation of the ADAPT-VQE algorithm, which builds ansatze by selecting operators :math:`\tau_k` from a user-defined pool of operators.
+    Once an operator is chosen, a parameterized gate :math:`\exp(\theta_k \tau_k)` is added to the circuit.
+    The method is based on the `Grimsley et al. <https://www.nature.com/articles/s41467-019-10988-2.pdf>`_ publication.
+
 
     Args:
-        operator_pool (List[Observable]): List of operators to choose from.
+        operator_pool (List[Observable]): List of operators :math:`\tau_k` to choose from (they should be antihermitian).
             The pool of commutators is either given by the user or internally constructed from this list.
         n_iterations (int, optional): Maximum number of iterations to perform. Defaults to 300.
         tol_vanishing_grad (float, optional): threshold value of the norm-2 of the gradient vector under which 
-        to stop the computation. Defaults to 1e-3.
+            to stop the computation. Defaults to 1e-3.
         commutators (List[Observable], optional): List of commutators between the observable and an operator from 
-        the pool, whose expectation values yield the gradient. Defaults to None, in which case it is constructed
-        when the plugin is run.
+            the pool, whose expectation values yield the gradient. Defaults to None, in which case it is constructed
+            when the plugin is run.
     """
 
     def __init__(
