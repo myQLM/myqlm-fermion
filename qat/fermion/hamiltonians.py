@@ -215,7 +215,7 @@ class SpinHamiltonian(Observable):
         return final_matrix
 
     @staticmethod
-    def _make_spin_op(op: str, qb: int, nqbits: int, sparse: bool) -> Union[np.ndarray, sp.bsr.bsr_matrix]:
+    def _make_spin_op(op: str, qb: int, nqbits: int, sparse: bool) -> Union[np.ndarray, sp.bsr_matrix]:
         """Build spin operator.
 
         Args:
@@ -225,7 +225,7 @@ class SpinHamiltonian(Observable):
             sparse (bool): If a sparse matrix should be returned.
 
         Returns:
-            Union[np.ndarray, sp.bsr.bsr_matrix]: Matrix of the spin operator.
+            Union[np.ndarray, sp.bsr_matrix]: Matrix of the spin operator.
         """
 
         id_type = sp.identity if sparse else np.identity
