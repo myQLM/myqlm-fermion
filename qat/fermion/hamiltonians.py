@@ -94,17 +94,14 @@ class SpinHamiltonian(Observable):
         nqbits: int,
         terms: List[Term],
         constant_coeff: float = 0.0,
-        do_clean_up: bool = True,
     ):
 
         self.matrix = None
-        self.do_clean_up = do_clean_up
 
         super(SpinHamiltonian, self).__init__(
             nqbits,
             pauli_terms=terms,
             constant_coeff=constant_coeff,
-            do_clean_up=do_clean_up,
         )
 
         # Fast consistency check on the first term inputted.
@@ -112,27 +109,27 @@ class SpinHamiltonian(Observable):
 
     def __add__(self, other):
         res = super().__add__(other)
-        return SpinHamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
+        return SpinHamiltonian(res.nbqbits, res.terms, res.constant_coeff)
 
     def __radd__(self, other):
         res = super().__radd__(other)
-        return SpinHamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
+        return SpinHamiltonian(res.nbqbits, res.terms, res.constant_coeff)
 
     def __sub__(self, other):
         res = super().__sub__(other)
-        return SpinHamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
+        return SpinHamiltonian(res.nbqbits, res.terms, res.constant_coeff)
 
     def __rsub__(self, other):
         res = super().__rsub__(other)
-        return SpinHamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
+        return SpinHamiltonian(res.nbqbits, res.terms, res.constant_coeff)
 
     def __mul__(self, other):
         res = super().__mul__(other)
-        return SpinHamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
+        return SpinHamiltonian(res.nbqbits, res.terms, res.constant_coeff)
 
     def __rmul__(self, other):
         res = super().__rmul__(other)
-        return SpinHamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
+        return SpinHamiltonian(res.nbqbits, res.terms, res.constant_coeff)
 
     def __or__(self, other):
         return self * other - other * self
@@ -161,7 +158,6 @@ class SpinHamiltonian(Observable):
             self.nbqbits,
             [Term(np.conj(term.coeff), term.op, term.qbits) for term in self.terms],
             np.conj(self.constant_coeff),
-            do_clean_up=self.do_clean_up,
         )
 
     def get_matrix(self, sparse: bool = False) -> np.ndarray:
@@ -270,7 +266,6 @@ class FermionHamiltonian(Observable):
         nqbits (int): The total number of qubits
         terms (List[Term]): The list of terms
         constant_coeff (float): Constant term
-        do_clean_up (bool, optional): If the terms should be simplified. Default to True.
         normal_order (bool, optional): If the fermionic terms should be normal (or Wick) ordered. Default to True. True is
             recommended always.
 
@@ -302,12 +297,10 @@ class FermionHamiltonian(Observable):
         nqbits: int,
         terms: List[Term],
         constant_coeff: float = 0.0,
-        do_clean_up: bool = True,
         normal_order: bool = True,
     ):
 
         self.matrix = None
-        self.do_clean_up = do_clean_up
 
         if terms:
             terms = _preprocess_terms(terms, nqbits, normal_order)
@@ -316,7 +309,6 @@ class FermionHamiltonian(Observable):
             nqbits,
             pauli_terms=terms,
             constant_coeff=constant_coeff,
-            do_clean_up=do_clean_up,
         )
 
     def copy(self):
@@ -329,19 +321,19 @@ class FermionHamiltonian(Observable):
 
     def __add__(self, other):
         res = super().__add__(other)
-        return FermionHamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
+        return FermionHamiltonian(res.nbqbits, res.terms, res.constant_coeff)
 
     def __radd__(self, other):
         res = super().__radd__(other)
-        return FermionHamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
+        return FermionHamiltonian(res.nbqbits, res.terms, res.constant_coeff)
 
     def __sub__(self, other):
         res = super().__sub__(other)
-        return FermionHamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
+        return FermionHamiltonian(res.nbqbits, res.terms, res.constant_coeff)
 
     def __rsub__(self, other):
         res = super().__rsub__(other)
-        return FermionHamiltonian(res.nbqbits, res.terms, res.constant_coeff, do_clean_up=self.do_clean_up)
+        return FermionHamiltonian(res.nbqbits, res.terms, res.constant_coeff)
 
     def __mul__(self, other):
         if isinstance(other, (Number, BaseArithmetic)):
@@ -366,7 +358,7 @@ class FermionHamiltonian(Observable):
         for term1, term2 in itertools.product(self.terms, other.terms):
             term_list.append(term1._term * term2._term)
 
-        fermionic_hamiltonian = FermionHamiltonian(self.nbqbits, terms=term_list, do_clean_up=self.do_clean_up, normal_order=True)
+        fermionic_hamiltonian = FermionHamiltonian(self.nbqbits, terms=term_list, normal_order=True)
 
         return fermionic_hamiltonian
 
@@ -504,7 +496,7 @@ class FermionHamiltonian(Observable):
                 term = order_qubits(term)
                 _fill_tensors(term)
 
-        return ElectronicStructureHamiltonian(hpq, hpqrs, do_clean_up=self.do_clean_up)
+        return ElectronicStructureHamiltonian(hpq, hpqrs)
 
 
 class ElectronicStructureHamiltonian(FermionHamiltonian):
@@ -553,7 +545,6 @@ class ElectronicStructureHamiltonian(FermionHamiltonian):
         hpq: np.ndarray,
         hpqrs: np.ndarray = None,
         constant_coeff: float = 0.0,
-        do_clean_up: bool = True,
     ):
 
         if hpqrs is None:
@@ -561,11 +552,10 @@ class ElectronicStructureHamiltonian(FermionHamiltonian):
 
         self._hpq = hpq
         self._hpqrs = hpqrs
-        self.do_clean_up = do_clean_up
 
         terms = self._get_fermionic_terms()
 
-        super(ElectronicStructureHamiltonian, self).__init__(self._hpq.shape[0], terms, constant_coeff, do_clean_up=do_clean_up)
+        super(ElectronicStructureHamiltonian, self).__init__(self._hpq.shape[0], terms, constant_coeff)
         
     @property
     def hpq(self):
@@ -584,7 +574,7 @@ class ElectronicStructureHamiltonian(FermionHamiltonian):
         self._hpq = value
         terms = self._get_fermionic_terms()
         # pylint: disable=E1101
-        super(ElectronicStructureHamiltonian, self).__init__(self._hpq.shape[0], terms, self.constant_coeff, do_clean_up=self.do_clean_up)
+        super(ElectronicStructureHamiltonian, self).__init__(self._hpq.shape[0], terms, self.constant_coeff)
 
     @property
     def hpqrs(self):
@@ -603,7 +593,7 @@ class ElectronicStructureHamiltonian(FermionHamiltonian):
         self._hpqrs = value
         terms = self._get_fermionic_terms()
         # pylint: disable=E1101
-        super(ElectronicStructureHamiltonian, self).__init__(self._hpq.shape[0], terms, self.constant_coeff, do_clean_up=self.do_clean_up)
+        super(ElectronicStructureHamiltonian, self).__init__(self._hpq.shape[0], terms, self.constant_coeff)
 
     def dag(self) -> "ElectronicStructureHamiltonian":
         """Compute the conjugate transpose of the Hamiltonian.
@@ -630,7 +620,6 @@ class ElectronicStructureHamiltonian(FermionHamiltonian):
             self.hpq + other.hpq,
             self.hpqrs + other.hpqrs,
             self.constant_coeff + other.constant_coeff,
-            do_clean_up=self.do_clean_up,
         )
 
     def _get_fermionic_terms(self) -> List[Term]:
@@ -668,7 +657,7 @@ class ElectronicStructureHamiltonian(FermionHamiltonian):
         terms = self._get_fermionic_terms()
 
         # pylint: disable=E1101
-        return FermionHamiltonian(self.hpq.shape[0], terms, self.constant_coeff, do_clean_up=self.do_clean_up)
+        return FermionHamiltonian(self.hpq.shape[0], terms, self.constant_coeff)
 
 
 def make_anderson_model(u: float, mu: float, v: np.ndarray, epsilon: np.ndarray) -> ElectronicStructureHamiltonian:

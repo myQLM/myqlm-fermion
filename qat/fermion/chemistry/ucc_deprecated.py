@@ -614,7 +614,7 @@ def get_cluster_ops_and_init_guess(
 
 #     hpq, hpqrs = convert_to_h_integrals(one_body_as, two_body_as)
 
-#     H_active = ElectronicStructureHamiltonian(hpq, hpqrs, constant_coeff=nuclear_repulsion + core_constant, do_clean_up=False)
+#     H_active = ElectronicStructureHamiltonian(hpq, hpqrs, constant_coeff=nuclear_repulsion + core_constant)
 
 #     return H_active, active_indices, occupied_indices
 
@@ -712,6 +712,6 @@ def get_active_space_hamiltonian(
 
     hpq, hpqrs = convert_to_h_integrals(one_body_as, two_body_as)
 
-    H_active = ElectronicStructureHamiltonian(hpq, hpqrs, constant_coeff=nuclear_repulsion + core_constant, do_clean_up=False)
+    H_active = ElectronicStructureHamiltonian(hpq, hpqrs, constant_coeff=nuclear_repulsion + core_constant)
 
     return H_active, active_indices, occupied_indices
