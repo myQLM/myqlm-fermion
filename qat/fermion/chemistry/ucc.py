@@ -819,7 +819,7 @@ def get_cluster_ops(
 
     Note:
         This function accepts as input the number of qubits or the noons. One of them is needed for the computation of the
-        cluster operators. :code:`n_electrons` and :code:`n_qbits` must be pair.
+        cluster operators. :code:`n_electrons` and :code:`n_qbits` must be even.
 
     """
 
@@ -835,13 +835,13 @@ def get_cluster_ops(
 
         # Sanity check for nqbits
         if nqbits % 2 != 0:
-            raise ValueError(f"Only pair values of nqbits are allowed.")
+            raise ValueError(f"Only even values of nqbits are allowed.")
 
         qbit_range = list(range(nqbits))
 
     # Sanity check for n_electrons
     if n_electrons % 2 != 0:
-        raise ValueError(f"Only pair values of n_electrons are allowed.")
+        raise ValueError(f"Only even values of n_electrons are allowed.")
 
     (
         occupied_orbitals,
