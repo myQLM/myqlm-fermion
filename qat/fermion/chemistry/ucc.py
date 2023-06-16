@@ -231,8 +231,7 @@ def convert_to_h_integrals(one_body_integrals: np.ndarray, two_body_integrals: n
 
 def _build_cluster_operator(l_ex_op: List[Tuple[int]], nqbits: int) -> List[FermionHamiltonian]:
     r"""
-    Builds the cluster operator and reduces the trial
-    parametrization to match the selected excitation operators.
+    Builds the cluster operator with selected excitation operators.
 
     The UCCSD cluster operator :math:`T` is defined (in normal-ordered form) as:
 
@@ -246,11 +245,9 @@ def _build_cluster_operator(l_ex_op: List[Tuple[int]], nqbits: int) -> List[Ferm
     where :math:`i, j` (resp. :math:`a, b`) indices occupied (resp.
     inoccupied) spin-orbitals. It is antihermitian.
 
-    The function returns :math:`iT`.
-
-    Finally, the trial MP2 parametrization is reduced to only store the
-    non-zero parameters corresponding to the selected excitation
-    parameters.
+    The function returns a list of the operators :math:`i (a^\dagger_a a_i -
+        a^\dagger_i a_a)` and :math:`i (a^\dagger_a a^\dagger_b a_i a_j - a^\dagger_i a^\dagger_j a_a
+        a_b)`.
 
     Args:
         l_ex_op (List[Tuple[int]]): The list of of (a, b, i, j) and (a, i) tuples describing the
@@ -815,7 +812,7 @@ def get_cluster_ops(
 
     Returns:
         List[FermionHamiltonian]:
-            The list of cluster operators :math:`\{T_{a}^{i}, a \in \mathcal{I}', i \in \mathcal{O}' \} \cup \{T_{ab}^{ij}, a>b, i>j, a,b \in \mathcal{I}', i,j \in \mathcal{O}'\}`
+            The list of cluster operators :math:`\{i T_{a}^{i}, a \in \mathcal{I}', i \in \mathcal{O}' \} \cup \{i T_{ab}^{ij}, a>b, i>j, a,b \in \mathcal{I}', i,j \in \mathcal{O}'\}`, with :mathcal:`I` (resp. :mathcal:`O`) the inoccupied (resp. occupied) orbitals.
 
     Note:
         This function accepts as input the number of qubits or the noons. One of them is needed for the computation of the
