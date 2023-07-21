@@ -812,7 +812,7 @@ def get_cluster_ops(
 
     Returns:
         List[FermionHamiltonian]:
-            The list of cluster operators :math:`\{i T_{a}^{i}, a \in \mathcal{I}', i \in \mathcal{O}' \} \cup \{i T_{ab}^{ij}, a>b, i>j, a,b \in \mathcal{I}', i,j \in \mathcal{O}'\}`, with :mathcal:`I` (resp. :mathcal:`O`) the inoccupied (resp. occupied) orbitals.
+            The list of cluster operators :math:`\{i T_{a}^{i}, a \in \mathcal{I}', i \in \mathcal{O}' \} \cup \{iT_{ab}^{ij}, a>b, i>j, a,b \in \mathcal{I}', i,j \in \mathcal{O}'\}`, with :math:`\mathcal{I}` (resp. :math:`\mathcal{O}`) the inoccupied (resp. occupied) orbitals.
 
     Note:
         This function accepts as input the number of qubits or the noons. One of them is needed for the computation of the
