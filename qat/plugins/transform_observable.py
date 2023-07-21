@@ -38,6 +38,7 @@ class TransformObservable(AbstractPlugin):
 
         except KeyError as excpt:
             raise ValueError(f"Unknown transformation {name!r}") from excpt
+        super().__init__()
 
     def compile(self, batch, specs):
         """
