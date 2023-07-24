@@ -14,8 +14,8 @@ class TransformObservable(AbstractPlugin):
     into a :class:`qat.fermion.hamiltonians.SpinHamiltonian`. The transformation is defined
     by a identifier (i.e. string)
 
-     - **jordan-wigner**: Jordan-Wigned transformation
-       (cf. :func:`~qat.fermion.transforms.transfrom_to_jw_basis`)
+     - **jordan-wigner**: Jordan-Wigner transformation
+       (cf. :func:`~qat.fermion.transforms.transform_to_jw_basis`)
      - **bravyi-kitaev**: Bravyi-Kitaev transformation
        (cf. :func:`~qat.fermion.transforms.transform_to_bk_basis`)
      - **parity-basis**: Parity basis transformation
