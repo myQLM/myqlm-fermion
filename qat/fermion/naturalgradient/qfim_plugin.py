@@ -52,7 +52,7 @@ class GradientDescentOptimizer(Optimizer):
         tol (float, optional): Tolerance for stopping criterion.
             Defaults to 1e-10.
         x0 (list, optional): Initial value of the parameters. The indexing must be the same as for the variables obtained via the
-            `.get_variables()`method. If None, the initial parameters will be randomly chosen. Defaults to None.
+            `.get_variables()` method. If None, the initial parameters will be randomly chosen. Defaults to None.
 
     """
 
@@ -248,8 +248,4 @@ class GradientDescentOptimizer(Optimizer):
         # Generate (angle, energy) tuple for optimizer trace metadata
         angle_energy = [(angles[idx], self.trace[idx]) for idx in range(len(self.trace))]
 
-        return (
-            self.trace[-1],
-            self.parameters_dict.values(),
-            {"iterations": self.iterations, "energies": angle_energy}
-        )
+        return (self.trace[-1], self.parameters_dict.values(), {"iterations": self.iterations, "energies": angle_energy})
