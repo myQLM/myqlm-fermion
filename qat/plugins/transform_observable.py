@@ -15,7 +15,7 @@ class TransformObservable(AbstractPlugin):
     by a identifier (i.e. string)
 
      - **jordan-wigner**: Jordan-Wigned transformation
-       (cf. :func:`~qat.fermion.transforms.transfrom_to_jw_basis`**)
+       (cf. :func:`~qat.fermion.transforms.transfrom_to_jw_basis`)
      - **bravyi-kitaev**: Bravyi-Kitaev transformation
        (cf. :func:`~qat.fermion.transforms.transform_to_bk_basis`)
      - **parity-basis**: Parity basis transformation
