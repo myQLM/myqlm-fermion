@@ -93,7 +93,7 @@ def perform_phase_estimation(
         Usually, energies lie outside the range :math:`(-\frac{2\pi}{t}, 0)`. However, this range can be adjusted
         by specifying the arguments `E_target` and `size_interval` thus searching inside the window
         :math:`(E_{t} - \frac{\Delta}{2}, E_{target} + \frac{size\_interval}{2})`,
-        where :math:`E_{t}` and :math:`\Delta` stand for . We suggest to always start from a large size interval
+        where :math:`E_{t}` and :math:`\Delta` stand for. We suggest to always start from a large size interval
         and unbiased target energy like 0 thus enclosing many of the eigenenergies including the desired one.
         One can then narrow the window around an already found eigenenergy for a better precision.
         Experience shows that working with a window not enclosing an eigenenergy makes the QPE still output a result,

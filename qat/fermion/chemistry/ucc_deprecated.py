@@ -206,9 +206,10 @@ def build_ucc_ansatz(cluster_ops: List[SpinHamiltonian], ket_hf: int, n_steps: O
                 for term in cluster_op.terms:
                     assert isinstance(term.coeff, (float, complex))
 
+                    coeff = term.coeff
                     if isinstance(term.coeff, complex):
                         assert term.coeff.imag < 1e-13
-                        term.coeff = term.coeff.real
+                        coeff = term.coeff.real
 
                     coeff = angle * term.coeff
                     terms.append(Term(coeff, term.op, term.qbits))
@@ -613,7 +614,7 @@ def get_cluster_ops_and_init_guess(
 
 #     hpq, hpqrs = convert_to_h_integrals(one_body_as, two_body_as)
 
-#     H_active = ElectronicStructureHamiltonian(hpq, hpqrs, constant_coeff=nuclear_repulsion + core_constant, do_clean_up=False)
+#     H_active = ElectronicStructureHamiltonian(hpq, hpqrs, constant_coeff=nuclear_repulsion + core_constant)
 
 #     return H_active, active_indices, occupied_indices
 
@@ -711,6 +712,6 @@ def get_active_space_hamiltonian(
 
     hpq, hpqrs = convert_to_h_integrals(one_body_as, two_body_as)
 
-    H_active = ElectronicStructureHamiltonian(hpq, hpqrs, constant_coeff=nuclear_repulsion + core_constant, do_clean_up=False)
+    H_active = ElectronicStructureHamiltonian(hpq, hpqrs, constant_coeff=nuclear_repulsion + core_constant)
 
     return H_active, active_indices, occupied_indices

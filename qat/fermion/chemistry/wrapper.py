@@ -274,7 +274,6 @@ class MolecularHamiltonian(object):
             hpq,
             hpqrs,
             constant_coeff=self.constant_coeff + self.core_constant,
-            do_clean_up=False,
         )
 
         return h_electronic

@@ -7,7 +7,7 @@
 %{?!buildnumber:    %define buildnumber     0} 
 %{?!branch:         %define branch          master} 
 
-%if %{branch} == rc || %{buildnumber} == 0 
+%if "%{branch}" == "rc" || "%{buildnumber}" == "0" 
 %{?!version:        %define version         %{major}.%{minor}.%{patchlevel}} 
 %else 
 %{?!version:        %define version         %{major}.%{minor}.%{patchlevel}.%{buildnumber}} 

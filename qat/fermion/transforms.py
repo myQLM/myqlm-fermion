@@ -107,7 +107,7 @@ def transform_to_jw_basis(fermion_hamiltonian: Union[FermionHamiltonian, Electro
     """
 
     nqbits = fermion_hamiltonian.nbqbits
-    spin_hamiltonian = SpinHamiltonian(nqbits, [], constant_coeff=fermion_hamiltonian.constant_coeff, do_clean_up=False)
+    spin_hamiltonian = SpinHamiltonian(nqbits, [], constant_coeff=fermion_hamiltonian.constant_coeff)
 
     for term in fermion_hamiltonian.terms:
 
@@ -128,8 +128,6 @@ def transform_to_jw_basis(fermion_hamiltonian: Union[FermionHamiltonian, Electro
             cur_ham = cur_ham * mini_ham
 
         spin_hamiltonian += cur_ham
-
-    spin_hamiltonian.clean_up()
 
     return spin_hamiltonian
 
@@ -162,7 +160,7 @@ def transform_to_parity_basis(fermion_hamiltonian: Union[FermionHamiltonian, Ele
     """
 
     nqbits = fermion_hamiltonian.nbqbits
-    spin_hamiltonian = SpinHamiltonian(nqbits, [], constant_coeff=fermion_hamiltonian.constant_coeff, do_clean_up=False)
+    spin_hamiltonian = SpinHamiltonian(nqbits, [], constant_coeff=fermion_hamiltonian.constant_coeff)
 
     for term in fermion_hamiltonian.terms:
 
@@ -183,8 +181,6 @@ def transform_to_parity_basis(fermion_hamiltonian: Union[FermionHamiltonian, Ele
             cur_ham = cur_ham * mini_ham
 
         spin_hamiltonian += cur_ham
-
-    spin_hamiltonian.clean_up()
 
     return spin_hamiltonian
 
@@ -219,20 +215,19 @@ def transform_to_bk_basis(fermion_hamiltonian: Union[FermionHamiltonian, Electro
     nqbits = fermion_hamiltonian.nbqbits
     pcu_sets = make_PCU_sets(nqbits)
 
-    spin_hamiltonian = SpinHamiltonian(nqbits, [], constant_coeff=fermion_hamiltonian.constant_coeff, do_clean_up=False)
+    spin_hamiltonian = SpinHamiltonian(nqbits, [], constant_coeff=fermion_hamiltonian.constant_coeff)
 
     for term in fermion_hamiltonian.terms:
 
         cur_ham = SpinHamiltonian(
             nqbits,
             [Term(term.coeff, "I" * nqbits, list(range(nqbits)))],
-            do_clean_up=False,
         )
 
         for op, qb in zip(term.op, term.qbits):
 
             sign = -1 if op == "C" else 1
-            mini_ham = SpinHamiltonian(nqbits, [], do_clean_up=False)
+            mini_ham = SpinHamiltonian(nqbits, [])
             p_set, c_set, u_set = pcu_sets[qb]
 
             qbits = []
@@ -258,8 +253,6 @@ def transform_to_bk_basis(fermion_hamiltonian: Union[FermionHamiltonian, Electro
             cur_ham = cur_ham * mini_ham
 
         spin_hamiltonian += cur_ham
-
-    spin_hamiltonian.clean_up()
 
     return spin_hamiltonian
 
