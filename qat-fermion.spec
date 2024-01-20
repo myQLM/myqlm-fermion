@@ -19,6 +19,7 @@
 %{?!packager:       %define packager        noreply@atos.net}
 %{?!run_by_jenkins: %define run_by_jenkins  0}
 %{?!platform:       %define platform        linux-x86_64}
+%{?!python_distrib: %define python_distrib  linux-x86_64}
 
 # Defines
 %define python_version      %{python_major}.%{python_minor}
@@ -120,11 +121,11 @@ bldit -t debug -nd -nc -nm ${name}
 # Save artifact
 ARTIFACTS_DIR=$QAT_REPO_BASEDIR/artifacts
 mkdir -p $ARTIFACTS_DIR
-tar cfz $ARTIFACTS_DIR/%{name}-%{version}-%{platform}-%{python_rpm}%{?dist}.tar.gz -C $INSTALL_DIR .
+tar cfz $ARTIFACTS_DIR/%{name}-%{version}-%{platform}-%{python_rpm}-%{python_distrib}.tar.gz -C $INSTALL_DIR .
 %else
 # Restore installed files
 mkdir -p $INSTALL_DIR
-tar xfz %{workspace}/%{name}-%{version}-%{platform}-%{python_rpm}%{?dist}.tar.gz -C $INSTALL_DIR
+tar xfz %{workspace}/%{name}-%{version}-%{platform}-%{python_rpm}-%{python_distrib}.tar.gz -C $INSTALL_DIR
 %endif
 
 
