@@ -69,7 +69,7 @@ def perform_phase_estimation(
         n_trotter_steps (int): Number of first order trotterization steps. For good phase estimation it
             should also increase if n_phase_bits is increased.
         init_vec (Optional[str]): Initial vector specified in the computational basis as a
-            string - '01101' for example. Starting from |0..0> an X will be applied to the respective
+            string - '01101' for example. Starting from ``|0..0>`` an X will be applied to the respective
             qubits so as to produce the provided vector. This vector will enter the adiabatic state
             preparation routine if n_adiab_steps is not 0 or will be given straight to the main QPE routine.
         n_adiab_steps (Optional[int]): Number of steps to pass from the part of the Hamiltonian containing

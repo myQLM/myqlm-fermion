@@ -190,8 +190,8 @@ def _build_quantum_subspace_expansion(
     """
     dim = len(expansion_operators)
 
-    matrix_h = np.asmatrix(np.zeros((dim, dim), dtype=np.float128))
-    matrix_s = np.asmatrix(np.zeros((dim, dim), dtype=np.float128))
+    matrix_h = np.asmatrix(np.zeros((dim, dim), dtype=np.float64))
+    matrix_s = np.asmatrix(np.zeros((dim, dim), dtype=np.float64))
 
     # Selection of the left operator to be applied:
     for (i, op_l) in enumerate(expansion_operators):
