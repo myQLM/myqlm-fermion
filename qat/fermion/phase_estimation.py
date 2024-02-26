@@ -83,11 +83,19 @@ def perform_phase_estimation(
             into a :class:`qat.fermion.hamiltonians.SpinHamiltonian`: one can use the "jordan-wigner" (default),
             "bravyi-kitaev" or "parity" transformations.
         qpu (Optional[QPU]): QPU to use for computation. Will use by default the default installed QPU.
+        n_shots (Optional[int]): Number of shots used for the estimation (default is 0).
 
     Returns:
         Tuple[float, float]:
             - Energy found,
             - associated probability.
+
+    .. warning::
+
+        Leaving the *n_shots* parameter to its default value (0) may result in a QPUException, for simulators, if
+        *nb_adiab_steps > 0*. Indeed, the generated circuit comprises intermediate measurements, typically
+        not supported for perfect simulation (nbshots=0) by Qaptiva simulators.
+        Please change the *n_shots* value in that case.
 
     Note:
         Usually, energies lie outside the range :math:`(-\frac{2\pi}{t}, 0)`. However, this range can be adjusted
