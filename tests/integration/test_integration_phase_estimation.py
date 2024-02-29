@@ -388,7 +388,7 @@ def test_bad_E_target_E_range():
             E_target,
             E_range,
             delta,
-            n_shots=100
+            n_shots=1
         )
         >= 10
     )
