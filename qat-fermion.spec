@@ -16,7 +16,7 @@
 %{?!rpm_release:    %define rpm_release     bull.0.0}
 %{?!python_major:   %define python_major    3}
 %{?!python_minor:   %define python_minor    6}
-%{?!packager:       %define packager        noreply@atos.net}
+%{?!packager:       %define packager        noreply@eviden.com}
 %{?!run_by_jenkins: %define run_by_jenkins  0}
 %{?!platform:       %define platform        linux-x86_64}
 %{?!python_distrib: %define python_distrib  linux-x86_64}
@@ -24,8 +24,14 @@
 # Defines
 %define python_version      %{python_major}.%{python_minor}
 %define python_rpm          python%{python_major}%{python_minor}
-%define target_python_dir   /usr/local/lib64/python%{python_version}/qaptiva-packages
 %define workspace           %{getenv:WORKSPACE}
+
+# Read location environment variables
+%define target_bin_dir      /%{getenv:BIN_INSTALL_DIR}
+%define target_lib_dir      /%{getenv:LIB_INSTALL_DIR}
+%define target_headers_dir  /%{getenv:HEADERS_INSTALL_DIR}
+%define target_thrift_dir   /%{getenv:THRIFT_INSTALL_DIR}
+%define target_python_dir   /%{getenv:PYTHON_INSTALL_DIR}
 
 %undefine __brp_mangle_shebangs
 
