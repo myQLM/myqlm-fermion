@@ -163,14 +163,5 @@ tar xfz %{workspace}/%{name}-%{version}-%{platform}-%{python_rpm}-%{python_distr
 * Sat May 04 2024 Jerome Pioux <jerome.pioux@eviden.com>
 - Release 1.10 - Change files location to support Virtual Environments
 
-* Sat May 04 2024 Jerome Pioux <jerome.pioux@eviden.com>
-- Release 1.10 - Change files location to support Virtual Environments
-
-* Sat May 04 2024 Jerome Pioux <jerome.pioux@eviden.com>
-- Release 1.10 - Change files location to support Virtual Environments
-
-* Sat May 04 2024 Jerome Pioux <jerome.pioux@eviden.com>
-- Release 1.10 - Change files location to support Virtual Environments
-
 -* Thu July 7 2022 Jerome Pioux <jerome.pioux@atos.net>
 -- Initial release
