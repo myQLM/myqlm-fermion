@@ -24,7 +24,7 @@
 # Defines
 %define python_version      %{python_major}.%{python_minor}
 %define python_rpm          python%{python_major}%{python_minor}
-%define target_python_dir   /usr/lib64/python%{python_version}/site-packages
+%define target_python_dir   /usr/local/lib64/python%{python_version}/qaptiva-packages
 %define workspace           %{getenv:WORKSPACE}
 
 %undefine __brp_mangle_shebangs
@@ -46,8 +46,8 @@ Packager:       %{packager}
 Distribution:   QLM
 Vendor:         Atos
 License:        Bull S.A.S. proprietary : All rights reserved
-BuildArch:	x86_64 
-URL:            https://atos.net/en/insights-and-innovation/quantum-computing/atos-quantum
+BuildArch:      x86_64 
+URL:            https://eviden.com/solutions/advanced-computing/quantum-computing
 
 Source:         %{name}-%{version}.tar.gz
 Source1:        qat.tar.gz
@@ -160,5 +160,17 @@ tar xfz %{workspace}/%{name}-%{version}-%{platform}-%{python_rpm}-%{python_distr
 #
 # -------------------------------------------------------------------
 %changelog
+* Sat May 04 2024 Jerome Pioux <jerome.pioux@eviden.com>
+- Release 1.10 - Change files location to support Virtual Environments
+
+* Sat May 04 2024 Jerome Pioux <jerome.pioux@eviden.com>
+- Release 1.10 - Change files location to support Virtual Environments
+
+* Sat May 04 2024 Jerome Pioux <jerome.pioux@eviden.com>
+- Release 1.10 - Change files location to support Virtual Environments
+
+* Sat May 04 2024 Jerome Pioux <jerome.pioux@eviden.com>
+- Release 1.10 - Change files location to support Virtual Environments
+
 -* Thu July 7 2022 Jerome Pioux <jerome.pioux@atos.net>
 -- Initial release
