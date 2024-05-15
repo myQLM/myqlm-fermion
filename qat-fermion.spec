@@ -66,7 +66,6 @@ Source1:        qat.tar.gz
 # -------------------------------------------------------------------
 #%package main
 Summary:  Quantum Application Toolset (QAT)
-Requires: %{python_rpm}
 Requires: qat-core > 1.1.1
 Provides: %{name}
 AutoReq: no
