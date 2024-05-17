@@ -48,7 +48,6 @@ Name:           %{name}
 Version:        %{version}
 Release:        %{rpm_release}%{?dist}
 Group:          Development/Libraries
-Packager:       %{packager}
 Distribution:   QLM
 Vendor:         Atos
 License:        Bull S.A.S. proprietary : All rights reserved
