@@ -63,7 +63,6 @@ Source1:        qat.tar.gz
 # MAIN PACKAGE DEFINITION
 #
 # -------------------------------------------------------------------
-#%package main
 Summary:  Quantum Application Toolset (QAT)
 Requires: qat-core > 1.1.1
 Provides: %{name}
@@ -92,7 +91,6 @@ tar xfz %{SOURCE1} -C ..
 QATDIR=%{_builddir}/qat
 QAT_REPO_BASEDIR=%{_builddir}
 RUNTIME_DIR=%{_builddir}/runtime
-INSTALL_DIR=%{buildroot}
 
 source /usr/local/bin/qatenv
 # Restore artifacts
