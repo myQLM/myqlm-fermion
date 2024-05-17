@@ -51,7 +51,7 @@ Group:          Development/Libraries
 Distribution:   QLM
 Vendor:         Atos
 License:        Bull S.A.S. proprietary : All rights reserved
-BuildArch:      x86_64 
+ExclusiveArch:  x86_64 
 URL:            https://eviden.com/solutions/advanced-computing/quantum-computing
 
 Source:         %{name}-%{version}.tar.gz
