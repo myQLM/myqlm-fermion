@@ -66,7 +66,6 @@ Source1:        qat.tar.gz
 #
 # -------------------------------------------------------------------
 Summary:  Quantum Application Toolset (QAT)
-Requires: qat-core > 1.1.1
 Provides: %{name}
 AutoReq: no
 
