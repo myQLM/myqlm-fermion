@@ -1,4 +1,4 @@
-%define name qat-fermion
+%define project_name qat-fermion
 
 # Input
 %{?!major:          %define major           0}
@@ -16,7 +16,7 @@
 %{?!rpm_release:    %define rpm_release     bull.0.0}
 %{?!python_major:   %define python_major    3}
 %{?!python_minor:   %define python_minor    6}
-%{?!packager:       %define packager        noreply@atos.net}
+%{?!packager:       %define packager        noreply@eviden.com}
 %{?!run_by_jenkins: %define run_by_jenkins  0}
 %{?!platform:       %define platform        linux-x86_64}
 %{?!python_distrib: %define python_distrib  linux-x86_64}
@@ -24,8 +24,16 @@
 # Defines
 %define python_version      %{python_major}.%{python_minor}
 %define python_rpm          python%{python_major}%{python_minor}
-%define target_python_dir   /usr/lib64/python%{python_version}/site-packages
 %define workspace           %{getenv:WORKSPACE}
+%define project_prefix      %(echo %{project_name} | cut -d- -f1)
+%define project_suffix      %(echo %{project_name} | cut -d- -f2-)
+
+# Read location environment variables
+%define target_bin_dir      /%{getenv:BIN_INSTALL_DIR}
+%define target_lib_dir      /%{getenv:LIB_INSTALL_DIR}
+%define target_headers_dir  /%{getenv:HEADERS_INSTALL_DIR}
+%define target_thrift_dir   /%{getenv:THRIFT_INSTALL_DIR}
+%define target_python_dir   /%{getenv:PYTHON_INSTALL_DIR}
 
 %undefine __brp_mangle_shebangs
 
@@ -38,18 +46,17 @@
 # GLOBAL PACKAGE & SUB-PACKAGES DEFINITION
 #
 # -------------------------------------------------------------------
-Name:           %{name}
+Name:           %{project_prefix}%{python_major}%{python_minor}-%{project_suffix}
 Version:        %{version}
 Release:        %{rpm_release}%{?dist}
 Group:          Development/Libraries
-Packager:       %{packager}
 Distribution:   QLM
-Vendor:         Atos
+Vendor:         Eviden
 License:        Bull S.A.S. proprietary : All rights reserved
-BuildArch:	x86_64 
-URL:            https://atos.net/en/insights-and-innovation/quantum-computing/atos-quantum
+ExclusiveArch:  x86_64 
+URL:            https://eviden.com/solutions/advanced-computing/quantum-computing
 
-Source:         %{name}-%{version}.tar.gz
+Source:         %{project_name}-%{version}.tar.gz
 Source1:        qat.tar.gz
 
 
@@ -58,10 +65,7 @@ Source1:        qat.tar.gz
 # MAIN PACKAGE DEFINITION
 #
 # -------------------------------------------------------------------
-#%package main
 Summary:  Quantum Application Toolset (QAT)
-Requires: %{python_rpm}
-Requires: qat-core > 1.1.1
 Provides: %{name}
 AutoReq: no
 
@@ -74,7 +78,7 @@ qat-fermion simulator. This package replaces the qat-dqs package.
 #
 # -------------------------------------------------------------------
 %prep
-%setup -q
+%setup -q -n %{project_name}-%{version}
 tar xfz %{SOURCE1} -C ..
 
 
@@ -88,13 +92,12 @@ tar xfz %{SOURCE1} -C ..
 QATDIR=%{_builddir}/qat
 QAT_REPO_BASEDIR=%{_builddir}
 RUNTIME_DIR=%{_builddir}/runtime
-INSTALL_DIR=%{buildroot}
 
 source /usr/local/bin/qatenv
 # Restore artifacts
 ARTIFACTS_DIR=$QAT_REPO_BASEDIR/artifacts
 mkdir -p $RUNTIME_DIR
-dependent_repos="$(get_dependencies.sh build %{name})"
+dependent_repos="$(get_dependencies.sh build %{project_name})"
 while read -r dependent_repo; do
     [[ -n $dependent_repo ]] || continue
     tar xfz $ARTIFACTS_DIR/${dependent_repo}-*.tar.gz -C $RUNTIME_DIR
@@ -121,11 +124,11 @@ bldit -t debug -nd -nc -nm ${name}
 # Save artifact
 ARTIFACTS_DIR=$QAT_REPO_BASEDIR/artifacts
 mkdir -p $ARTIFACTS_DIR
-tar cfz $ARTIFACTS_DIR/%{name}-%{version}-%{platform}-%{python_rpm}-%{python_distrib}.tar.gz -C $INSTALL_DIR .
+tar cfz $ARTIFACTS_DIR/%{project_name}-%{version}-%{platform}-%{python_rpm}-%{python_distrib}.tar.gz -C $INSTALL_DIR .
 %else
 # Restore installed files
 mkdir -p $INSTALL_DIR
-tar xfz %{workspace}/%{name}-%{version}-%{platform}-%{python_rpm}-%{python_distrib}.tar.gz -C $INSTALL_DIR
+tar xfz %{workspace}/%{project_name}-%{version}-%{platform}-%{python_rpm}-%{python_distrib}.tar.gz -C $INSTALL_DIR
 %endif
 
 
@@ -160,5 +163,11 @@ tar xfz %{workspace}/%{name}-%{version}-%{platform}-%{python_rpm}-%{python_distr
 #
 # -------------------------------------------------------------------
 %changelog
+* Sat May 04 2024 Jerome Pioux <jerome.pioux@eviden.com>
+- Release 1.10
+  Change files location to support Virtual Environments.
+  Create a versionned main package using the python version, and
+  an unversionned, noarch, config package.
+
 -* Thu July 7 2022 Jerome Pioux <jerome.pioux@atos.net>
 -- Initial release

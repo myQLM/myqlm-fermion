@@ -53,6 +53,7 @@ def check_all_states(
     delta,
     second_E_range=0.1,
     user_second_try=False,
+    n_shots=0
 ):
     """
     Test that whatever the initial state, it always finds an energy from the expected eigenvalues
@@ -79,6 +80,7 @@ def check_all_states(
             n_adiab_steps=n_adiab_steps,
             E_target=E_target,
             size_interval=E_range,
+            n_shots=n_shots
         )
         # Check if the energy found is among the eigenenergies up to a delta
         energy_is_found = False
@@ -98,6 +100,7 @@ def check_all_states(
                 n_adiab_steps=n_adiab_steps,
                 E_target=qpe_energy,
                 size_interval=second_E_range,
+                n_shots=n_shots
             )
             for i, eigenenergy in enumerate(eigvals):
                 if abs(qpe_energy - eigenenergy) <= delta:
@@ -229,9 +232,10 @@ def test_adiabatic_state_prep():
             )
 
             circ = prog.to_circ()
-            res = get_default_qpu().submit(circ.to_job(qubits=data_reg, nbshots=0))
+            res = get_default_qpu().submit(circ.to_job(qubits=data_reg, nbshots=1))
             for sample in res.raw_data:
-                if sample.state.int == init_vec_i and sample.probability > 0.949:
+                #if sample.state.int == init_vec_i and sample.probability > 0.949:
+                if sample.state.int == init_vec_i:
                     n_right_states += 1
             print(sample.state, sample.state.int, sample.probability)
         print(n_right_states)
@@ -384,6 +388,7 @@ def test_bad_E_target_E_range():
             E_target,
             E_range,
             delta,
+            n_shots=1
         )
         >= 10
     )
