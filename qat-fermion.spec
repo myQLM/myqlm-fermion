@@ -139,6 +139,7 @@ tar xfz %{workspace}/%{project_name}-%{version}-%{platform}-%{python_rpm}-%{pyth
 # -------------------------------------------------------------------
 # Main package
 %files
+%exclude /usr/lib/.build-id
 %defattr(-,root,root)
 %{target_python_dir}/qat/*
 
