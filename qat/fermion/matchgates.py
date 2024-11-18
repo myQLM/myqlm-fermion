@@ -549,10 +549,12 @@ def get_nn_rotation_angles(
 
     r_majo = np.block([[r.real, r.imag], [-r.imag, r.real]])
 
-    if slater:
-        theta0 = [0.1 for _ in range(nqbits**2)]
-    else:
-        theta0 = [0.1 for _ in range(2 * nqbits**2 - nqbits)]
+    if theta0 is None:
+
+        if slater:
+            theta0 = [0.1 for _ in range(nqbits**2)]
+        else:
+            theta0 = [0.1 for _ in range(2 * nqbits**2 - nqbits)]
 
     if verbose:
         print("theta0=", theta0)
