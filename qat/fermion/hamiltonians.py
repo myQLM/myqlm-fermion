@@ -875,7 +875,7 @@ def make_hubbard_model(t_mat: np.ndarray, U: float, mu: float) -> ElectronicStru
     r"""Constructs Hubbard model
 
     .. math::
-        H = \sum_{ij,\sigma} (t_{ij} -  mu \delta_{ij}) c^\dagger_i c_j + U \sum_i n_{i\uparrow} n_{i \downarrow} 
+        H = \sum_{ij,\sigma} (t_{ij} -  \mu \delta_{ij}) c^\dagger_{i\sigma} c_{j\sigma} + U \sum_i n_{i\uparrow} n_{i \downarrow} 
 
     Args:
         t_mat (np.ndarray): Hopping matrix (n_sites x n_sites). t_mat may have diagonal terms contributing 
