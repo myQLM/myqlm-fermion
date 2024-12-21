@@ -272,7 +272,7 @@ def init_creation_ops(Norb, sparse: Optional[bool] = False):
 
         c_dagger_dict[i] = sp.coo_matrix((data, (row_ind, col_ind)), shape=(2**Norb, 2**Norb))
         if not sparse:
-            c_dagger_dict[i] = c_dagger_dict[i].A
+            c_dagger_dict[i] = c_dagger_dict[i].toarray()
 
     return c_dagger_dict
 
