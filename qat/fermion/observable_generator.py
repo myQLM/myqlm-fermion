@@ -48,7 +48,7 @@ class ObservableGenerator(AbstractPlugin, AbstractGenerator):
 
     .. warning::
 
-        In myQLM Power Access, a remote service can't be both a remote Plugin
+        In Qaptiva Access, a remote service can't be both a remote Plugin
         and a remote BatchGenerator. If you wan to use the class as a
         BatchGenerator, please import this class using module :mod:`qlmaas.generators`,
         otherwise, please import this class using module :mod:`qlmaas.plugins`
