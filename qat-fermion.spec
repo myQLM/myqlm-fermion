@@ -4,14 +4,14 @@
 %{?!major:          %define major           0}
 %{?!minor:          %define minor           0}
 %{?!patchlevel:     %define patchlevel      0}
-%{?!buildnumber:    %define buildnumber     0} 
-%{?!branch:         %define branch          master} 
+%{?!buildnumber:    %define buildnumber     0}
+%{?!branch:         %define branch          master}
 
-%if "%{branch}" == "rc" || "%{buildnumber}" == "0" 
-%{?!version:        %define version         %{major}.%{minor}.%{patchlevel}} 
-%else 
-%{?!version:        %define version         %{major}.%{minor}.%{patchlevel}.%{buildnumber}} 
-%endif 
+%if "%{branch}" == "rc" || "%{buildnumber}" == "0"
+%{?!version:        %define version         %{major}.%{minor}.%{patchlevel}}
+%else
+%{?!version:        %define version         %{major}.%{minor}.%{patchlevel}.%{buildnumber}}
+%endif
 
 %{?!rpm_release:    %define rpm_release     bull.0.0}
 %{?!python_major:   %define python_major    3}
@@ -53,7 +53,7 @@ Group:          Development/Libraries
 Distribution:   QLM
 Vendor:         Eviden
 License:        Bull S.A.S. proprietary : All rights reserved
-ExclusiveArch:  x86_64 
+ExclusiveArch:  x86_64
 URL:            https://eviden.com/solutions/advanced-computing/quantum-computing
 
 Source:         %{project_name}-%{version}.tar.gz
@@ -128,7 +128,7 @@ tar cfz $ARTIFACTS_DIR/%{project_name}-%{version}-%{platform}-%{python_rpm}-%{py
 %else
 # Restore installed files
 mkdir -p $INSTALL_DIR
-tar xfz %{workspace}/%{project_name}-%{version}-%{platform}-%{python_rpm}-%{python_distrib}.tar.gz -C $INSTALL_DIR
+tar xfz %{workspace}/artifacts/tarballs-prod/%{name}-%{version}-%{rpm_release}-%{python_distrib}.%{dist}.%{ExclusiveArch}.tar.gz -C $INSTALL_DIR
 %endif
 
 
