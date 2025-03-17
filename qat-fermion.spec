@@ -4,14 +4,14 @@
 %{?!major:          %define major           0}
 %{?!minor:          %define minor           0}
 %{?!patchlevel:     %define patchlevel      0}
-%{?!buildnumber:    %define buildnumber     0} 
-%{?!branch:         %define branch          master} 
+%{?!buildnumber:    %define buildnumber     0}
+%{?!branch:         %define branch          master}
 
-%if "%{branch}" == "rc" || "%{buildnumber}" == "0" 
-%{?!version:        %define version         %{major}.%{minor}.%{patchlevel}} 
-%else 
-%{?!version:        %define version         %{major}.%{minor}.%{patchlevel}.%{buildnumber}} 
-%endif 
+%if "%{branch}" == "rc" || "%{buildnumber}" == "0"
+%{?!version:        %define version         %{major}.%{minor}.%{patchlevel}}
+%else
+%{?!version:        %define version         %{major}.%{minor}.%{patchlevel}.%{buildnumber}}
+%endif
 
 %{?!rpm_release:    %define rpm_release     bull.0.0}
 %{?!python_major:   %define python_major    3}
@@ -53,7 +53,7 @@ Group:          Development/Libraries
 Distribution:   QLM
 Vendor:         Eviden
 License:        Bull S.A.S. proprietary : All rights reserved
-ExclusiveArch:  x86_64 
+ExclusiveArch:  x86_64
 URL:            https://eviden.com/solutions/advanced-computing/quantum-computing
 
 Source:         %{project_name}-%{version}.tar.gz
@@ -88,22 +88,6 @@ tar xfz %{SOURCE1} -C ..
 #
 # -------------------------------------------------------------------
 %build
-%if 0%{run_by_jenkins} == 0
-QATDIR=%{_builddir}/qat
-QAT_REPO_BASEDIR=%{_builddir}
-RUNTIME_DIR=%{_builddir}/runtime
-
-source /usr/local/bin/qatenv
-# Restore artifacts
-ARTIFACTS_DIR=$QAT_REPO_BASEDIR/artifacts
-mkdir -p $RUNTIME_DIR
-dependent_repos="$(get_dependencies.sh build %{project_name})"
-while read -r dependent_repo; do
-    [[ -n $dependent_repo ]] || continue
-    tar xfz $ARTIFACTS_DIR/${dependent_repo}-*.tar.gz -C $RUNTIME_DIR
-done <<< "$dependent_repos"
-bldit -t debug -nd -ni -v ${name}
-%endif
 
 
 # -------------------------------------------------------------------
@@ -112,24 +96,9 @@ bldit -t debug -nd -ni -v ${name}
 #
 # -------------------------------------------------------------------
 %install
-QATDIR=%{_builddir}/qat
-QAT_REPO_BASEDIR=%{_builddir}
-INSTALL_DIR=%{buildroot}
-
-# Install it
-%if 0%{run_by_jenkins} == 0
-source /usr/local/bin/qatenv
-bldit -t debug -nd -nc -nm ${name}
-
-# Save artifact
-ARTIFACTS_DIR=$QAT_REPO_BASEDIR/artifacts
-mkdir -p $ARTIFACTS_DIR
-tar cfz $ARTIFACTS_DIR/%{project_name}-%{version}-%{platform}-%{python_rpm}-%{python_distrib}.tar.gz -C $INSTALL_DIR .
-%else
-# Restore installed files
-mkdir -p $INSTALL_DIR
-tar xfz %{workspace}/%{project_name}-%{version}-%{platform}-%{python_rpm}-%{python_distrib}.tar.gz -C $INSTALL_DIR
-%endif
+mkdir -p $RPM_BUILD_ROOT
+dist_no_dot=$(echo "%{dist}" | sed 's/^\.//')
+tar xfz %{workspace}/artifacts/tarballs-prod/%{name}-%{version}-%{rpm_release}-${dist_no_dot}-%{_target_cpu}.tar.gz -C $RPM_BUILD_ROOT
 
 
 # -------------------------------------------------------------------
@@ -139,7 +108,6 @@ tar xfz %{workspace}/%{project_name}-%{version}-%{platform}-%{python_rpm}-%{pyth
 # -------------------------------------------------------------------
 # Main package
 %files
-%exclude /usr/lib/.build-id
 %defattr(-,root,root)
 %{target_python_dir}/qat/*
 
