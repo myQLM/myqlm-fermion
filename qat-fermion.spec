@@ -98,7 +98,7 @@ tar xfz %{SOURCE1} -C ..
 %install
 mkdir -p $RPM_BUILD_ROOT
 dist_no_dot=$(echo "%{dist}" | sed 's/^\.//')
-tar xfz %{workspace}/artifacts/tarballs-prod/%{name}-%{version}-%{rpm_release}-${dist_no_dot}-%{_target_cpu}.tar.gz -C $RPM_BUILD_ROOT
+tar xfz %{workspace}/artifacts/tarballs-prod/%{name}-%{version}-%{rpm_release}.${dist_no_dot}.%{_target_cpu}.tar.gz -C $RPM_BUILD_ROOT
 
 
 # -------------------------------------------------------------------
