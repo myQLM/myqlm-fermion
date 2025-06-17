@@ -780,7 +780,7 @@ def make_embedded_model(
 
     M = np.shape(lambda_c)[0]  # number of SO in each cluster (imp and bath) = 2*cluster size
 
-    h_pq = np.zeros((2 * M, 2 * M), dtype=np.complex_)
+    h_pq = np.zeros((2 * M, 2 * M), dtype=np.complex128)
 
     if int_kernel is None:
         h_pqrs = np.zeros((2 * M, 2 * M, 2 * M, 2 * M))
