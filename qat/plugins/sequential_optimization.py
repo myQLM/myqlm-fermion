@@ -8,6 +8,7 @@ import numpy as np
 import math
 import copy
 
+from qat.core.plugins import OffloadedPlugin
 from qat.core.optimizer import Optimizer
 from qat.comm.exceptions.ttypes import PluginException
 
@@ -48,7 +49,7 @@ class SeqOptimResult:
         self.fun = fun
 
 
-class SeqOptim(Optimizer):
+class SeqOptim(Optimizer, OffloadedPlugin):
     r"""
     This plugin implements the sequential parameter optimization technique (also known as *rotosolve*) described in:
 

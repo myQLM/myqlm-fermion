@@ -3,11 +3,11 @@
 TransformObservable plugin
 """
 
-from qat.core.plugins import AbstractPlugin
+from qat.core.plugins import AbstractPlugin, OffloadedPlugin
 from qat.fermion.transforms import transform_to_jw_basis, transform_to_bk_basis, transform_to_parity_basis
 
 
-class TransformObservable(AbstractPlugin):
+class TransformObservable(AbstractPlugin, OffloadedPlugin):
     """
     Plugin performing a transformation on the Observable, to cast
     a :class:`qat.fermion.hamiltonians.FermionHamiltonian` or a :class:`qat.fermion.hamiltonians.ElectronicStructureHamiltonian`

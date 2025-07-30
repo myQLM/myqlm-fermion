@@ -9,7 +9,7 @@ from scipy.stats import linregress
 import copy
 
 from qat.core import BatchResult, Circuit, Batch
-from qat.core.plugins import AbstractPlugin
+from qat.core.plugins import AbstractPlugin, OffloadedPlugin
 from qat.lang.AQASM import CNOT
 from qat.lang.AQASM.gates import Gate
 from qat.comm.exceptions.ttypes import PluginException
@@ -140,7 +140,7 @@ def perform_extrapolation(
     return value, a, b
 
 
-class ZeroNoiseExtrapolator(AbstractPlugin):
+class ZeroNoiseExtrapolator(AbstractPlugin, OffloadedPlugin):
     r"""
     Perform Zero-Noise Extrapolation (linear - by default - or exponential) by inserting
     decompositions :math:`GG^{\dagger}` of the identity after each occurrence of the gate

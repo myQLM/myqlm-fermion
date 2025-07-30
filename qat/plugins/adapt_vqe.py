@@ -3,18 +3,19 @@
 ADAPT-VQE Plugin
 """
 
+import copy
 import warnings
 from typing import List
 from tqdm.auto import tqdm
-import copy
 import numpy as np
 
 from qat.core.junction import Junction
+from qat.core.plugins import OffloadedPlugin
 from qat.core import Result, Observable, Job
 from qat.lang.AQASM import Program, RX, RY, RZ, H, CNOT
 
 
-class AdaptVQEPlugin(Junction):
+class AdaptVQEPlugin(Junction, OffloadedPlugin):
     r"""
     Plugin implementation of the ADAPT-VQE algorithm, which builds ansatze by selecting operators :math:`\tau_k` from a user-defined pool of operators.
     Once an operator is chosen, a parameterized gate :math:`\exp(\theta_k \tau_k)` is added to the circuit.
@@ -36,7 +37,7 @@ class AdaptVQEPlugin(Junction):
         self,
         operator_pool: List[Observable],
         n_iterations: int = 300,
-        tol_vanishing_grad : float = 1e-3,
+        tol_vanishing_grad: float = 1e-3,
         commutators = None
     ):
 

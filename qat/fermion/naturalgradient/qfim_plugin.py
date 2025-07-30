@@ -9,6 +9,7 @@ import numpy as np
 
 from qat.comm.exceptions.ttypes import PluginException
 from qat.core.optimizer import Optimizer
+from qat.core.plugins import OffloadedPlugin
 
 from ..matchgates import gate_set
 from .auto_derivatives import (
@@ -17,7 +18,7 @@ from .auto_derivatives import (
 )
 
 
-class GradientDescentOptimizer(Optimizer):
+class GradientDescentOptimizer(Optimizer, OffloadedPlugin):
     r"""Gradient-based optimization plugin, with possibility to use natural gradients
     as described in `this publication <http://dx.doi.org/10.22331/q-2020-05-25-269>`_.
 
