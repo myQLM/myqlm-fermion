@@ -76,7 +76,7 @@ setup(
         "myqlm",
         "anytree",
         "bitstring",
-        "numpy~=1.0",
+        "numpy~=2.0",
         "scipy",
         "tqdm",
     ],
