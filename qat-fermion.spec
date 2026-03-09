@@ -137,5 +137,5 @@ tar xfz %{workspace}/artifacts/tarballs-prod/%{name}-%{version}-%{rpm_release}.$
   Create a versionned main package using the python version, and
   an unversionned, noarch, config package.
 
--* Thu July 7 2022 Jerome Pioux <jerome.pioux@atos.net>
+-* Thu July 7 2022 Jerome Pioux <jerome.pioux@bull.com>
 -- Initial release
