@@ -16,7 +16,7 @@
 %{?!rpm_release:    %define rpm_release     bull.0.0}
 %{?!python_major:   %define python_major    3}
 %{?!python_minor:   %define python_minor    6}
-%{?!packager:       %define packager        noreply@eviden.com}
+%{?!packager:       %define packager        noreply@bull.com}
 %{?!run_by_jenkins: %define run_by_jenkins  0}
 %{?!platform:       %define platform        linux-x86_64}
 %{?!python_distrib: %define python_distrib  linux-x86_64}
@@ -52,7 +52,7 @@ Version:        %{version}
 Release:        %{rpm_release}%{?dist}
 Group:          Development/Libraries
 Distribution:   QLM
-Vendor:         Eviden
+Vendor:         Bull
 License:        Bull S.A.S. proprietary : All rights reserved
 BuildArch:      noarch
 URL:            https://eviden.com/solutions/advanced-computing/quantum-computing
@@ -131,7 +131,7 @@ tar xfz %{workspace}/artifacts/tarballs-prod/%{name}-%{version}-%{rpm_release}.$
 #
 # -------------------------------------------------------------------
 %changelog
-* Sat May 04 2024 Jerome Pioux <jerome.pioux@eviden.com>
+* Sat May 04 2024 Jerome Pioux <jerome.pioux@bull.com>
 - Release 1.10
   Change files location to support Virtual Environments.
   Create a versionned main package using the python version, and
